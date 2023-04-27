@@ -1,1 +1,15 @@
-# sif-gha-workflows
+sif-gha-workflows
+================
+
+Reusable workflows for team i Sykdom i Familien
+
+---
+
+# Henvendelser
+
+Enten:
+Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub
+
+## For NAV-ansatte
+
+Interne henvendelser kan sendes via Slack i kanalen #sykdom-i-familien.
