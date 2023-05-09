@@ -2,19 +2,30 @@ name: Gradle Dependency Submission
 on:
   workflow_call:
     inputs:
-      build-gradle-path:
+      module-name:
         required: false
         type: string
-        description: Path til gradle file
-        default: 'build.gradle.kts'
+        description: Navn på gradle module
+        default: 'app'
+      multi-module:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run snapshot action
+      - name: Run snapshot action, single module
+        if: inputs.multi-module == false
         uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
         with:
           fail-on-error: true
-          gradle-dependency-path: ${{ inputs.build-gradle-path }}
+      - name: Run snapshot action, multi module support
+        if: inputs.multi-module == true
+        uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
+        with:
+          fail-on-error: true
+          gradle-build-module: :${{ inputs.module-name }}
+          sub-module-mode: INDIVIDUAL
