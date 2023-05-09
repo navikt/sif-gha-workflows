@@ -1,6 +1,12 @@
 name: Gradle Dependency Submission
 on:
   workflow_call:
+    inputs:
+      build-gradle-path:
+        required: false
+        type: string
+        description: Path til gradle file
+        default: 'build.gradle.kts'
 
 jobs:
   scan:
@@ -11,4 +17,4 @@ jobs:
         uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
         with:
           fail-on-error: true
-          gradle-dependency-path: "build.gradle.kts"
+          gradle-dependency-path: ${{ inputs.build-gradle-path }}
