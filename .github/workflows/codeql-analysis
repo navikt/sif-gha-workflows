@@ -1,0 +1,53 @@
+name: 'CodeQL Analysis'
+description: 'Analyze your code with CodeQL'
+inputs:
+  language:
+    description: 'Language to analyze'
+    required: true
+    default: 'java'
+  java-version:
+    description: 'Java version'
+    required: false
+    default: '17'
+  distribution:
+    description: 'Java distribution'
+    required: false
+    default: 'corretto'
+  cache:
+    description: 'Cache system for the Java setup'
+    required: false
+    default: 'gradle'
+  branch:
+    description: 'Branch to analyze'
+    required: true
+    default: 'master'
+  package-command:
+    description: 'Your build command i.e. mvn package, ./gradalew shadowjar etc.'
+    required: false
+    default: './gradlew shadowjar'
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.branch }}
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ inputs.language }}
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: ${{ inputs.distribution }}
+        cache: ${{ inputs.cache }}
+
+    - run: ${{ inputs.package-command }}
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{inputs.language}}"
