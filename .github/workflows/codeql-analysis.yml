@@ -1,33 +1,35 @@
 name: 'CodeQL Analysis'
-description: 'Analyze your code with CodeQL'
-inputs:
-  language:
-    description: 'Language to analyze'
-    required: true
-    default: 'java'
-  java-version:
-    description: 'Java version'
-    required: false
-    default: '17'
-  distribution:
-    description: 'Java distribution'
-    required: false
-    default: 'corretto'
-  cache:
-    description: 'Cache system for the Java setup'
-    required: false
-    default: 'gradle'
-  branch:
-    description: 'Branch to analyze'
-    required: true
-    default: 'master'
-  package-command:
-    description: 'Your build command i.e. mvn package, ./gradalew shadowjar etc.'
-    required: false
-    default: './gradlew shadowjar'
-runs:
-  using: 'composite'
-  steps:
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: 'Language to analyze'
+        required: true
+        default: 'java'
+      java-version:
+        description: 'Java version'
+        required: false
+        default: '17'
+      distribution:
+        description: 'Java distribution'
+        required: false
+        default: 'corretto'
+      cache:
+        description: 'Cache system for the Java setup'
+        required: false
+        default: 'gradle'
+      branch:
+        description: 'Branch to analyze'
+        required: true
+        default: 'master'
+      package-command:
+        description: 'Your build command i.e. mvn package, ./gradalew shadowjar etc.'
+        required: false
+        default: './gradlew shadowjar'
+jobs:
+  analyze:
+   runs-on: ubuntu-latest
+   steps:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
