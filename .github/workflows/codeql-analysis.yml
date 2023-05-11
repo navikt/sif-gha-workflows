@@ -4,26 +4,32 @@ on:
     inputs:
       language:
         description: 'Language to analyze'
+        type: 'string'
         required: true
         default: 'java'
       java-version:
         description: 'Java version'
+        type: 'string'
         required: false
         default: '17'
       distribution:
         description: 'Java distribution'
+        type: 'string'
         required: false
         default: 'corretto'
       cache:
         description: 'Cache system for the Java setup'
+        type: 'string'
         required: false
         default: 'gradle'
       branch:
         description: 'Branch to analyze'
+        type: 'string'
         required: true
         default: 'master'
       package-command:
         description: 'Your build command i.e. mvn package, ./gradalew shadowjar etc.'
+        type: 'string'
         required: false
         default: './gradlew shadowjar'
 jobs:
