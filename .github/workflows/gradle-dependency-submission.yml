@@ -6,7 +6,7 @@ on:
         required: false
         type: string
         description: Navn på gradle module
-        default: 'app'
+        default: ':'
       multi-module:
         required: false
         type: boolean
@@ -23,20 +23,21 @@ jobs:
           java-version: 17
           distribution: corretto
           cache: gradle
+
       - name: Run snapshot action, single module
         if: inputs.multi-module == false
         uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
         with:
           fail-on-error: true
-          sub-module-mode: INDIVIDUAL
           gradle-build-configuration: |-
             compileClasspath
+
       - name: Run snapshot action, multi module support
         if: inputs.multi-module == true
         uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
         with:
           fail-on-error: true
-          gradle-build-module: :${{ inputs.module-name }}
+          gradle-build-module: ${{ inputs.module-name }}
           sub-module-mode: INDIVIDUAL
           gradle-build-configuration: |-
             compileClasspath
