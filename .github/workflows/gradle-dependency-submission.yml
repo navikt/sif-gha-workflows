@@ -28,6 +28,7 @@ jobs:
         uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
         with:
           fail-on-error: true
+          sub-module-mode: INDIVIDUAL
           gradle-build-configuration: |-
             compileClasspath
       - name: Run snapshot action, multi module support
