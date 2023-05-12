@@ -5,7 +5,7 @@ on:
       language:
         description: 'Language to analyze'
         type: 'string'
-        required: true
+        required: false
         default: 'java'
       java-version:
         description: 'Java version'
