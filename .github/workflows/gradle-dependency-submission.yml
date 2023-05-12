@@ -28,6 +28,8 @@ jobs:
         uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
         with:
           fail-on-error: true
+          gradle-build-configuration: |-
+            compileClasspath
       - name: Run snapshot action, multi module support
         if: inputs.multi-module == true
         uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
@@ -35,3 +37,5 @@ jobs:
           fail-on-error: true
           gradle-build-module: :${{ inputs.module-name }}
           sub-module-mode: INDIVIDUAL
+          gradle-build-configuration: |-
+            compileClasspath
