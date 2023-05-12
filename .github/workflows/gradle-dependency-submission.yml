@@ -6,7 +6,7 @@ on:
         required: false
         type: string
         description: Navn på gradle module
-        default: ':'
+        default: ''
       multi-module:
         required: false
         type: boolean
@@ -37,7 +37,7 @@ jobs:
         uses: mikepenz/gradle-dependency-submission@aa82af7186ba17eb630a7d47c840ba8a3185ac91
         with:
           fail-on-error: true
-          gradle-build-module: ${{ inputs.module-name }}
+          gradle-build-module: :${{ inputs.module-name }}
           sub-module-mode: INDIVIDUAL
           gradle-build-configuration: |-
             compileClasspath
