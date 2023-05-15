@@ -1,6 +1,12 @@
 name: Maven Dependency Submission
 on:
   workflow_call:
+    inputs:
+      path:
+        required: false
+        type: string
+        description: The directory that contains the pom.xml
+        default: ${{ github.workspace }}
 
 jobs:
   scan:
@@ -44,3 +50,4 @@ jobs:
         with:
           settings-file: m2-settings.xml
           maven-args: -DskipTests
+          directory: ${{ input.directory }}
