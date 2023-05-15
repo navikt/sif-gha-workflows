@@ -11,6 +11,8 @@ on:
         required: false
         type: boolean
         default: false
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   scan:
