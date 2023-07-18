@@ -1,0 +1,41 @@
+name: Deploy image
+on:
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
+      environment:
+        required: false
+        type: string
+        default: gcp
+      deploy-prod:
+        required: false
+        type: boolean
+        default: false
+        
+env:
+  IMAGE: ${{ inputs.image }}
+
+jobs:
+  build:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy til dev-${{ inputs.environment }}
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-${{ inputs.environment }}
+          RESOURCE: nais/dev-${{ inputs.environment }}.yml
+
+      - name: Deploy til prod
+        if: ${{ inputs.deploy-prod }}
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-${{ inputs.environment }}
+          RESOURCE: nais/dev-${{ inputs.environment }}.yml
