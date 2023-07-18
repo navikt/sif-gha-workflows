@@ -1,19 +1,11 @@
-name: Bygg og deploy
+name: Build image
 on:
   workflow_call:
     inputs:
-      branch:
-        required: false
-        type: string
-        default: main
-      environment:
-        required: false
-        type: string
-        default: gcp
       team:
         required: false
         type: string
-        default: k9saksbehandling
+        default: omsorgspenger
       dockercontext:
         required: false
         type: string
@@ -22,6 +14,9 @@ on:
         required: false
         type: boolean
         default: false
+    outputs:
+      image:
+        value: ${{ jobs.build.outputs.image }}
 
 jobs:
   build:
@@ -29,6 +24,8 @@ jobs:
       contents: read
       id-token: write # for nais/docker-build-push
     runs-on: ubuntu-latest
+    outputs: 
+      image: ${{ steps.docker-push.outputs.image }}
     steps:
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
@@ -53,19 +50,3 @@ jobs:
           docker_context: ${{ inputs.dockercontext }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
-
-      - name: Deploy til dev
-        uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: dev-${{ inputs.environment }}
-          RESOURCE: nais/dev-${{ inputs.environment }}.yml
-          IMAGE: ${{ steps.docker-push.outputs.image }}
-
-      - name: Deploy til prod
-        uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: dev-${{ inputs.environment }}
-          RESOURCE: nais/dev-${{ inputs.environment }}.yml
-          IMAGE: ${{ steps.docker-push.outputs.image }}
