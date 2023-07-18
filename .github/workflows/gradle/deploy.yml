@@ -16,7 +16,7 @@ on:
 env:
   IMAGE: ${{ inputs.image }}
 jobs:
-  build:
+  deploy:
     permissions:
       contents: read
     runs-on: ubuntu-latest
