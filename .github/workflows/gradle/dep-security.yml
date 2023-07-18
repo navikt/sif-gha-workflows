@@ -6,7 +6,7 @@ on:
         required: true
         type: string
 jobs:
-  build:
+  security:
     permissions:
       contents: write # required by dependency graph
       security-events: write # required by trivy

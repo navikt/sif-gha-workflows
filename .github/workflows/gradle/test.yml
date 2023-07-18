@@ -1,4 +1,4 @@
-name: Test
+name: Run test & build docker image
 on:
   workflow_call:
     inputs:
