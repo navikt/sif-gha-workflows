@@ -1,5 +1,4 @@
 name: Dependency snapshot & Trivy scan
-
 on:
   workflow_call:
     inputs:
