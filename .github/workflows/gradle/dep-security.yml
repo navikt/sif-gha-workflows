@@ -1,0 +1,46 @@
+name: Dependency snapshot & Trivy scan
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
+
+jobs:
+  build:
+    permissions:
+        contents: write # required by dependency graph
+        security-events: write # required by trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+
+      - name: Setup Gradle to generate and submit dependency graphs
+        uses: gradle/gradle-build-action@dependency-graph
+        with:
+          dependency-graph: generate-and-submit
+
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: corretto
+          cache: gradle
+
+      - name: Generate dependency graph snapshot
+        run: ./gradlew build
+
+      - name: Run Trivy vulnerability scanner on docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ inputs.image }}
+          ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
