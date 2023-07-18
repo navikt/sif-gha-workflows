@@ -1,0 +1,49 @@
+name: Build image
+on:
+  workflow_call:
+    inputs:
+      team:
+        required: false
+        type: string
+        default: omsorgspenger
+      dockercontext:
+        required: false
+        type: string
+        default: .
+      readertoken:
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      image:
+        value: ${{ jobs.build.outputs.image }}
+jobs:
+  build:
+    permissions:
+      contents: read
+      id-token: write # for nais/docker-build-push
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.docker-push.outputs.image }}
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # ratchet:actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@8d49e559aae34d3e0eb16cde532684bc9702762b # ratchet:gradle/wrapper-validation-action@v1
+      - uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # ratchet:actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: corretto
+          cache: gradle
+      - name: Build shadowjar
+        run: ./gradlew shadowjar
+        env:
+          GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
+      - uses: nais/docker-build-push@c1d05d5a796be7b24d59a2e76851acdcdbcaff7a # ratchet:nais/docker-build-push@v0
+        id: docker-push
+        with:
+          team: ${{ inputs.team }}
+          push_image: true
+          pull: true
+          dockerfile: Dockerfile
+          docker_context: ${{ inputs.dockercontext }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
