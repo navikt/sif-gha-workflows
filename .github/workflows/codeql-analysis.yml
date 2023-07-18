@@ -34,32 +34,28 @@ on:
         default: './gradlew shadowjar'
 jobs:
   analyze:
-   runs-on: ubuntu-latest
-   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ inputs.branch }}
-
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: ${{ inputs.language }}
-
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        java-version: ${{ inputs.java-version }}
-        distribution: ${{ inputs.distribution }}
-        cache: ${{ inputs.cache }}
-
-    - run: ${{ inputs.package-command }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        READER_TOKEN: ${{ secrets.READER_TOKEN }}
-        GITHUB_USERNAME: x-access-token
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
-      with:
-        category: "/language:${{inputs.language}}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # ratchet:actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@489225d82a57396c6f426a40e66d461b16b3461d # ratchet:github/codeql-action/init@v2
+        with:
+          languages: ${{ inputs.language }}
+      - name: Set up Java
+        uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # ratchet:actions/setup-java@v3
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.distribution }}
+          cache: ${{ inputs.cache }}
+      - run: ${{ inputs.package-command }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          READER_TOKEN: ${{ secrets.READER_TOKEN }}
+          GITHUB_USERNAME: x-access-token
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@489225d82a57396c6f426a40e66d461b16b3461d # ratchet:github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{inputs.language}}"
