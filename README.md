@@ -1,9 +1,10 @@
-sif-gha-workflows
+SIF Reusable Github Actions Workflows
 ================
 
-Reusable workflows for team i Sykdom i Familien
+## Eksempler
 
-## Eksempler på workflows
+* [Bygg Gradle projekt](#bygg-workflow-for-gradle-projekt)
+* [PR Gradle projekt](#pull-request-workflow-for-gradle-projekt)
 
 ---
 
