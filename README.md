@@ -12,7 +12,7 @@ SIF Reusable Github Actions Workflows
 - Navn på workflowet må vara `name: Build` for att docker-build-push skal finne SBOM som genereres av gradle.
 - Submitter SBOM til [NAIS Dependency tracker](https://salsa.prod-gcp.nav.cloud.nais.io/)
 - Dependency snapshot & codeql resultat sendes til Github Security.
-```
+- Leter efter nais resource i `nais/naiserator.yaml` og vars `nais/dev-gcp.json` i `nais/prod-gcp.json` (alt. dev/prod-fss)
 name: Build
 on:
   push:
