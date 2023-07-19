@@ -1,4 +1,4 @@
-name: Build image
+name: Build
 on:
   workflow_call:
     inputs:
@@ -20,7 +20,7 @@ on:
 jobs:
   build:
     permissions:
-      contents: read
+      contents: write # for dependency submission
       id-token: write # for nais/docker-build-push
     runs-on: ubuntu-latest
     outputs:
@@ -43,7 +43,7 @@ jobs:
       - uses: nais/docker-build-push@c1d05d5a796be7b24d59a2e76851acdcdbcaff7a # ratchet:nais/docker-build-push@v0
         id: docker-push
         with:
-          byosbom: dependency-graph-reports/gradle-build-build.json # (workflow filename)-(github job name).json
+          byosbom: dependency-graph-reports/build-build.json # (workflow name)-(github job name).json
           team: ${{ inputs.team }}
           push_image: true
           pull: true
