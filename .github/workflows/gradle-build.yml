@@ -33,13 +33,17 @@ jobs:
           java-version: 17
           distribution: corretto
           cache: gradle
-      - name: Build shadowjar
-        run: ./gradlew shadowjar
+      - uses: gradle/gradle-build-action@915a66c096a03101667f9df2e56c9efef558b165 # ratchet:gradle/gradle-build-action@v2.6.1
         env:
+          DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath # Eksluderer test dependencies
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
+        with:
+          dependency-graph: generate-and-submit
+          arguments: --configuration-cache build shadowjar
       - uses: nais/docker-build-push@c1d05d5a796be7b24d59a2e76851acdcdbcaff7a # ratchet:nais/docker-build-push@v0
         id: docker-push
         with:
+          byosbom: dependency-graph-reports/gradle-build-build.json # (workflow filename)-(github job name).json
           team: ${{ inputs.team }}
           push_image: true
           pull: true
