@@ -10,7 +10,7 @@ jobs:
   analyze:
     permissions:
       contents: read
-      pull_requests: read # allows SonarCloud to decorate PRs with analysis results
+      pull-requests: read # allows SonarCloud to decorate PRs with analysis results
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # ratchet:actions/checkout@v3
