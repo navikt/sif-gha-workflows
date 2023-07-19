@@ -21,12 +21,11 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # ratchet:actions/checkout@v3.3.0
-      - name: Login to registry
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
+      - uses: nais/login@104bca34b70d1d00fe837bcd0689633978eca744 # ratchet:nais/login@v0
         with:
-          registry: europe-north1-docker.pkg.dev/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/${{ inputs.team }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          team: ${{ inputs.team }}
       - name: Pull docker image
         run: docker pull ${{ inputs.image }}
       - name: Run Trivy vulnerability scanner
