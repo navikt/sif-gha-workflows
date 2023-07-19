@@ -30,11 +30,11 @@ jobs:
           CLUSTER: dev-${{ inputs.environment }}
           RESOURCE: nais/naiserator.yaml
           VARS: nais/dev-${{ inputs.environment }}.json
-      - name: Deploy til prod
+      - name: Deploy til prod-${{ inputs.environment }}
         if: ${{ inputs.deploy-prod }}
         uses: nais/deploy/actions/deploy@913eb0f92e9d132dbe0cbba3390a340675849f30 # ratchet:nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           RESOURCE: nais/naiserator.yaml
-          CLUSTER: dev-${{ inputs.environment }}
-          VARS: nais/dev-${{ inputs.environment }}.json
+          CLUSTER: prod-${{ inputs.environment }}
+          VARS: nais/prod-${{ inputs.environment }}.json
