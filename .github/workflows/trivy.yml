@@ -19,6 +19,7 @@ jobs:
       contents: write # to write sarif
       security-events: write # push sarif to github security
       id-token: write # for nais/login
+      actions: read # for private repositories
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # ratchet:actions/checkout@v3.3.0
       - uses: nais/login@104bca34b70d1d00fe837bcd0689633978eca744 # ratchet:nais/login@v0
