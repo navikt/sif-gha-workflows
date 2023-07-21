@@ -68,6 +68,7 @@ jobs:
       contents: write
       security-events: write
       id-token: write
+      actions: read
     secrets: inherit
     with:
       image: ${{ needs.build.outputs.image }}
