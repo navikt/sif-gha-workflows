@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       team:
-        required: false
+        required: true
         type: string
         default: omsorgspenger
       dockercontext:
