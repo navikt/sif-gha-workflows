@@ -5,7 +5,7 @@ on:
       - '.github/workflows/**'
 jobs:
   ratchet:
-    if: github.actor != 'dependabot[bot]
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1 # Fails if more than 1 job tries to push at the same time
