@@ -6,6 +6,7 @@ on:
 jobs:
   ratchet:
     if: github.actor != 'dependabot[bot]'
+    permissions: write-all
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1 # Fails if more than 1 job tries to push at the same time
@@ -16,6 +17,9 @@ jobs:
           codeql.yml
         ]
     steps:
+      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+        with:
+          config: ${{ vars.PERMISSIONS_CONFIG }}
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           persist-credentials:
