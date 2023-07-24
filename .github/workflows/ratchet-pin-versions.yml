@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
-          fetch-depth: 0
+          persist-credentials:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check if ${{matrix.asset}} is pinned
@@ -42,5 +42,5 @@ jobs:
           message: Pinning versions in ${{matrix.asset}}
           
       - name: Exit with success if push was successful
-        if: ${{ steps.push.conclusion != 'failure' }}
+        if: ${{ failure() && steps.push.conclusion != 'failure' }}
         run: exit 0
