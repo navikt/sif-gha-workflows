@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1 # Fails if more than 1 job tries to push at the same time
-      fail-fast: false
       matrix:
         asset: [
           codeql-analysis.yml,
@@ -25,6 +24,7 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.RATCHET_PAT }}
       - name: Check if ${{matrix.asset}} is pinned
+        continue-on-error: true
         uses: 'docker://ghcr.io/sethvargo/ratchet@sha256:e5b2409be0d1c82c71a6e60c49027e539f4c90636529e4f8b5c25a68b68a36d4'
         with:
           args: 'check .github/workflows/${{matrix.asset}}'
