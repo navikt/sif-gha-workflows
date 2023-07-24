@@ -12,10 +12,7 @@ jobs:
       matrix:
         asset: [
           codeql-analysis.yml,
-          codeql.yml,
-          gradle-build.yml,
-          gradle-codeql.yml,
-          gradle-dependency-submission.yml
+          codeql.yml
         ]
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
