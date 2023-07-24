@@ -1,0 +1,45 @@
+name: Check and pin versions in workflows with Ratchet
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+jobs:
+  ratchet:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1 # Fails if more than 1 job tries to push at the same time
+      fail-fast: false
+      matrix:
+        asset: [
+          codeql-analysis.yml,
+          codeql.yml,
+          gradle-build.yml,
+          gradle-codeql.yml,
+          gradle-dependency-submission.yml
+        ]
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+#          token: ${{ secrets.RATCHET_WORKFLOW_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check if ${{matrix.asset}} is pinned
+        uses: 'docker://ghcr.io/sethvargo/ratchet@sha256:e5b2409be0d1c82c71a6e60c49027e539f4c90636529e4f8b5c25a68b68a36d4'
+        with:
+          args: 'check .github/workflows/${{matrix.asset}}'
+          entrypoint: /ratchet
+      - name: Updating pinned versions in ${{matrix.asset}}
+        if: ${{ failure() }}
+        uses: 'docker://ghcr.io/sethvargo/ratchet@sha256:e5b2409be0d1c82c71a6e60c49027e539f4c90636529e4f8b5c25a68b68a36d4'
+        with:
+          args: 'pin .github/workflows/${{matrix.asset}}'
+          entrypoint: /ratchet
+      - name: Commit & Push changes
+        if: ${{ failure() }}
+        uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 # ratchet:exclude
+        with:
+#          github_token: ${{ secrets.RATCHET_WORKFLOW_PAT }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.head_ref }}
+          message: Pinning versions in ${{matrix.asset}}
