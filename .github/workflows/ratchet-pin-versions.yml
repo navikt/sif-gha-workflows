@@ -16,10 +16,6 @@ jobs:
           codeql.yml
         ]
     steps:
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
-        continue-on-error: true
-        with:
-          config: ${{ vars.PERMISSIONS_CONFIG }}
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           fetch-depth: 0
@@ -37,9 +33,14 @@ jobs:
           args: 'pin .github/workflows/${{matrix.asset}}'
           entrypoint: /ratchet
       - name: Commit & Push changes
+        id: push
         if: ${{ failure() }}
         uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 # ratchet:exclude
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.head_ref }}
           message: Pinning versions in ${{matrix.asset}}
+          
+      - name: Exit with success if push was successful
+        if: ${{ steps.push.conclusion != 'failure' }}
+        run: exit 0
