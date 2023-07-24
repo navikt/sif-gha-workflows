@@ -17,6 +17,7 @@ jobs:
         ]
     steps:
       - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+        continue-on-error: true
         with:
           config: ${{ vars.PERMISSIONS_CONFIG }}
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
