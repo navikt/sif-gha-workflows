@@ -1,6 +1,7 @@
 name: Check and pin versions in workflows with Ratchet
 on:
   pull_request:
+    types: [ opened, synchronize ]
     paths:
       - '.github/workflows/**'
 jobs:
