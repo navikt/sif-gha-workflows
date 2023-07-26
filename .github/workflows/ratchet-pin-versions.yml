@@ -9,6 +9,7 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     permissions: 
       pull-requests: read
+      contents: write
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1 # Fails if more than 1 job tries to push at the same time
@@ -16,7 +17,16 @@ jobs:
       matrix:
         asset: [
           codeql-analysis.yml,
-          codeql.yml
+          codeql.yml,
+          gradle-build.yml,
+          gradle-codeql.yml,
+          gradle-dependency-submission.yml,
+          gradle-deploy.yml,
+          gradle-sonar.yml,
+          maven-dependency-submission.yml,
+          package-cleaner.yml,
+          trivy-pin-versions.yml,
+          trivy.yml
         ]
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
