@@ -6,6 +6,10 @@ on:
         required: false
         type: boolean
         default: false
+      buildcommand:
+        required: false
+        type: string
+        default: ./gradlew test shadowjar
 
 jobs:
   test:
@@ -21,6 +25,6 @@ jobs:
           distribution: corretto
           cache: gradle
       - name: Build shadowjar
-        run: ./gradlew test shadowjar
+        run: ${{ inputs.buildcommand }}
         env:
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
