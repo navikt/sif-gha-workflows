@@ -24,7 +24,7 @@ jobs:
           java-version: 17
           distribution: corretto
           cache: gradle
-      - name: Build shadowjar
+      - name: run test command
         run: ${{ inputs.buildcommand }}
         env:
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
