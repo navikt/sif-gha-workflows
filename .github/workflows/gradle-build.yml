@@ -14,6 +14,10 @@ on:
         required: false
         type: boolean
         default: false
+      buildcommand:
+        required: false
+        type: string
+        default: --configuration-cache build shadowjar -x test
     outputs:
       image:
         value: ${{ jobs.build.outputs.image }}
@@ -39,7 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
         with:
           dependency-graph: generate-and-submit
-          arguments: --configuration-cache build shadowjar -x test
+          arguments: ${{ inputs.buildcommand }}
       - uses: nais/docker-build-push@c1d05d5a796be7b24d59a2e76851acdcdbcaff7a # ratchet:nais/docker-build-push@v0
         id: docker-push
         with:
