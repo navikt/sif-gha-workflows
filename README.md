@@ -110,6 +110,83 @@ jobs:
       readertoken: false
 ```
 
+## K9 ChatOps workflows
+- Workflow i tre delar som oppretter issue og deployer til dev vid push til master. Push til prod styres via kommentar i issue.
+- Tilgangsstyring skjer via dispatch-script. Se [dispatch](#dispatch) 
+### Bygg pull-request
+- Avhengig av oppsett for o kjøre verdikjede i med keystore etc. under `dev/`
+```
+name: Bygg pull request
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.MD'
+      - '.gitignore'
+      - 'LICENCE'
+      - 'CODEOWNERS'
+      - 'dev/**'
+
+jobs:
+  build:
+    uses: navikt/sif-gha-workflows/.github/workflows/k9-issues-build-pr.yml@main
+    secrets: inherit
+```
+
+### Bygg master og deploy til dev
+```
+name: Bygg og deploy til dev
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+      - '**.MD'
+      - '.gitignore'
+      - 'LICENCE'
+      - 'CODEOWNERS'
+      - 'dev/**'
+
+jobs:
+  build:
+    uses: navikt/sif-gha-workflows/.github/workflows/k9-issues-deploy.yml@main
+    secrets: inherit
+```
+
+
+### Deploy image
+- Avhengig av format på naiserator eks: `.deploy/dev-fss.yml`
+```
+name: Deploy image
+on:
+  repository_dispatch:
+    types: [promote-command]
+
+jobs:
+  build:
+    uses: navikt/sif-gha-workflows/.github/workflows/k9-issues-build.yml@main
+    secrets: inherit
+```
+
+### Dispatch
+```
+name: Slash command dispatch
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  dispatcher:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slash command dispatch
+        uses: peter-evans/slash-command-dispatch@v3
+        with:
+          token: ${{ secrets.READER_TOKEN }}
+          commands: promote
+          issue-type: issue
+```
 ---
 
 # Henvendelser

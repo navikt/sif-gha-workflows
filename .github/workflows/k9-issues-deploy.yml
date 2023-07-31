@@ -1,0 +1,60 @@
+name: Deploy image
+on:
+  workflow_call:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setter image base
+        run: |
+          echo "IMAGE=europe-north1-docker.pkg.dev/nais-management-233d/k9saksbehandling/${{ basename github.repository }}" >> $GITHUB_ENV
+      - name: Henter informasjon fra issuet
+        id: issue_comment
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # ratchet:actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.get( {
+              owner: context.issue.owner,
+              repo: context.issue.repo,
+              issue_number: ${{ github.event.client_payload.github.payload.issue.number }} })
+            .then(response => {
+              core.setOutput('sha', response.data.body);
+              core.setOutput('title', response.data.title);
+            });
+      - name: Setter IMAGE som brukes i deploy-filen & SHA for kode checkout
+        env:
+          TAG_INPUT: ${{ steps.issue_comment.outputs.title }}
+          CLUSTER_INPUT: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
+          SHA_INPUT: ${{ steps.issue_comment.outputs.sha }}
+        run: |
+          echo "IMAGE=$IMAGE_BASE:$(echo $TAG_INPUT | awk '{print $NF}')" >> $GITHUB_ENV
+          echo "SHA=$(echo $SHA_INPUT | awk '{print $NF}')" >> $GITHUB_ENV
+          echo "CLUSTER=$CLUSTER_INPUT" >> $GITHUB_ENV
+      - name: Sjekk ut kode
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # ratchet:actions/checkout@v3
+        with:
+          ref: ${{ env.SHA }}
+      - name: Deploy til cluster
+        uses: nais/deploy/actions/deploy@913eb0f92e9d132dbe0cbba3390a340675849f30 # ratchet:nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.DEPLOY_KEY }}
+          CLUSTER: ${{ env.CLUSTER }}
+          RESOURCE: .deploy/${{ env.CLUSTER }}.yml
+      - name: Oppdater kommentar med deployment status ved feil
+        if: failure()
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # ratchet:actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: "const issue = { owner: context.issue.owner,\n                repo: context.issue.repo,\n                issue_number: ${{ github.event.client_payload.github.payload.issue.number }} }\ngithub.rest.issues.createComment({...issue, body: 'promote til ${{ env.CLUSTER }} feilet'})\ngithub.rest.issues.addLabels({...issue, labels: ['deployment-failed','${{ env.CLUSTER }}']})        \n"
+      - name: Oppdater kommentar med deployment status
+        if: success()
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # ratchet:actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |-
+            const issue = { owner: context.issue.owner,
+                            repo: context.issue.repo,
+                            issue_number: ${{ github.event.client_payload.github.payload.issue.number }} }
+            github.rest.issues.createComment({...issue, body: 'promote til  ${{ env.CLUSTER }} utført'})
+            github.rest.issues.addLabels({...issue, labels: ['deployment','${{ env.CLUSTER }}']})
