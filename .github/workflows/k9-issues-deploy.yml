@@ -46,7 +46,12 @@ jobs:
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # ratchet:actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
-          script: "const issue = { owner: context.issue.owner,\n                repo: context.issue.repo,\n                issue_number: ${{ github.event.client_payload.github.payload.issue.number }} }\ngithub.rest.issues.createComment({...issue, body: 'promote til ${{ env.CLUSTER }} feilet'})\ngithub.rest.issues.addLabels({...issue, labels: ['deployment-failed','${{ env.CLUSTER }}']})        \n"
+          script: |
+            const issue = { owner: context.issue.owner,
+                            repo: context.issue.repo,
+                            issue_number: ${{ github.event.client_payload.github.payload.issue.number }} }
+            github.rest.issues.createComment({...issue, body: 'promote til ${{ env.CLUSTER }} feilet'})
+            github.rest.issues.addLabels({...issue, labels: ['deployment-failed','${{ env.CLUSTER }}']})
       - name: Oppdater kommentar med deployment status
         if: success()
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # ratchet:actions/github-script@v6
