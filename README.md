@@ -113,7 +113,7 @@ jobs:
 
 
 ### Package cleaner
-- Sletter eldre packages fra GHCR.io, beholder de <min-versions-to-keep> siste, default er 50.
+- Sletter eldre packages fra GHCR.io, beholder de <versionstokeep> siste, default er 50.
 ```
 name: Package cleaner
 on:
@@ -129,7 +129,7 @@ jobs:
     secrets: inherit
     with:
       package-name: <PACKAGE NAME>
-      min-versions-to-keep: 50
+      versionstokeep: 50
 ```
 
 
