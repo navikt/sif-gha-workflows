@@ -128,7 +128,7 @@ jobs:
       packages: write
     secrets: inherit
     with:
-      package-name: <PACKAGE NAME>
+      package: <PACKAGE NAME>
       versionstokeep: 50
 ```
 
