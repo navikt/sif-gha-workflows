@@ -5,6 +5,7 @@ SIF Reusable Github Actions Workflows
 
 * [Bygg Gradle projekt](#bygg-workflow-for-gradle-projekt)
 * [PR Gradle projekt](#pull-request-workflow-for-gradle-projekt)
+* [GHCR.io package cleaner](#package-cleaner)
 
 ---
 
@@ -109,6 +110,28 @@ jobs:
     with:
       readertoken: false
 ```
+
+
+### Package cleaner
+- Sletter eldre packages fra GHCR.io, beholder de <min-versions-to-keep> siste, default er 50.
+```
+name: Package cleaner
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  clean:
+    uses: navikt/sif-gha-workflows/.github/workflows/package-cleaner.yml@main
+    permissions:
+      packages: write
+    secrets: inherit
+    with:
+      package-name: <PACKAGE NAME>
+      min-versions-to-keep: 50
+```
+
 
 ---
 
