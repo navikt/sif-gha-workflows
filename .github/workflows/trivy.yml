@@ -30,7 +30,7 @@ jobs:
       - name: Pull docker image
         run: docker pull ${{ inputs.image }}
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@e602665a11b530ef6d75951b866d4eea32732be9 # ratchet:aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@559eb1224e654a86c844a795e6702a0742c60c72 # ratchet:aquasecurity/trivy-action@master
         with:
           image-ref: '${{ inputs.image }}'
           format: 'sarif'
