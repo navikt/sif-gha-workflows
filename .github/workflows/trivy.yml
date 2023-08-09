@@ -30,7 +30,7 @@ jobs:
       - name: Pull docker image
         run: docker pull ${{ inputs.image }}
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@e602665a11b530ef6d75951b866d4eea32732be9 # ratchet:aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@559eb1224e654a86c844a795e6702a0742c60c72 # ratchet:aquasecurity/trivy-action@master
         with:
           image-ref: '${{ inputs.image }}'
           format: 'sarif'
@@ -39,6 +39,6 @@ jobs:
           limit-severities-for-sarif: true
       - name: Upload results to GitHub Security
         if: inputs.upload-sarif
-        uses: github/codeql-action/upload-sarif@0ba4244466797eb048eb91a6cd43d5c03ca8bd05 # ratchet:github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@5b6282e01c62d02e720b81eb8a51204f527c3624 # ratchet:github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy.sarif'

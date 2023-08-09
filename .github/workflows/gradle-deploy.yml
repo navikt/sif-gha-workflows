@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # ratchet:actions/checkout@v3
       - name: Deploy til dev-${{ inputs.environment }}
-        uses: nais/deploy/actions/deploy@913eb0f92e9d132dbe0cbba3390a340675849f30 # ratchet:nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@eb4162c2b21b95a3f7a769d972165ea55e774631 # ratchet:nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-${{ inputs.environment }}
@@ -32,7 +32,7 @@ jobs:
           VARS: nais/dev-${{ inputs.environment }}.json
       - name: Deploy til prod-${{ inputs.environment }}
         if: ${{ inputs.deploy-prod }}
-        uses: nais/deploy/actions/deploy@913eb0f92e9d132dbe0cbba3390a340675849f30 # ratchet:nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@eb4162c2b21b95a3f7a769d972165ea55e774631 # ratchet:nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           RESOURCE: nais/naiserator.yaml
