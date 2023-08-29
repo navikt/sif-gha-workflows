@@ -12,9 +12,9 @@ jobs:
     name: Analyze code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # ratchet:actions/checkout@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # ratchet:actions/checkout@v3
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@a09933a12a80f87b87005513f0abb1494c27a716 # ratchet:github/codeql-action/init@v2
+        uses: github/codeql-action/init@00e563ead9f72a8461b24876bee2d0c2e8bd2ee8 # ratchet:github/codeql-action/init@v2
         with:
           languages: ${{ inputs.language }}
           config-file: ${{ inputs.config-file }}
@@ -39,8 +39,8 @@ jobs:
           mvn versions:set -DnewVersion="${{ steps.generate-build-version.outputs.build-version }}" -s settings.xml -q -e -B
           mvn install -s settings.xml -q -e -B -DskipTests
       - name: Autobuild
-        uses: github/codeql-action/autobuild@a09933a12a80f87b87005513f0abb1494c27a716 # ratchet:github/codeql-action/autobuild@v2
+        uses: github/codeql-action/autobuild@00e563ead9f72a8461b24876bee2d0c2e8bd2ee8 # ratchet:github/codeql-action/autobuild@v2
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@a09933a12a80f87b87005513f0abb1494c27a716 # ratchet:github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@00e563ead9f72a8461b24876bee2d0c2e8bd2ee8 # ratchet:github/codeql-action/analyze@v2
         with:
           category: "/language:${{ inputs.language }}"
