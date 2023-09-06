@@ -13,7 +13,7 @@ jobs:
       pull-requests: read # allows SonarCloud to decorate PRs with analysis results
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # ratchet:actions/checkout@v3
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # ratchet:actions/checkout@v3
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
       - uses: actions/setup-java@cd89f46ac9d01407894225f350157564c9c7cee2 # ratchet:actions/setup-java@v3

@@ -21,7 +21,7 @@ jobs:
       id-token: write # for nais/login
       actions: read # for private repositories
     steps:
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # ratchet:actions/checkout@v3.6.0
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # ratchet:actions/checkout@v4.0.0
       - uses: nais/login@104bca34b70d1d00fe837bcd0689633978eca744 # ratchet:nais/login@v0
         with:
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
@@ -30,7 +30,7 @@ jobs:
       - name: Pull docker image
         run: docker pull ${{ inputs.image }}
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@559eb1224e654a86c844a795e6702a0742c60c72 # ratchet:aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@fbd16365eb88e12433951383f5e99bd901fc618f # ratchet:aquasecurity/trivy-action@master
         with:
           image-ref: '${{ inputs.image }}'
           format: 'sarif'
