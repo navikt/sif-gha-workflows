@@ -84,7 +84,7 @@ jobs:
     with:
       image: ${{ needs.build.outputs.image }}
       environment: gcp
-      deploy-prod: true
+      deploy-prod: ${{ startsWith(github.ref, 'refs/heads/master') }}
 ```
 
 ### Pull request-workflow for Gradle projekt
