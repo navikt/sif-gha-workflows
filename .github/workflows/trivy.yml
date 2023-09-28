@@ -21,7 +21,7 @@ jobs:
       id-token: write # for nais/login
       actions: read # for private repositories
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # ratchet:actions/checkout@v4.0.0
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # ratchet:actions/checkout@v4.1.0
       - uses: nais/login@104bca34b70d1d00fe837bcd0689633978eca744 # ratchet:nais/login@v0
         with:
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
@@ -39,6 +39,6 @@ jobs:
           limit-severities-for-sarif: true
       - name: Upload results to GitHub Security
         if: inputs.upload-sarif
-        uses: github/codeql-action/upload-sarif@00e563ead9f72a8461b24876bee2d0c2e8bd2ee8 # ratchet:github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@ddccb873888234080b77e9bc2d4764d5ccaaccf9 # ratchet:github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy.sarif'
