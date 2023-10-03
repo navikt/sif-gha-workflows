@@ -30,21 +30,21 @@ jobs:
     outputs:
       image: ${{ steps.docker-push.outputs.image }}
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # ratchet:actions/checkout@v3
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # ratchet:actions/checkout@v3
       - uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4 # ratchet:gradle/wrapper-validation-action@v1
-      - uses: actions/setup-java@cd89f46ac9d01407894225f350157564c9c7cee2 # ratchet:actions/setup-java@v3
+      - uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # ratchet:actions/setup-java@v3
         with:
           java-version: 17
           distribution: corretto
           cache: gradle
-      - uses: gradle/gradle-build-action@ef76a971e2fa3f867b617efd72f2fbd72cf6f8bc # ratchet:gradle/gradle-build-action@v2.8.0
+      - uses: gradle/gradle-build-action@842c587ad8aa4c68eeba24c396e15af4c2e9f30a # ratchet:gradle/gradle-build-action@v2.9.0
         env:
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath # Eksluderer test dependencies
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
         with:
           dependency-graph: generate-and-submit
           arguments: ${{ inputs.buildcommand }}
-      - uses: nais/docker-build-push@c1d05d5a796be7b24d59a2e76851acdcdbcaff7a # ratchet:nais/docker-build-push@v0
+      - uses: nais/docker-build-push@3257289fd8cb0018ce0bda55db86ee54c21669b1 # ratchet:nais/docker-build-push@v0
         id: docker-push
         with:
           byosbom: dependency-graph-reports/build-build.json # (workflow name)-(github job name).json
