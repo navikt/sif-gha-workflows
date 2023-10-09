@@ -50,6 +50,7 @@ jobs:
           byosbom: dependency-graph-reports/build-build.json # (workflow name)-(github job name).json
           team: ${{ inputs.team }}
           push_image: true
+          tag: latest
           pull: true
           dockerfile: Dockerfile
           docker_context: ${{ inputs.dockercontext }}
