@@ -32,7 +32,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@ddccb873888234080b77e9bc2d4764d5ccaaccf9 # ratchet:github/codeql-action/init@v2
         with:
-          languages: ${{ inputs.language }}
+          languages: java
       - name: Set up Java
         uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # ratchet:actions/setup-java@v3
         with:
