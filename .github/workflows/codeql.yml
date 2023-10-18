@@ -12,7 +12,7 @@ jobs:
     name: Analyze code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # ratchet:actions/checkout@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v3
       - name: Initialize CodeQL
         uses: github/codeql-action/init@ddccb873888234080b77e9bc2d4764d5ccaaccf9 # ratchet:github/codeql-action/init@v2
         with:
