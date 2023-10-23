@@ -26,14 +26,14 @@ jobs:
           cache: gradle
       - name: Run snapshot action, single module
         if: inputs.multi-module == false
-        uses: mikepenz/gradle-dependency-submission@91b021ee7e1ec04cb057c055cc80c5124e70242c
+        uses: mikepenz/gradle-dependency-submission@03725509c6bfb27fc9c924fbe5d38a7d3c82e1b5
         with:
           fail-on-error: true
           gradle-build-configuration: |-
             compileClasspath
       - name: Run snapshot action, multi module support
         if: inputs.multi-module == true
-        uses: mikepenz/gradle-dependency-submission@91b021ee7e1ec04cb057c055cc80c5124e70242c
+        uses: mikepenz/gradle-dependency-submission@03725509c6bfb27fc9c924fbe5d38a7d3c82e1b5
         with:
           fail-on-error: true
           gradle-build-module: :${{ inputs.module-name }}
