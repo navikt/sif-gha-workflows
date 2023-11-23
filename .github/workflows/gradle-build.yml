@@ -47,7 +47,6 @@ jobs:
       - uses: nais/docker-build-push@3257289fd8cb0018ce0bda55db86ee54c21669b1 # ratchet:nais/docker-build-push@v0
         id: docker-push
         with:
-          byosbom: dependency-graph-reports/build-build.json # (workflow name)-(github job name).json
           team: ${{ inputs.team }}
           push_image: true
           tag: latest
