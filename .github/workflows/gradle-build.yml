@@ -18,10 +18,6 @@ on:
         required: false
         type: string
         default: --configuration-cache build shadowjar -x test
-      cyclonedx:
-        required: false
-        type: boolean
-        default: false
     outputs:
       image:
         value: ${{ jobs.build.outputs.image }}
@@ -59,15 +55,3 @@ jobs:
           docker_context: ${{ inputs.dockercontext }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
-          salsa: ${{ inputs.cyclonedx == 'false' }} # Skip salsa if cyclonedx is enabled
-
-      # Generate and submit SBOM if cyclonedx is enabled
-      # Requires that org.cyclonedx.bom plugin is enabled in build.gradle.kts
-      - name: Generate and output SBOM
-        if: inputs.cyclonedx
-        run: ./gradlew cyclonedxBom
-      - uses: nais/attest-sign@v1
-        if: inputs.cyclonedx
-        with:
-          image_ref: ${{ steps.docker-push.outputs.image }}
-          sbom: build/reports/bom.json
