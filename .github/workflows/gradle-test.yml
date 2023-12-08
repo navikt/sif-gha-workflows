@@ -25,6 +25,15 @@ jobs:
           distribution: corretto
           cache: gradle
       - name: run test command
-        run: ${{ inputs.buildcommand }}
+        run: ${{ inputs.buildcommand }}
         env:
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
+      - name: Upload build reports & test-results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: build-reports
+          path: |
+            **/build/reports/
+            **/build/test-results/
+          retention-days: 1
