@@ -26,4 +26,4 @@ jobs:
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
         with:
           dependency-graph: generate-and-submit
-          arguments: build
+          arguments: build -x test
