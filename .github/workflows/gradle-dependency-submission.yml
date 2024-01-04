@@ -2,41 +2,28 @@ name: Gradle Dependency Submission
 on:
   workflow_call:
     inputs:
-      module-name:
-        required: false
-        type: string
-        description: Navn på gradle module
-        default: ''
-      multi-module:
+      readertoken:
         required: false
         type: boolean
         default: false
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
-  scan:
+  build:
+    permissions:
+      contents: write # for dependency submission
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # ratchet:actions/setup-java@v3
+      - uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4 # ratchet:gradle/wrapper-validation-action@v1
+      - uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # ratchet:actions/setup-java@v3
         with:
           java-version: 17
           distribution: corretto
           cache: gradle
-      - name: Run snapshot action, single module
-        if: inputs.multi-module == false
-        uses: mikepenz/gradle-dependency-submission@03725509c6bfb27fc9c924fbe5d38a7d3c82e1b5
+      - uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2 # ratchet:gradle/gradle-build-action@v2.11.1
+        env:
+          DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath # Eksluderer test dependencies
+          GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
         with:
-          fail-on-error: true
-          gradle-build-configuration: |-
-            compileClasspath
-      - name: Run snapshot action, multi module support
-        if: inputs.multi-module == true
-        uses: mikepenz/gradle-dependency-submission@03725509c6bfb27fc9c924fbe5d38a7d3c82e1b5
-        with:
-          fail-on-error: true
-          gradle-build-module: :${{ inputs.module-name }}
-          sub-module-mode: INDIVIDUAL
-          gradle-build-configuration: |-
-            compileClasspath
+          dependency-graph: generate-and-submit
+          arguments: build
