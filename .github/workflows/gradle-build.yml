@@ -18,6 +18,10 @@ on:
         required: false
         type: string
         default: --configuration-cache build shadowjar -x test
+      javaversion:
+        required: false
+        type: string
+        default: 17
     outputs:
       image:
         value: ${{ jobs.build.outputs.image }}
