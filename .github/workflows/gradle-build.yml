@@ -18,6 +18,10 @@ on:
         required: false
         type: string
         default: --configuration-cache build shadowjar -x test
+      javaversion:
+        required: false
+        type: string
+        default: 17
     outputs:
       image:
         value: ${{ jobs.build.outputs.image }}
@@ -34,7 +38,7 @@ jobs:
       - uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4 # ratchet:gradle/wrapper-validation-action@v1
       - uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # ratchet:actions/setup-java@v3
         with:
-          java-version: 17
+          java-version: ${{ inputs.javaversion }}
           distribution: corretto
           cache: gradle
       - uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2 # ratchet:gradle/gradle-build-action@v2.11.1
