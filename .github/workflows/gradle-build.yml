@@ -41,14 +41,14 @@ jobs:
           java-version: ${{ inputs.javaversion }}
           distribution: corretto
           cache: gradle
-      - uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa # ratchet:gradle/gradle-build-action@v2.12.0
+      - uses: gradle/gradle-build-action@3b1b3b9a2104c2b47fbae53f3938079c00c9bb87 # ratchet:gradle/gradle-build-action@v3.0.0
         env:
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath # Eksluderer test dependencies
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
         with:
           dependency-graph: generate-and-submit
           arguments: ${{ inputs.buildcommand }}
-      - uses: nais/docker-build-push@1d8fa37371227a83cc5f1f491d528f572341eb09 # ratchet:nais/docker-build-push@v0
+      - uses: nais/docker-build-push@14cd7a0a656477da33aa7d627123330990ef3807 # ratchet:nais/docker-build-push@v0
         id: docker-push
         with:
           team: ${{ inputs.team }}

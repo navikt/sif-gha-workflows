@@ -24,7 +24,7 @@ jobs:
           java-version: ${{ inputs.javaversion }}
           distribution: corretto
           cache: gradle
-      - uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa # ratchet:gradle/gradle-build-action@v2.12.0
+      - uses: gradle/gradle-build-action@3b1b3b9a2104c2b47fbae53f3938079c00c9bb87 # ratchet:gradle/gradle-build-action@v3.0.0
         env:
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath # Eksluderer test dependencies
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
