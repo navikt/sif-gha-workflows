@@ -99,19 +99,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup java and maven
-        uses: navikt/sif-gha-workflows/.github/actions/setup-java-and-maven@main # ratchet:exclude
+        uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
         with:
           github-token: ${{ (github.actor != 'dependabot[bot]' && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
           java-version: ${{ inputs.java-version }}
       - name: Maven install and test
         id: build-and-test
-        uses: navikt/sif-gha-workflows/.github/actions/build-maven-application@main # ratchet:exclude
+        uses: navikt/sif-gha-workflows/.github/actions/maven/build-maven-application@main # ratchet:exclude
         with:
           t-2c: ${{ inputs.t-2c }}
           skip-tests: ${{ inputs.skip-tests }}
       - name: Bygg og push docker image
         if: inputs.build-image
-        uses: navikt/sif-gha-workflows/.github/actions/build-push-docker-image@main # ratchet:exclude
+        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@main # ratchet:exclude
         with:
           build-version: ${{ steps.build-and-test.outputs.build-version }}
           push-image: ${{ inputs.push-image }}
