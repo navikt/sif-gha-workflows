@@ -1,0 +1,33 @@
+name: 'Setup Java and Maven'
+description: 'Setup Java and Maven for pipeline'
+inputs:
+  github-token:
+    description: 'Token used to reach maven.pkg.github.com'
+    required: true
+  java-version:
+    description: 'Java SDK version to use'
+    required: false
+    default: '21'
+  maven-version:
+    description: 'Maven version to use'
+    required: false
+    default: '3.9.5'
+runs:
+  using: "composite"
+  steps:
+    - name: Create maven .m2 settings
+      uses: whelk-io/maven-settings-xml-action@7c60eb95b2d5ec18f2e0e29f34c9ed69475e7a96
+      with:
+        repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
+        servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ inputs.github-token }}" }]'
+        output_file: 'settings.xml'
+    - name: Set up JDK-${{ inputs.java-version }} with cache
+      uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # ratchet:actions/setup-java@v3
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: 'temurin'
+        cache: 'maven'
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
+      with:
+        maven-version: ${{ inputs.maven-version }}

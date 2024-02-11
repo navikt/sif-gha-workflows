@@ -1,0 +1,123 @@
+name: Build app
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        required: false
+        type: string
+        description: Miljø versjon som skal brukes til bygg.
+        default: 'ubuntu-latest'
+      t-2c:
+        required: false
+        type: string
+        description: Tråd konfig til maven.
+        default: ''
+      skip-tests:
+        type: boolean
+        required: false
+        description: 'Skip tests'
+        default: false
+      java-version:
+        required: false
+        type: string
+        description: Java SDK versjon som skal brukes.
+        default: '17'
+      sonar-scan:
+        required: false
+        type: boolean
+        description: Skal sonar scan brukes?
+        default: false
+      build-image:
+        required: false
+        type: boolean
+        description: Skal docker image bygges?
+        default: true
+      push-image:
+        required: false
+        type: boolean
+        description: Skal docker image pushes?
+        default: false
+      namespace:
+        required: false
+        type: string
+        description: "NAV team"
+        default: "k9saksbehandling"
+      db_schema:
+        required: false
+        type: string
+        description: "Database navn for test"
+        default: "k9"
+    outputs:
+      build-version:
+        description: "Build version"
+        value: ${{ jobs.build-and-test.outputs.build-version }}
+jobs:
+  build-and-test:
+    name: Build and test
+    permissions:
+      contents: read
+      id-token: write
+
+    runs-on: ${{ (github.actor == 'dependabot[bot]' && 'ubuntu-latest') || inputs.runs-on }}
+
+    env:
+      TZ: "Europe/Oslo"
+
+    outputs:
+      build-version: ${{ steps.build-and-test.outputs.build-version }}
+
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        with:
+          fetch-depth: 0 # checkout gir shallow copy - fetch-depth: 0 vil tilgjengeliggjøre tags
+      - name: Init postgres
+        env:
+          DB_SCHEMA: ${{ inputs.db_schema}}
+        run: |
+          export PGPASSWORD='postgres'
+          psql -h localhost -p 5432 -U 'postgres' <<EOSQL
+            CREATE DATABASE $DB_SCHEMA;
+            CREATE USER $DB_SCHEMA WITH PASSWORD '$DB_SCHEMA';
+            GRANT ALL PRIVILEGES ON DATABASE k9sak_unit TO $DB_SCHEMA;
+            ALTER DATABASE $DB_SCHEMA SET timezone TO 'Europe/Oslo';
+            \connect $DB_SCHEMA;
+            create extension if not exists btree_gist;
+          EOSQL
+      - name: Login to GitHub Packages Docker Registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup java and maven
+        uses: navikt/sif-gha-workflows/.github/actions/setup-java-and-maven@main # ratchet:exclude
+        with:
+          github-token: ${{ (github.actor != 'dependabot[bot]' && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
+          java-version: ${{ inputs.java-version }}
+      - name: Maven install and test
+        id: build-and-test
+        uses: navikt/sif-gha-workflows/.github/actions/build-maven-application@main # ratchet:exclude
+        with:
+          t-2c: ${{ inputs.t-2c }}
+          skip-tests: ${{ inputs.skip-tests }}
+      - name: Bygg og push docker image
+        if: inputs.build-image
+        uses: navikt/sif-gha-workflows/.github/actions/build-push-docker-image@main # ratchet:exclude
+        with:
+          build-version: ${{ steps.build-and-test.outputs.build-version }}
+          push-image: ${{ inputs.push-image }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          namespace: ${{ inputs.namespace }}
+      - name: Clean up generated stuff before caching
+        run: |
+          rm ~/.m2/repository/no/nav/k9 -r

@@ -1,43 +1,38 @@
 name: Maven Dependency Submission
 on:
   workflow_call:
+    inputs:
+      java-version:
+        required: false
+        type: string
+        description: Java SDK versjon som skal brukes.
+        default: '17'
 jobs:
   scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v3
-      - uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # ratchet:actions/setup-java@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - name: Setup java and maven
+        uses: navikt/sif-gha-workflows/.github/actions/setup-java-and-maven@main # ratchet:exclude
         with:
-          java-version: 17
-          distribution: temurin
-          cache: maven
-      - name: Create m2-settings with private repository access
-        uses: whelk-io/maven-settings-xml-action@7c60eb95b2d5ec18f2e0e29f34c9ed69475e7a96
-        with:
-          repositories: |
-            [
-              {
-                "id": "central",
-                "name": "Maven Central",
-                "url": "https://repo.maven.apache.org/maven2"
-              },
-              {
-                "id": "github",
-                "name": "github",
-                "url": "https://maven.pkg.github.com/${{ github.repository }}"
-              }
-            ]
-          servers: |
-            [
-              {
-                "id": "github",
-                "password": "${{ secrets.READER_TOKEN }}",
-                "username": "${{ github.actor }}"
-              }
-            ]
-          output_file: m2-settings.xml
+          github-token: ${{ (github.actor != 'dependabot[bot]' && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
+          java-version: ${{ inputs.java-version }}
+      - name: Generate build version
+        id: generate-build-version
+        shell: bash
+        run: echo "build-version=$(date +%Y.%m.%d.%H%M%S)-$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+      - name: Print build version
+        shell: bash
+        run: echo "Generated build-version is ${{ steps.generate-build-version.outputs.build-version }}"
+      - name: Build artifacts
+        shell: bash
+        run: |
+          echo "Building artifacts ${{ steps.generate-build-version.outputs.build-version }}"
+          mvn versions:set -DnewVersion="${{ steps.generate-build-version.outputs.build-version }}" -s settings.xml -q -e -B
       - name: Submit Dependency Snapshot to Github Security
-        uses: advanced-security/maven-dependency-submission-action@ed72a3242c5331913886b41ca9ea66c9195ebdaa
+        uses: advanced-security/maven-dependency-submission-action@fcd7eab6b6d22946badc98d1e62665cdee93e0ae
         with:
-          settings-file: m2-settings.xml
+          settings-file: settings.xml
           maven-args: -DskipTests
