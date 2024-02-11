@@ -46,7 +46,6 @@ on:
         required: false
         type: string
         description: "Database navn for test"
-        default: "k9"
     outputs:
       build-version:
         description: "Build version"
@@ -80,16 +79,18 @@ jobs:
         with:
           fetch-depth: 0 # checkout gir shallow copy - fetch-depth: 0 vil tilgjengeliggjøre tags
       - name: Init postgres
+        if: inputs.db_schema
+        shell: bash
         env:
           DB_SCHEMA: ${{ inputs.db_schema}}
         run: |
           export PGPASSWORD='postgres'
           psql -h localhost -p 5432 -U 'postgres' <<EOSQL
-            CREATE DATABASE $DB_SCHEMA;
-            CREATE USER $DB_SCHEMA WITH PASSWORD '$DB_SCHEMA';
-            GRANT ALL PRIVILEGES ON DATABASE k9sak_unit TO $DB_SCHEMA;
-            ALTER DATABASE $DB_SCHEMA SET timezone TO 'Europe/Oslo';
-            \connect $DB_SCHEMA;
+            CREATE DATABASE ${{ env.DB_SCHEMA }};
+            CREATE USER ${{ env.DB_SCHEMA }} WITH PASSWORD '${{ env.DB_SCHEMA }}';
+            GRANT ALL PRIVILEGES ON DATABASE ${{ env.DB_SCHEMA }} TO ${{ env.DB_SCHEMA }};
+            ALTER DATABASE ${{ env.DB_SCHEMA }} SET timezone TO 'Europe/Oslo';
+            \connect ${{ env.DB_SCHEMA }};
             create extension if not exists btree_gist;
           EOSQL
       - name: Login to GitHub Packages Docker Registry
