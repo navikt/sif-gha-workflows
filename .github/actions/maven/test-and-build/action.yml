@@ -9,6 +9,10 @@ inputs:
     description: 'Skip tests'
     required: false
     default: 'false'
+  db_schema:
+    required: false
+    type: string
+    description: "Database navn for test"
 outputs:
   build-version:
     description: "Build version"
