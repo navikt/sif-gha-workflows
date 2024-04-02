@@ -107,6 +107,7 @@ jobs:
         id: build-and-test
         env:
           DB_SCHEMA: ${{ inputs.db_schema}}
+          POSTGRES_PASSWORD: ${{ inputs.db_schema }}
         uses: navikt/sif-gha-workflows/.github/actions/maven/test-and-build@main # ratchet:exclude
         with:
           t-2c: ${{ inputs.t-2c }}
