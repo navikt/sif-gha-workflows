@@ -109,6 +109,7 @@ jobs:
         with:
           t-2c: ${{ inputs.t-2c }}
           skip-tests: ${{ inputs.skip-tests }}
+          db_schema: ${{ inputs.db_schema }}
       - name: Bygg og push docker image
         if: inputs.build-image
         uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@main # ratchet:exclude
