@@ -1,0 +1,137 @@
+name: Tester saksbehandling (reusable)
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        description: 'Docker tag (from repository)'
+        required: true
+
+jobs:
+  run_tests:
+    name: Tests
+    runs-on: ubuntu-latest-8-cores
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [pleiepenger, livetssluttfase, annet]
+    outputs:
+      pleiepenger: ${{ steps.pleiepenger.outputs.test_result }}
+      livetssluttfase: ${{ steps.livetssluttfase.outputs.test_result }}
+      annet: ${{ steps.annet.outputs.test_result }}
+    steps:
+      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@master
+        id: pleiepenger
+        if: contains(matrix.suite, 'pleiepenger')
+        with:
+          apps: 'k9-sak k9-formidling'
+          test_suite: pleiepenger
+          test_groups: "-Dgroups=pleiepenger '-Dtest=!PleiepengerLoggTest'"
+          log_groups: "-Dgroups=etter-pleiepenger"
+          # Composite actions arver ikke secrets så vi må få dem in som input
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reader-token: ${{ secrets.READER_TOKEN }}
+          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@master
+        id: livetssluttfase
+        if: contains(matrix.suite, 'livetssluttfase')
+        with:
+          apps: 'k9-sak k9-formidling'
+          test_suite: livetssluttfase
+          test_groups: "-Dgroups=livetssluttfase"
+          log_groups: "-Dgroups=etter-livetssluttfase"
+          # Composite actions arver ikke secrets så vi må få dem in som input
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reader-token: ${{ secrets.READER_TOKEN }}
+          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@master
+        id: annet
+        if: contains(matrix.suite, 'annet')
+        with:
+          apps: 'k9-sak k9-formidling'
+          test_suite: annet
+          test_groups: "-DexcludedGroups=frontendtest,frontendtest-los,pleiepenger,livetssluttfase,klage,tilbakekreving,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter"
+          log_groups: "-Dgroups=etter"
+          # Composite actions arver ikke secrets så vi må få dem in som input
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reader-token: ${{ secrets.READER_TOKEN }}
+          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+
+  run_frontend_tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest-8-cores
+    timeout-minutes: 30
+    outputs:
+      frontend: ${{ steps.test.outputs.test_result }}
+    steps:
+      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-frontend-test@master
+        id: test
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reader-token: ${{ secrets.READER_TOKEN }}
+          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+
+  slack:
+    name: Sender slack melding
+    if: ${{ always() && !cancelled() }}
+    needs: [run_tests, run_frontend_tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setter outcome
+        run: |
+          if [[ ${{ needs.run_tests.outputs.pleiepenger }} == 'success' &&
+                ${{ needs.run_tests.outputs.livetssluttfase }} == 'success' &&
+                ${{ needs.run_tests.outputs.annet }} == 'success' &&
+                ${{ needs.run_frontend_tests.outputs.frontend }} == 'success'
+          ]]; then
+            echo "SLACK_TITLE=Verdikjeden er kjørt UTEN feil :rocket:" >> $GITHUB_ENV
+          else
+            echo "SLACK_TITLE=Verdikjeden er brukket :boom:" >> $GITHUB_ENV
+          fi
+
+      - name: Bygger opp slack melding
+        run: |
+          function echoStatus() {
+            if [[ "$2" == 'success' ]]; then
+              echo ":heavy_check_mark:  $1"
+            elif [[ "$2" == 'stack_not_started' ]]; then
+              echo ":boom:  $1"
+            else
+              echo ":x:  $1"
+            fi
+          }
+          echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
+          echo >> $GITHUB_ENV
+          echoStatus Pleiepenger ${{ needs.run_tests.outputs.pleiepenger }}  >> $GITHUB_ENV
+          echoStatus "Livets sluttfase" ${{ needs.run_tests.outputs.livetssluttfase }}  >> $GITHUB_ENV
+          echoStatus Frontend ${{ needs.run_frontend_tests.outputs.frontend }} >> $GITHUB_ENV
+          echoStatus "Omsorgspenger og annet" ${{ needs.run_tests.outputs.annet }}  >> $GITHUB_ENV
+          echo >> $GITHUB_ENV
+          echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
+          echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
+          echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
+          echo '\n' >> $GITHUB_ENV
+
+        # https://api.slack.com/block-kit
+      - name: Slack Notification
+        run: >
+          curl -X POST
+          -H 'Content-type: application/json'
+          --data '{"blocks": [
+            {
+              "type": "header",
+              "text": {"type": "plain_text", "text": "${{ env.SLACK_TITLE }}"}
+            },
+            {
+              "type": "section",
+              "text": {"type": "mrkdwn", "text": "${{ env.SLACK_MESSAGE }}"}
+            }
+          ]}'
+          ${{ secrets.SLACKBOT_WEBHOOK }}
