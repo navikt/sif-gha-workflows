@@ -21,7 +21,7 @@ jobs:
       livetssluttfase: ${{ steps.livetssluttfase.outputs.test_result }}
       annet: ${{ steps.annet.outputs.test_result }}
     steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@master
+      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@main
         id: pleiepenger
         if: contains(matrix.suite, 'pleiepenger')
         with:
@@ -35,7 +35,7 @@ jobs:
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
-      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@master
+      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@main
         id: livetssluttfase
         if: contains(matrix.suite, 'livetssluttfase')
         with:
@@ -49,7 +49,7 @@ jobs:
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
-      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@master
+      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@main
         id: annet
         if: contains(matrix.suite, 'annet')
         with:
@@ -70,7 +70,7 @@ jobs:
     outputs:
       frontend: ${{ steps.test.outputs.test_result }}
     steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-frontend-test@master
+      - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-frontend-test@main
         id: test
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
