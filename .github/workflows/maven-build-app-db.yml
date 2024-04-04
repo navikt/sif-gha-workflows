@@ -46,6 +46,11 @@ on:
         required: false
         type: string
         description: "Database navn for test"
+      pg_version:
+        required: false
+        type: string
+        description: "Database navn for test"
+        default: 15
     outputs:
       build-version:
         description: "Build version"
@@ -59,7 +64,7 @@ jobs:
     runs-on: ${{ (github.actor == 'dependabot[bot]' && 'ubuntu-latest') || inputs.runs-on }}
     services:
       postgres:
-        image: index.docker.io/library/postgres:15
+        image: index.docker.io/library/postgres:${{ inputs.pg_version }}
         env:
           POSTGRES_USER: ${{ inputs.db_schema }}
           POSTGRES_PASSWORD: ${{ inputs.db_schema }}
