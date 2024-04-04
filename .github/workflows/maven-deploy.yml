@@ -77,5 +77,5 @@ jobs:
           PRINT_PAYLOAD: true
           CLUSTER: ${{ inputs.cluster }}
           IMAGE: ${{ steps.login.outputs.registry }}/${{ github.repository }}${{ inputs.image_suffix }}:${{ inputs.image }}
-          RESOURCE: nais/${{ inputs.naiserator_file }}
+          RESOURCE: ${{ inputs.naiserator_file }}
           VARS: nais/${{ inputs.cluster }}.json
