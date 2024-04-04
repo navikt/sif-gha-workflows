@@ -24,7 +24,7 @@ on:
         required: false
         type: string
         description: 'The naiserator.yaml file name in .deploy/ to use'
-        default: 'naiserator.yaml'
+        default: 'nais/naiserator.yaml'
       deploy_context:
         required: false
         type: string
@@ -60,7 +60,7 @@ jobs:
         env:
           PRINT_PAYLOAD: true
           CLUSTER: ${{ inputs.cluster }}
-          RESOURCE: nais/${{ inputs.naiserator_file }}
+          RESOURCE: ${{ inputs.naiserator_file }}
           VARS: nais/${{ inputs.cluster }}.json
       - name: Login GAR
         uses: nais/login@557ec71a21c53ce9a8f672e1889997d2d564bd8c # ratchet:nais/login@v0
