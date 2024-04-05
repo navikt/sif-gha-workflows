@@ -88,7 +88,7 @@ jobs:
         env:
           DB_SCHEMA: ${{ inputs.db_schema}}
         run: |
-          export PGPASSWORD='postgres'
+          export PGPASSWORD='${{ env.DB_SCHEMA }}'
           psql -h localhost -p 5432 -U ${{ env.DB_SCHEMA }} <<EOSQL
             CREATE DATABASE ${{ env.DB_SCHEMA }};
             CREATE USER ${{ env.DB_SCHEMA }} WITH PASSWORD '${{ env.DB_SCHEMA }}';
