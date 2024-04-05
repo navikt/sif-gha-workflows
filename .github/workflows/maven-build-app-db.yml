@@ -83,6 +83,20 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           fetch-depth: 0 # checkout gir shallow copy - fetch-depth: 0 vil tilgjengeliggjøre tags
+      - name: Init postgres database
+        shell: bash
+        env:
+          DB_SCHEMA: ${{ inputs.db_schema}}
+        run: |
+          export PGPASSWORD='postgres'
+          psql -h localhost -p 5432 -U ${{ env.DB_SCHEMA }} <<EOSQL
+            CREATE DATABASE ${{ env.DB_SCHEMA }};
+            CREATE USER ${{ env.DB_SCHEMA }} WITH PASSWORD '${{ env.DB_SCHEMA }}';
+            GRANT ALL PRIVILEGES ON DATABASE ${{ env.DB_SCHEMA }} TO ${{ env.DB_SCHEMA }};
+            ALTER DATABASE ${{ env.DB_SCHEMA }} SET timezone TO 'Europe/Oslo';
+            \connect ${{ env.DB_SCHEMA }};
+            create extension if not exists btree_gist;
+          EOSQL
       - name: Login to GitHub Packages Docker Registry
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
         with:
