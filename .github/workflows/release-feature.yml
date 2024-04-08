@@ -1,0 +1,55 @@
+name: Release feature
+on:
+  workflow_call:
+    inputs:
+      release-version:
+        required: true
+        type: string
+        description: 'The release version.'
+      java-version:
+        required: false
+        type: string
+        description: 'Java SDK versjon som skal brukes.'
+        default: '21'
+      mvn-projects:
+        required: false
+        type: string
+        description: 'Comma-delimited list of specified reactor projects to build instead of all projects.'
+        default: ''
+      release-profiles:
+        required: false
+        type: string
+        description: 'Profiles which should be used when releasing an artifact.'
+        default: '-Pdeploy'
+      release-branch:
+        required: false
+        type: string
+        description: 'Hvilken branch skal releases. Default master.'
+        default: 'master'
+      release-file:
+        required: false
+        type: string
+        description: 'Hvilken pom.xml fil skal releases. Default empty.'
+        default: ''
+jobs:
+  build:
+    name: Release
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # ratchet:actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release-branch }}
+      - name: Setup java and maven
+        uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          java-version: ${{ inputs.java-version }}
+      - name: Publish artifacts
+        run: |
+          mvn -B -s settings.xml versions:set -DnewVersion=${{ inputs.release-version }} ${{ inputs.release-file }}
+          mvn -B -s settings.xml -DskipTests clean deploy ${{ inputs.mvn-projects }} ${{ inputs.release-profiles }} ${{ inputs.release-file }}
