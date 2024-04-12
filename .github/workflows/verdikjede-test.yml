@@ -6,6 +6,11 @@ on:
         type: string
         description: 'Docker tag (from repository)'
         required: true
+      reader-token:
+        type: string
+        description: 'Token for setting up settings.xml for internal packages'
+        required: false
+        default: ${{ secrets.READER_TOKEN }}
 
 jobs:
   run_tests:
@@ -31,7 +36,7 @@ jobs:
           log_groups: "-Dgroups=etter-pleiepenger"
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          reader-token: ${{ secrets.READER_TOKEN }}
+          reader-token: ${{ inputs.reader-token }}
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
@@ -45,7 +50,7 @@ jobs:
           log_groups: "-Dgroups=etter-livetssluttfase"
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          reader-token: ${{ secrets.READER_TOKEN }}
+          reader-token: ${{ inputs.reader-token }}
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
@@ -59,7 +64,7 @@ jobs:
           log_groups: "-Dgroups=etter"
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          reader-token: ${{ secrets.READER_TOKEN }}
+          reader-token: ${{ inputs.reader-token }}
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
@@ -74,7 +79,7 @@ jobs:
         id: test
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          reader-token: ${{ secrets.READER_TOKEN }}
+          reader-token: ${{ inputs.reader-token }}
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
