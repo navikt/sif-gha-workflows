@@ -125,4 +125,4 @@ jobs:
           namespace: ${{ inputs.namespace }}
       - name: Clean up generated stuff before caching
         run: |
-          rm ~/.m2/repository/no/nav/k9 -r
+          rm ~/.m2/repository/no/nav -r
