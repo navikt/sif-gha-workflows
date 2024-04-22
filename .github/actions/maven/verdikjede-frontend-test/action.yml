@@ -100,6 +100,9 @@ runs:
         mkdir frontendtest-screenshots
         chmod 777 frontendtest-screenshots
         MED_FRONTENDTEST=true mvn clean verify --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml -Dgroups=frontendtest -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+      env:
+        GITHUB_USERNAME: ${{ github.actor }}
+        GITHUB_PASSWORD: ${{ inputs.reader-token }}
 
     - name: Utfører loggsjekker
       id: loggsjekker
@@ -107,6 +110,9 @@ runs:
       run: |
         cd verdikjede
         mvn test --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml -Dgroups=etter-frontendtest -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+      env:
+        GITHUB_USERNAME: ${{ github.actor }}
+        GITHUB_PASSWORD: ${{ inputs.reader-token }}
 
     - name: Henter testresultat og setter outcome
       id: outcome
