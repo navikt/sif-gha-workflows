@@ -55,6 +55,15 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - name: Compare prod to current sha and construct comparison url
+        id: compare_commits
+        run: |
+          REPO_NAME=$(echo ${{ github.repository }} | cut -d '/' -f 2)
+          PROD_SHA=$(gh api graphql -f owner='${{ github.repository_owner }}' -f name='${REPO_NAME}' -f deployment_env='${{ env.PROD_ENV }}' -f query='query($owner: String!, $name: String!, $deployment_env: String!) { repository(owner: $owner, name: $name) { deployments(environments: [$deployment_env], orderBy: {field: CREATED_AT, direction: DESC}, first: 50) {edges { node { commit { oid } state }}}}}' | jq ' .data.repository.deployments.edges[] | select(.node.state == "ACTIVE") | .node.commit.oid')
+          url="https://github.com/${{ github.repository }}/compare/${{ PROD_SHA }}...${{ GITHUB_SHA }}" >> $GITHUB_OUTPUT
+          echo "Diff mot prod: <${url}>" >> $GITHUB_STEP_SUMMARY
+        env:
+          PROD_ENV: "${{ inputs.cluster }}:${{ inputs.namespace }}"
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ (inputs.branch != '' && inputs.branch) || '' }}
