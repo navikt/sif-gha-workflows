@@ -53,6 +53,7 @@ jobs:
     if: contains(inputs.cluster, 'prod')
     permissions:
       contents: read
+      deployments: read
     outputs:
       output1: ${{ steps.compare_commits.LAST_DEPLOY_SHA }}
     steps:
