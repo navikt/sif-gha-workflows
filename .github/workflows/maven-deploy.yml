@@ -47,13 +47,13 @@ on:
 env:
   IMAGE: ${{ inputs.image }} # Brukes i naiserator.yaml
 jobs:
-  deploy:
-    name: deploy
-    environment: ${{ inputs.cluster }}:${{ inputs.namespace }}${{ inputs.image_suffix }}
+  commit_url:
+    name: comparison_url
     runs-on: 'ubuntu-latest'
+    if: contains(inputs.cluster, 'prod')
     permissions:
       contents: read
-      id-token: write
+      deployments: read
     outputs:
       output1: ${{ steps.compare_commits.LAST_DEPLOY_SHA }}
     steps:
@@ -68,6 +68,14 @@ jobs:
         env:
           DEPLOY_ENV: ${{ inputs.cluster }}:${{ inputs.namespace }}${{ inputs.image_suffix }}
           GH_TOKEN: ${{ github.token }}
+  deploy:
+    name: deploy
+    environment: ${{ inputs.cluster }}:${{ inputs.namespace }}${{ inputs.image_suffix }}
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ (inputs.branch != '' && inputs.branch) || '' }}
