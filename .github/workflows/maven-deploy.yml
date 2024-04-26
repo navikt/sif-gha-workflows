@@ -97,6 +97,8 @@ jobs:
       - name: Tagg prodsatt commit
         if: contains(inputs.cluster, 'prod') && success()
         uses: actions/github-script@v6
+        env:
+          TAG_COMMIT: ${GITHUB_SHA}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -134,8 +136,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: 'refs/tags/' + latestName,
-              sha: "${{ steps.issue_comment.outputs.sha }}"
+              sha: "${{ env.TAG_COMMIT }}"
             }).then((res) => {
               console.log("laget tagg=" + latestName)
             }) 
-            
