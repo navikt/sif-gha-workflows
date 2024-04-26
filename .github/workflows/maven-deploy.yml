@@ -46,24 +46,33 @@ on:
 
 env:
   IMAGE: ${{ inputs.image }} # Brukes i naiserator.yaml
-  PROD_TAG: latest_${{ inputs.cluster }}_${{ inputs.namespace }}${{ inputs.image_suffix }}
 jobs:
   commit_url:
     name: comparison_url
     runs-on: 'ubuntu-latest'
     if: contains(inputs.cluster, 'prod')
+    permissions:
+      contents: read
+      deployments: read
+    outputs:
+      output1: ${{ steps.compare_commits.LAST_DEPLOY_SHA }}
     steps:
       - name: Construct comparison url for last deploy
         id: compare_commits
         run: |
-          url="https://github.com/${{ github.repository }}/compare/${{ env.PROD_TAG }}...${GITHUB_SHA}" >> $GITHUB_OUTPUT
-          echo "Diff last deploy to ${{ env.PROD_TAG }} : <${url}>" >> $GITHUB_STEP_SUMMARY
+          LAST_DEPLOY_SHA=$(gh api graphql -f owner='${{ github.repository_owner }}' -f name='${{ github.event.repository.name }}' -f deployment_env='${{ env.DEPLOY_ENV }}' -f query='query($owner: String!, $name: String!, $deployment_env: String!) { repository(owner: $owner, name: $name) { deployments(environments: [$deployment_env], orderBy: {field: CREATED_AT, direction: DESC}, first: 50) {edges { node { commit { oid } state }}}}}' | jq -r ' .data.repository.deployments.edges[] | select(.node.state == "ACTIVE") | .node.commit.oid')
+          url="https://github.com/${{ github.repository }}/compare/${LAST_DEPLOY_SHA}...${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          echo "LAST_DEPLOY_SHA=$LAST_DEPLOY_SHA" >> $GITHUB_OUTPUT
+          echo "Diff last deploy to ${{ env.DEPLOY_ENV }} : <${url}>" >> $GITHUB_STEP_SUMMARY
+        env:
+          DEPLOY_ENV: ${{ inputs.cluster }}:${{ inputs.namespace }}${{ inputs.image_suffix }}
+          GH_TOKEN: ${{ github.token }}
   deploy:
     name: deploy
     environment: ${{ inputs.cluster }}:${{ inputs.namespace }}${{ inputs.image_suffix }}
     runs-on: 'ubuntu-latest'
     permissions:
-      contents: write #for å lage tag
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
@@ -94,48 +103,3 @@ jobs:
           IMAGE: ${{ steps.login.outputs.registry }}/${{ github.repository }}${{ inputs.image_suffix }}:${{ inputs.image }}
           RESOURCE: ${{ inputs.naiserator_file }}
           VARS: ${{ inputs.input_vars_file }}
-      - name: Tagg prodsatt commit
-        if: contains(inputs.cluster, 'prod') && success()
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const latestName = '${{ env.PROD_TAG }}'
-            const latestRef = 'tags/' + latestName
-            console.log("ser om tagg="+ latestRef + " finnes...")
-            try {
-              let previous = await github.rest.git.getRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: latestRef,
-              })
-              console.log(latestRef + " finnes! sletter...")
-              
-              let slettet = await github.rest.git.deleteRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: latestRef,
-              }) 
-            
-              console.log("slettet gamle " + latestName)
-            
-            } catch(err) {
-              if (err.status == 404) {
-                console.log("fant ikke ref " + latestRef)
-              } else {
-                console.log(err)
-                throw Error("Feil ved henting/sletting av " + latestRef + ": " + err.status)
-              }
-            }
-
-            console.log("lager tagg=" + latestName)
-            
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/' + latestName,
-              sha: "${{ steps.issue_comment.outputs.sha }}"
-            }).then((res) => {
-              console.log("laget tagg=" + latestName)
-            }) 
-            
