@@ -46,7 +46,7 @@ on:
 
 env:
   IMAGE: ${{ inputs.image }} # Brukes i naiserator.yaml
-  PROD_TAG: latest_${{ inputs.cluster }}:${{ inputs.namespace }}${{ inputs.image_suffix }}
+  PROD_TAG: latest_${{ inputs.cluster }}_${{ inputs.namespace }}${{ inputs.image_suffix }}
 jobs:
   commit_url:
     name: comparison_url
