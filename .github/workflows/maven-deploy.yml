@@ -98,7 +98,7 @@ jobs:
         if: contains(inputs.cluster, 'prod') && success()
         uses: actions/github-script@v6
         env:
-          TAG_COMMIT: ${GITHUB_SHA}
+          TAG_COMMIT: ${{ github.sha }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
