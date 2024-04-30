@@ -66,7 +66,7 @@ jobs:
       contents: write #for å lage tag
       id-token: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # ratchet:actions/checkout@v4
         with:
           ref: ${{ (inputs.branch != '' && inputs.branch) || '' }}
       - name: Deploy ${{ inputs.cluster }} fra Github
@@ -78,7 +78,7 @@ jobs:
           RESOURCE: ${{ inputs.naiserator_file }}
           VARS: ${{ inputs.input_vars_file }}
       - name: Login GAR
-        uses: nais/login@557ec71a21c53ce9a8f672e1889997d2d564bd8c # ratchet:nais/login@v0
+        uses: nais/login@4ce7445c84f09114e481a1d2c164f563e9e2ba8e # ratchet:nais/login@v0
         if: inputs.gar == 'true'
         id: login
         with:
@@ -96,7 +96,7 @@ jobs:
           VARS: ${{ inputs.input_vars_file }}
       - name: Tagg prodsatt commit
         if: contains(inputs.cluster, 'prod') && success()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         env:
           TAG_COMMIT: ${{ github.sha }}
         with:
