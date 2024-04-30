@@ -6,6 +6,11 @@ on:
         type: string
         description: 'Docker tag (from repository)'
         required: true
+    outputs:
+      pleiepenger: ${{ jobs.run_tests.outputs.pleiepenger }}
+      livetssluttfase: ${{ jobs.run_tests.outputs.livetssluttfase }}
+      annet: ${{ jobs.run_tests.outputs.annet }}
+      frontend: ${{ jobs.run_frontend_tests.outputs.frontend }}
 
 jobs:
   run_tests:
