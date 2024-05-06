@@ -1,0 +1,153 @@
+name: "Setup verdikjede & run frontend tests"
+description: Setup verdikjede & run frontend tests
+inputs:
+  github-token:
+    description: "Token for accessing GitHub packages"
+    required: true
+  reader-token:
+    description: "Token for setting up settings.xml for internal packages"
+    required: true
+  nais-management-project-id:
+    description: "NAIS management project ID"
+    required: true
+  nais-workload-identity-provider:
+    description: "NAIS workload identity provider"
+    required: true
+outputs:
+  test_result:
+    description: "Test result"
+    value: ${{ steps.outcome.outputs.test_result }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: "navikt/k9-verdikjede"
+        ref: "master"
+        token: ${{ inputs.reader-token }}
+
+    - uses: actions/setup-java@v4
+      with:
+        java-version: "21"
+        distribution: "temurin"
+        cache: "maven"
+
+    - uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.github-token }}
+
+    - uses: nais/login@v0
+      with:
+        project_id: ${{ inputs.nais-management-project-id }}
+        identity_provider: ${{ inputs.nais-workload-identity-provider }}
+        team: k9saksbehandling
+
+    - name: Hente image for frontendtest
+      shell: bash
+      run: docker pull europe-north1-docker.pkg.dev/nais-management-233d/k9saksbehandling/k9-los-web-e2e
+
+    - name: Setup saksbehandling-stack
+      shell: bash
+      run: |
+        echo "STACK_STARTED=false" >> $GITHUB_ENV
+        echo "Oppretter dummy keystore for testing"
+        cd keystore
+        ./make-dummy-keystore.sh
+        cd ../saksbehandling
+        ./update-versions.sh ${{ github.event.inputs.trigger }} ${{ github.event.inputs.version }}
+        echo "STACK_STARTING=true" >> $GITHUB_ENV
+        docker-compose up --quiet-pull -d k9-los-web || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+
+    - name: Venter på stacken og sjekker status
+      shell: bash
+      run: |
+        echo "STACK_CREATED=true" >> $GITHUB_ENV
+        docker ps -a
+        echo
+        echo "Tester om VTP er oppe"
+        timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done' || false
+        echo Oppe!
+        echo
+        echo "Tester om abakus er oppe"
+        timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8015/k9/abakus/internal/isReady)" != "200" ]]; do sleep 2; done' || false
+        echo Oppe!
+        echo
+        echo "Tester om k9-sak er oppe"
+        timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/k9/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done' || false
+        echo Oppe!
+        echo
+        echo
+        echo "Tester om k9-los-web er oppe "
+        timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8031/isReady)" != "200" ]]; do sleep 2; done' || false
+        echo Oppe!
+        echo "STACK_STARTED=true" >> $GITHUB_ENV
+        docker stats --no-stream
+
+    - name: Utfører tester
+      id: tester
+      shell: bash
+      run: |
+        cd verdikjede
+        mkdir k9-los-web-frontendtest-videos
+        chmod 777 k9-los-web-frontendtest-videos
+        MED_LOS_FRONTENDTEST=true mvn clean verify --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml -Dgroups=frontendtest-los -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+      env:
+        GITHUB_USERNAME: ${{ github.actor }}
+        GITHUB_PASSWORD: ${{ inputs.reader-token }}
+
+    - name: Last opp testvideoer som artifakt
+      uses: actions/upload-artifact@v4
+      if: always() && !cancelled()
+      with:
+        name: k9-los-web-test-videos
+        path: verdikjede/k9-los-web-frontendtest-videos/
+
+    - name: Utfører loggsjekker
+      id: loggsjekker
+      shell: bash
+      if: always() && !cancelled()
+      run: |
+        cd verdikjede
+        mvn test -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml -Dgroups=etter -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+      env:
+        GITHUB_USERNAME: ${{ github.actor }}
+        GITHUB_PASSWORD: ${{ inputs.reader-token }}
+
+    - name: Henter testresultat og setter outcome
+      id: outcome
+      if: always() && !cancelled()
+      shell: bash
+      run: |
+        if [ ! ${{ env.STACK_STARTED }} ]; then
+            echo "result=stack_not_started" >> $GITHUB_OUTPUT
+        elif [[ ${{ steps.tester.outcome }} == success && ${{ steps.loggsjekker.outcome }} == success ]]; then
+            echo "result=success" >> $GITHUB_OUTPUT
+        else
+            echo "result=failed" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Dumper logger for feilsøking
+      if: always() && !cancelled() && env.STACK_STARTING == 'true'
+      shell: bash
+      run: |
+        mkdir -p container-logs
+        cd container-logs
+
+        # Log the output of `docker ps -a` to capture the container statuses and exit codes
+        echo "Container statuses and exit codes:" > docker_ps_a.log
+        docker ps -a --format 'table {{.Names}}\t{{.Status}}' >> docker_ps_a.log
+
+        # Dump logs of each container
+        docker ps -a --format '{{.Names}}' | while read pod; do
+          docker logs $pod > $pod.log 2>&1
+        done
+
+    - name: Laste opp logger
+      if: always() && !cancelled() && env.STACK_STARTING == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: k9-los-web-logs
+        path: container-logs/
