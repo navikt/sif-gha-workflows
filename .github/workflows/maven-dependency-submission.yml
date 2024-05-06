@@ -32,7 +32,7 @@ jobs:
           echo "Building artifacts ${{ steps.generate-build-version.outputs.build-version }}"
           mvn versions:set -DnewVersion="${{ steps.generate-build-version.outputs.build-version }}" -s settings.xml -q -e -B
       - name: Submit Dependency Snapshot to Github Security
-        uses: advanced-security/maven-dependency-submission-action@bfd2106013da0957cdede0b6c39fb5ca25ae375e
+        uses: advanced-security/maven-dependency-submission-action@5d0f9011b55d6268922128af45275986303459c3
         with:
           settings-file: settings.xml
           maven-args: -DskipTests
