@@ -138,14 +138,14 @@ jobs:
             fi
           }
           echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
+          echoStatus "Frontend" $frontend >> $GITHUB_ENV
           if [[${{inputs.frontend_only}} == 'false']]; then
             echoStatus "Pleiepenger" $pleiepenger >> $GITHUB_ENV
             echoStatus "Livets sluttfase" $livetssluttfase >> $GITHUB_ENV
             echoStatus "Omsorgspenger og annet" $annet >> $GITHUB_ENV
           else 
-            echo "Kjørt fra frontend-repo, skipper backend tester ::fast_forward" >> $GITHUB_ENV
+            echo "::fast_forward: Skipper backend tester, kjørt fra frontend-repo ::screaming_cowboy:" >> $GITHUB_ENV
           fi
-          echoStatus "Frontend" $frontend >> $GITHUB_ENV
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
           echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
