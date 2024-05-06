@@ -97,7 +97,7 @@ jobs:
 
   slack:
     name: Sender slack melding
-    if: always() && !cancelled()
+    if: ${{ always() && !cancelled() }}
     needs: [run_tests, run_frontend_tests]
     runs-on: ubuntu-latest
     steps:
