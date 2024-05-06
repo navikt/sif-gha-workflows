@@ -6,6 +6,10 @@ on:
         type: string
         description: 'Docker tag (from repository)'
         required: true
+      frontend_only:
+        type: boolean
+        description: 'Kun kjør frontend tester'
+        required: false
     outputs:
       pleiepenger: 
             description: "Utfall fra pleiepenger-test"
@@ -36,7 +40,7 @@ jobs:
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test@main
         id: pleiepenger
-        if: contains(matrix.suite, 'pleiepenger')
+        if: contains(matrix.suite, 'pleiepenger') && inputs.frontend_only == 'false'
         with:
           apps: 'k9-sak k9-formidling'
           test_suite: pleiepenger
@@ -50,7 +54,7 @@ jobs:
 
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test@main
         id: livetssluttfase
-        if: contains(matrix.suite, 'livetssluttfase')
+        if: contains(matrix.suite, 'livetssluttfase') && inputs.frontend_only == 'false'
         with:
           apps: 'k9-sak k9-formidling'
           test_suite: livetssluttfase
@@ -64,7 +68,7 @@ jobs:
 
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test@main
         id: annet
-        if: contains(matrix.suite, 'annet')
+        if: contains(matrix.suite, 'annet') && inputs.frontend_only == 'false'
         with:
           apps: 'k9-sak k9-formidling'
           test_suite: annet
@@ -93,45 +97,55 @@ jobs:
 
   slack:
     name: Sender slack melding
-    if: ${{ always() && !cancelled() }}
+    if: always() && !cancelled()
     needs: [run_tests, run_frontend_tests]
     runs-on: ubuntu-latest
     steps:
-      - name: Setter outcome
-        run: |
-          if [[ ${{ needs.run_tests.outputs.pleiepenger }} == 'success' &&
-                ${{ needs.run_tests.outputs.livetssluttfase }} == 'success' &&
-                ${{ needs.run_tests.outputs.annet }} == 'success' &&
-                ${{ needs.run_frontend_tests.outputs.frontend }} == 'success'
-          ]]; then
-            echo "SLACK_TITLE=Verdikjeden er kjørt UTEN feil :rocket:" >> $GITHUB_ENV
-          else
-            echo "SLACK_TITLE=Verdikjeden er brukket :boom:" >> $GITHUB_ENV
-          fi
-
       - name: Bygger opp slack melding
         run: |
+          pleiepenger=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.pleiepenger }}")
+          livetssluttfase=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.livetssluttfase }}")
+          annet=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.annet }}")
+          frontend=${{ needs.run_frontend_tests.outputs.frontend }}
+  
+          title="Verdikjede er "
+          all_success=true
+
+          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend")
+          for result in "${test_results[@]}"; do
+            if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
+              all_success=false
+              break
+            fi
+          done
+  
+          if [[ "$all_success" == true ]]; then
+            title+="kjørt UTEN feil :rocket:"
+          else
+            title+="brukket :boom:"
+          fi
+  
+          echo "SLACK_TITLE=$title" >> $GITHUB_ENV
+  
           function echoStatus() {
             if [[ "$2" == 'success' ]]; then
               echo ":heavy_check_mark:  $1"
-            elif [[ "$2" == 'stack_not_started' ]]; then
-              echo ":boom:  $1"
+            elif [[ "$2" == 'skipped' ]]; then
+              echo ":fast_forward:  $1"
             else
               echo ":x:  $1"
             fi
           }
+  
           echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
-          echo >> $GITHUB_ENV
-          echoStatus Pleiepenger ${{ needs.run_tests.outputs.pleiepenger }}  >> $GITHUB_ENV
-          echoStatus "Livets sluttfase" ${{ needs.run_tests.outputs.livetssluttfase }}  >> $GITHUB_ENV
-          echoStatus Frontend ${{ needs.run_frontend_tests.outputs.frontend }} >> $GITHUB_ENV
-          echoStatus "Omsorgspenger og annet" ${{ needs.run_tests.outputs.annet }}  >> $GITHUB_ENV
-          echo >> $GITHUB_ENV
+          echoStatus "Pleiepenger" $pleiepenger >> $GITHUB_ENV
+          echoStatus "Livets sluttfase" $livetssluttfase >> $GITHUB_ENV
+          echoStatus "Frontend" $frontend >> $GITHUB_ENV
+          echoStatus "Omsorgspenger og annet" $annet >> $GITHUB_ENV
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
           echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
           echo '\n' >> $GITHUB_ENV
-
         # https://api.slack.com/block-kit
       - name: Slack Notification
         run: >
