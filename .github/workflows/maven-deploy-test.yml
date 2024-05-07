@@ -69,13 +69,18 @@ jobs:
       - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # ratchet:actions/checkout@v4
         with:
           ref: ${{ (inputs.branch != '' && inputs.branch) || '' }}
+      - name: Finn commit sha fra image
+        run: |
+          IMAGE_SHA=echo ${{ input.image }} | awk -F'-' '{print $2}'
+          COMPLETE_SHA=git rev-parse $image_sha
+          echo "TAG_COMMIT=COMPLETE_SHA"  >> $GITHUB_ENV
       - name: Tagg prodsatt commit
         if: contains(inputs.cluster, 'prod') && success()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const tag_commit = '${{ inputs.image }}'.split('-')[1]
+            const tag_commit = ${{ env.TAG_COMMIT }}
             const latestName = '${{ env.PROD_TAG }}'
             const latestRef = 'tags/' + latestName
             console.log("ser om tagg="+ latestRef + " finnes...")
