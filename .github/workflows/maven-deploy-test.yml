@@ -79,23 +79,26 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const partial_sha = "${{ env.TAG_COMMIT }}"
+            const latestName = '${{ env.PROD_TAG }}'
+            const latestRef = 'tags/' + latestName
+                
             let tag_commit;
             try {
-              let commitDetails = await github.rest.git.getCommit({
+              const commit_path = 'GET /repos/' + context.repo.owner + '/' + context.repo.repo + '/commits/' + partial_sha
+              console.log("commit_path=" + commit_path)
+              let commitDetails = await github.request(commit_path, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                commit_sha: partial_sha
-                });
+                ref: partial_sha
+              });
               tag_commit = commitDetails.data.sha;
-              console.log ("Fant full sha: " + tag_commit);
-            } catch(err) {
+              console.log("Fant full sha: " + tag_commit);
+            } catch (err) {
               console.log("feilet ved henting av commit", err);
               throw Error("feilet ved henting av commit: " + partial_sha);
             }
             
-            const latestName = '${{ env.PROD_TAG }}'
-            const latestRef = 'tags/' + latestName
-            console.log("ser om tagg="+ latestRef + " finnes...")
+            console.log("ser om tagg=" + latestRef + " finnes...")
             try {
               let previous = await github.rest.git.getRef({
                 owner: context.repo.owner,
@@ -103,16 +106,16 @@ jobs:
                 ref: latestRef,
               })
               console.log(latestRef + " finnes! sletter...")
-            
+              
               let slettet = await github.rest.git.deleteRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: latestRef,
-              }) 
-            
+              })
+              
               console.log("slettet gamle " + latestName)
             
-            } catch(err) {
+            } catch (err) {
               if (err.status == 404) {
                 console.log("fant ikke ref " + latestRef)
               } else {
