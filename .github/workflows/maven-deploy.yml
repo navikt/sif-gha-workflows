@@ -56,7 +56,8 @@ jobs:
       - name: Construct comparison url for last deploy
         id: compare_commits
         run: |
-          url="https://github.com/${{ github.repository }}/compare/${{ env.PROD_TAG }}...${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          IMAGE_SHA=$(echo '${{ inputs.image }}' | awk -F'-' '{print $2}')
+          url="https://github.com/${{ github.repository }}/compare/${{ env.PROD_TAG }}...${IMAGE_SHA}" >> $GITHUB_OUTPUT
           echo "Diff last deploy to ${{ env.PROD_TAG }} : <${url}>" >> $GITHUB_STEP_SUMMARY
   deploy:
     name: deploy
@@ -94,33 +95,53 @@ jobs:
           IMAGE: ${{ steps.login.outputs.registry }}/${{ github.repository }}${{ inputs.image_suffix }}:${{ inputs.image }}
           RESOURCE: ${{ inputs.naiserator_file }}
           VARS: ${{ inputs.input_vars_file }}
+      - name: Finn commit sha fra image navn
+        if: contains(inputs.cluster, 'prod') && success()
+        run: |
+          echo "TAG_COMMIT=$(echo '${{ inputs.image }}' | awk -F'-' '{print $2}')"  >> $GITHUB_ENV
       - name: Tagg prodsatt commit
         if: contains(inputs.cluster, 'prod') && success()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const tag_commit = '${{ inputs.image }}'.split('-')[1]
+            const partial_sha = '${{ env.TAG_COMMIT }}'
             const latestName = '${{ env.PROD_TAG }}'
             const latestRef = 'tags/' + latestName
-            console.log("ser om tagg="+ latestRef + " finnes...")
+            
+            let tag_commit;
+            try {
+              const commit_path = 'GET /repos/' + context.repo.owner + '/' + context.repo.repo + '/commits/' + partial_sha
+              let commitDetails = await github.request(commit_path, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: partial_sha
+              });
+              tag_commit = commitDetails.data.sha;
+              console.log("Fant full sha: " + tag_commit);
+            } catch (err) {
+              console.log("feilet ved henting av commit", err);
+              throw Error("feilet ved henting av commit: " + partial_sha);
+            }
+            
+            console.log("ser om tagg=" + latestRef + " finnes...")
             try {
               let previous = await github.rest.git.getRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: latestRef,
+                ref: latestRef
               })
               console.log(latestRef + " finnes! sletter...")
-              
+            
               let slettet = await github.rest.git.deleteRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: latestRef,
-              }) 
+                ref: latestRef
+              })
             
               console.log("slettet gamle " + latestName)
             
-            } catch(err) {
+            } catch (err) {
               if (err.status == 404) {
                 console.log("fant ikke ref " + latestRef)
               } else {
@@ -128,7 +149,7 @@ jobs:
                 throw Error("Feil ved henting/sletting av " + latestRef + ": " + err.status)
               }
             }
-
+            
             console.log("lager tagg=" + latestName + " på commit " + tag_commit)
             
             await github.rest.git.createRef({
