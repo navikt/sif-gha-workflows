@@ -7,10 +7,10 @@ on:
         description: 'Docker tag (from repository)'
         required: true
       frontend_only:
-        type: boolean
+        type: string
         description: 'Kun kjør frontend tester'
         required: false
-        default: false
+        default: 'false'
     outputs:
       pleiepenger: 
             description: "Utfall fra pleiepenger-test"
