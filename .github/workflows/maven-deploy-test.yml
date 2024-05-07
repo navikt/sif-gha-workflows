@@ -78,13 +78,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const partial_sha = ${{ env.TAG_COMMIT }}
+            const partial_sha = "${{ env.TAG_COMMIT }}"
             let tag_commit;
             try {
               let commitDetails = await github.rest.git.getCommit({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                commit_sha: partial_sha,
+                commit_sha: partial_sha
                 });
               tag_commit = commitDetails.data.sha;
               console.log ("Fant full sha: " + tag_commit);
@@ -120,7 +120,7 @@ jobs:
                 throw Error("Feil ved henting/sletting av " + latestRef + ": " + err.status)
               }
             }
-
+            
             console.log("lager tagg=" + latestName + " på commit " + tag_commit)
             
             await github.rest.git.createRef({
