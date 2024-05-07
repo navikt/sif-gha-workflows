@@ -71,7 +71,7 @@ jobs:
           ref: ${{ (inputs.branch != '' && inputs.branch) || '' }}
       - name: Finn commit sha fra image
         run: |
-          IMAGE_SHA=echo ${{ input.image }} | awk -F'-' '{print $2}'
+          IMAGE_SHA=echo ${{ inputs.image }} | awk -F'-' '{print $2}'
           COMPLETE_SHA=git rev-parse $image_sha
           echo "TAG_COMMIT=COMPLETE_SHA"  >> $GITHUB_ENV
       - name: Tagg prodsatt commit
