@@ -97,11 +97,10 @@ jobs:
       - name: Tagg prodsatt commit
         if: contains(inputs.cluster, 'prod') && success()
         uses: actions/github-script@v7
-        env:
-          TAG_COMMIT: ${{ github.sha }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const tag_commit = '${{ inputs.image }}'.split('-')[1]
             const latestName = '${{ env.PROD_TAG }}'
             const latestRef = 'tags/' + latestName
             console.log("ser om tagg="+ latestRef + " finnes...")
@@ -130,13 +129,13 @@ jobs:
               }
             }
 
-            console.log("lager tagg=" + latestName)
+            console.log("lager tagg=" + latestName + " på commit " + tag_commit)
             
             await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: 'refs/tags/' + latestName,
-              sha: "${{ env.TAG_COMMIT }}"
+              sha: tag_commit
             }).then((res) => {
               console.log("laget tagg=" + latestName)
             }) 
