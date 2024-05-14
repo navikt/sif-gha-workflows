@@ -30,7 +30,7 @@ runs:
     - name: Build artifacts
       shell: bash
       run: |
-        if [ "${{ inputs.buildcommand }}" != "" ]; then
+        if [ -n "${{ inputs.buildcommand }}" ]; then
           ${{ inputs.buildcommand }}
         else
           echo "Building artifacts ${{ steps.generate-build-version.outputs.build-version }}"
