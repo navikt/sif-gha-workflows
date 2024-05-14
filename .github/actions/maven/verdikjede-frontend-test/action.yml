@@ -90,6 +90,9 @@ runs:
         timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/k9/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done' || false
         echo Oppe!
         echo "STACK_STARTED=true" >> $GITHUB_ENV
+        echo "Tester om k9-tilbake er oppe"
+        timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8030/k9/tilbake/internal/health/isReady)" != "200" ]]; do sleep 2; done' || false
+        echo Oppe!
         docker stats --no-stream
 
     - name: Utfører tester
