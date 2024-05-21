@@ -1,0 +1,80 @@
+name: Tester saksbehandling (reusable)
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        description: "Docker tag (from repository)"
+        required: true
+    outputs:
+      frontend:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_frontend_tests.outputs.frontend }}
+
+jobs:
+  run_frontend_tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest-8-cores
+    timeout-minutes: 30
+    outputs:
+      frontend: ${{ steps.test.outputs.test_result }}
+    steps:
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-frontend-los-test@main
+        id: test
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reader-token: ${{ secrets.READER_TOKEN }}
+          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+
+  slack:
+    name: Sender slack melding
+    if: ${{ always() && !cancelled() }}
+    needs: [run_frontend_tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setter outcome
+        run: |
+          if [[ ${{ needs.run_frontend_tests.outputs.frontend }} == 'success'
+          ]]; then
+            echo "SLACK_TITLE=Verdikjeden er kjørt UTEN feil :rocket:" >> $GITHUB_ENV
+          else
+            echo "SLACK_TITLE=Verdikjeden er brukket :boom:" >> $GITHUB_ENV
+          fi
+
+      - name: Bygger opp slack melding
+        run: |
+          function echoStatus() {
+            if [[ "$2" == 'success' ]]; then
+              echo ":heavy_check_mark:  $1"
+            elif [[ "$2" == 'stack_not_started' ]]; then
+              echo ":boom:  $1"
+            else
+              echo ":x:  $1"
+            fi
+          }
+          echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
+          echo >> $GITHUB_ENV
+          echoStatus Los Frontend ${{ needs.run_frontend_tests.outputs.frontend }} >> $GITHUB_ENV
+          echo >> $GITHUB_ENV
+          echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
+          echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
+          echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
+          echo '\n' >> $GITHUB_ENV
+
+        # https://api.slack.com/block-kit
+      - name: Slack Notification
+        run: >
+          curl -X POST
+          -H 'Content-type: application/json'
+          --data '{"blocks": [
+            {
+              "type": "header",
+              "text": {"type": "plain_text", "text": "${{ env.SLACK_TITLE }}"}
+            },
+            {
+              "type": "section",
+              "text": {"type": "mrkdwn", "text": "${{ env.SLACK_MESSAGE }}"}
+            }
+          ]}'
+          ${{ secrets.SLACKBOT_WEBHOOK }}
