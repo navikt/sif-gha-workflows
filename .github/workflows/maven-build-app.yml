@@ -62,7 +62,7 @@ jobs:
       build-version: ${{ steps.build-and-test.outputs.build-version }}
 
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # ratchet:actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           fetch-depth: 0 # checkout gir shallow copy - fetch-depth: 0 vil tilgjengeliggjøre tags
       - name: Login to GitHub Packages Docker Registry
@@ -74,7 +74,7 @@ jobs:
       - name: Setup java and maven
         uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
         with:
-          github-token: ${{ (github.actor != 'dependabot[bot]' && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.READER_TOKEN }} # bruker READER_TOKEN pga private repos
           java-version: ${{ inputs.java-version }}
       - name: Maven install and test
         id: build-and-test
@@ -93,4 +93,4 @@ jobs:
           namespace: ${{ inputs.namespace }}
       - name: Clean up generated stuff before caching
         run: |
-          rm ~/.m2/repository/no/nav/k9 -r
+          rm ~/.m2/repository/no/nav -r
