@@ -132,7 +132,7 @@ jobs:
             if [[ "$2" == 'success' ]]; then
               echo ":heavy_check_mark:  $1"
             elif [[ "$2" == 'skipped' ]]; then
-              echo ":fast_forward:  $1"
+              return
             else
               echo ":x:  $1"
             fi
