@@ -21,7 +21,7 @@ on:
         required: false
         type: string
         description: Java SDK versjon som skal brukes.
-        default: '17'
+        default: '21'
       sonar-scan:
         required: false
         type: boolean
