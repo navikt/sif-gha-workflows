@@ -22,7 +22,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v3
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # ratchet:actions/checkout@v3
       - name: Deploy til dev-${{ inputs.environment }}
         uses: nais/deploy/actions/deploy@c73efa8384743a5c14b94d4a4b9c1cf5a260b532 # ratchet:nais/deploy/actions/deploy@v2
         env:
