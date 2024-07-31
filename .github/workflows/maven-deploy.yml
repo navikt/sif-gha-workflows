@@ -61,6 +61,9 @@ jobs:
           echo "Diff last deploy to ${{ env.PROD_TAG }} : <${url}>" >> $GITHUB_STEP_SUMMARY
   deploy:
     name: deploy
+    #Tillater én aktiv deployment per miljø. Dette fordi deployments som aldri blir kjørt feiler etter 30 dager og notifikasjon om feilet bygg
+    #cuncurrency gjør at pending deployments blir kansellert og får status cancel istedenfor failed, som da kan filtreres vekk (i mailklienten).
+    concurrency: ${{ inputs.cluster }}:${{ inputs.namespace }}${{ inputs.image_suffix }}
     environment: ${{ inputs.cluster }}:${{ inputs.namespace }}${{ inputs.image_suffix }}
     runs-on: 'ubuntu-latest'
     permissions:
