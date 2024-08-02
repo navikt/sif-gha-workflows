@@ -57,6 +57,7 @@ runs:
       shell: bash
       run: |
         docker -v
+        docker-compose -v
         echo "STACK_STARTED=false" >> $GITHUB_ENV
         echo "Oppretter dummy keystore for testing"
         cd keystore
