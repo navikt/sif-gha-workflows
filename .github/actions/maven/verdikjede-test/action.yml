@@ -113,11 +113,11 @@ runs:
       shell: bash
       run: |
         if [ ! ${{ env.STACK_STARTED }} ]; then
-           echo "test_result=stack_not_started" >> $GITHUB_OUTPUT
+           echo "test_result_${{inputs.test_suite}}=stack_not_started" >> $GITHUB_OUTPUT
         elif [[ ${{ steps.tester.outcome }} == success && ${{ steps.loggsjekker.outcome }} == success ]]; then
-           echo "test_result=success" >> $GITHUB_OUTPUT
+           echo "test_result_${{inputs.test_suite}}=success" >> $GITHUB_OUTPUT
         else
-           echo "test_result=failed" >> $GITHUB_OUTPUT
+           echo "test_result_${{inputs.test_suite}}=failed" >> $GITHUB_OUTPUT
         fi
 
     - name: Dumper logger for feilsøking

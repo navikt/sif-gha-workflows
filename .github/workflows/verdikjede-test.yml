@@ -51,13 +51,13 @@ jobs:
           }
         ]
     outputs:
-      pleiepenger: ${{ steps.pleiepenger.outputs.test_result }}
-      klage: ${{ steps.klage.outputs.test_result }}
+      pleiepenger: ${{ steps.verdikjede-action.outputs.test_result_pleiepenger }}
+      klage: ${{ steps.verdikjede-action.outputs.test_result_klage }}
       #livetssluttfase: ${{ steps.livetssluttfase.outputs.test_result }}
       #annet: ${{ steps.annet.outputs.test_result }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test@main
-        id: $${{ matrix.stack.suite }}
+        id: verdikjede-action
         if: contains(inputs.stack, matrix.suite) && inputs.frontend_only == 'false'
         with:
           test_suite: $${{ matrix.stack.suite }}
