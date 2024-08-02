@@ -37,7 +37,7 @@ jobs:
         stack: ${{ fromJson(inputs.stack) }}
     runs-on: ubuntu-latest
     steps:
-      run: echo "ut -> ${{ matrix.stack }}"
+      - run: echo "ut -> $output"
 
   run_tests:
     name: Tests
