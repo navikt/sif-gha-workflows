@@ -32,12 +32,12 @@ on:
 
 jobs:
   verify_output:
-    strategy:
-      matrix:
-        stack: ${{ fromJson(inputs.stack) }}
+#    strategy:
+#      matrix:
+#        stack: ${{ fromJson(inputs.stack) }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "ut -> $output"
+      - run: echo "ut -> ${{ fromJson(inputs.stack) }}"
 
   run_tests:
     name: Tests
