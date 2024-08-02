@@ -77,7 +77,6 @@ jobs:
       annet: ${{ steps.annet.outputs.test_result_annet}}
       tilbake: ${{ steps.annet.outputs.test_result_tilbake }}
     steps:
-      - run: echo "${{ matrix.suite }} - ${{ matrix.suites.suite }}"
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test@verdikjede-stacks
         id: verdikjede-action
         if: contains(inputs.suites, matrix.suites.suite) && inputs.frontend_only == 'false'
