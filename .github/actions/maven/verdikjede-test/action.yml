@@ -22,6 +22,9 @@ inputs:
   log_groups:
     description: 'Maven log groups to check'
     required: true
+  docker_compose_f:
+    required: true
+    description: 'docker compose flag to run with one or more docker compose files'
 outputs:
   test_result:
     description: 'Test result'
@@ -63,7 +66,7 @@ runs:
         cd ../saksbehandling
         ./update-versions.sh ${{ github.event.inputs.trigger }} ${{ github.event.inputs.version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
-        docker compose --env-file .env -f docker-compose-stacks/docker-compose-${{ inputs.test_suite }}.yml up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+        docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
 
     - name: Venter på stacken og sjekker status
       shell: bash
@@ -88,6 +91,14 @@ runs:
           echo
           echo "Tester om abakus er oppe"
           timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8015/k9/abakus/internal/isReady)" != "200" ]]; do sleep 2; done' || false
+          echo Oppe!
+          echo
+        fi
+        
+        if [[ ${{ inputs.test_suite }} == tilbake ]]
+          echo
+          echo "Tester om k9-tilbake er oppe"
+          timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8030/k9/tilbake/internal/health/isReady)" != "200" ]]; do sleep 2; done' || false
           echo Oppe!
           echo
         fi
