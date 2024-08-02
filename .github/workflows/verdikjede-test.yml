@@ -43,7 +43,7 @@ jobs:
             suite: pleiepenger,
             test_groups: "-Dgroups=pleiepenger '-Dtest=!PleiepengerLoggTest'",
             log_groups: "-Dgroups=etter-pleiepenger"
-          }
+          },
           {
             suite: klage,
             test_groups: "-Dgroups=klage ",
