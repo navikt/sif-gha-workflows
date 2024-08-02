@@ -1,9 +1,6 @@
 name: 'Setup verdikjede & run tests'
 description: Setup verdikjede & run tests
 inputs:
-  apps:
-    description: 'Apps to start for verdikjede, separated by space'
-    required: true
   github-token:
     description: 'Token for accessing GitHub packages'
     required: true
@@ -35,7 +32,7 @@ runs:
     - uses: actions/checkout@v4
       with:
         repository: 'navikt/k9-verdikjede'
-        ref: 'master'
+        ref: 'docker-compose-stacks'
         token: ${{ inputs.reader-token }}
 
     - uses: actions/setup-java@v4
@@ -66,7 +63,7 @@ runs:
         cd ../saksbehandling
         ./update-versions.sh ${{ github.event.inputs.trigger }} ${{ github.event.inputs.version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
-        docker-compose -f docker-compose.yml -f docker-compose-github.yml up --quiet-pull -d ${{ inputs.apps }} || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+        docker-compose --env-file .env -f docker-compose-github.yml -f docker-compose-stacks/docker-compose-$${{ input.test_suite }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
 
     - name: Venter på stacken og sjekker status
       shell: bash
