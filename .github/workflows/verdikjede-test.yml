@@ -15,7 +15,7 @@ on:
         type: string
         description: 'komma-separert liste med test-stacker som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los.'
         required: false
-        default: 'pleiepenger, annet, klage, tilbake, frontend, frontend-los'
+        default: "['pleiepenger', 'annet', 'klage', 'tilbake', 'frontend', 'frontend-los']"
     outputs:
       pleiepenger: 
             description: "Utfall fra pleiepenger-test"
