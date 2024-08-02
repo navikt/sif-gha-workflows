@@ -31,21 +31,13 @@ on:
             value: ${{ jobs.run_frontend_tests.outputs.frontend }}
 
 jobs:
-  parse-input:
-    runs-on: ubuntu-latest
-    outputs:
-      test_stacks: ${{ steps.vars.outputs.test_stack_list }}
-    steps:
-      - name: Parse input
-        id: vars
-        run: echo "pleiepenger, annet, klage, tilbake, frontend, frontend-los" | jq 'split(", ")' -Rc >> "$GITHUB_OUTPUT"
   verify_output:
+    strategy:
+      matrix:
+        stack: ${{ fromJson(inputs.stack) }}
     runs-on: ubuntu-latest
-    needs: parse-input
     steps:
-      - env:
-          output: ${{needs.parse-input.outputs.test_stacks}}
-        run: echo "ut -> $output"
+      run: echo "ut -> ${{ matrix.stack }}"
 
   run_tests:
     name: Tests
