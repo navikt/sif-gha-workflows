@@ -66,7 +66,7 @@ runs:
         cd ../saksbehandling
         ./update-versions.sh ${{ github.event.inputs.trigger }} ${{ github.event.inputs.version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
-        docker-compose -f docker-compose.yml -f docker-compose-github.yml up --quiet-pull -d ${{ inputs.apps }} || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+        docker compose -f docker-compose.yml -f docker-compose-github.yml up --quiet-pull -d ${{ inputs.apps }} || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
 
     - name: Venter på stacken og sjekker status
       shell: bash
