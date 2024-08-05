@@ -30,11 +30,11 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # ratchet:actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@b7cec7526559c32f1616476ff32d17ba4c59b2d6 # ratchet:github/codeql-action/init@v2
+        uses: github/codeql-action/init@afb54ba388a7dca6ecae48f608c4ff05ff4cc77a # ratchet:github/codeql-action/init@v2
         with:
           languages: java
       - name: Set up Java
@@ -48,6 +48,6 @@ jobs:
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
           GITHUB_USERNAME: x-access-token
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@b7cec7526559c32f1616476ff32d17ba4c59b2d6 # ratchet:github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@afb54ba388a7dca6ecae48f608c4ff05ff4cc77a # ratchet:github/codeql-action/analyze@v2
         with:
           category: "/language:java"
