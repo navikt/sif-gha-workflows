@@ -121,3 +121,12 @@ runs:
       with:
         name: ${{ inputs.test_suite }}-logs
         path: container-logs/
+
+    - name: Laste opp skjermbilder
+      if: contains(test_suite, 'frontend') && failure() && env.STACK_CREATED == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-test-output
+        # definert i frontend java-testene!
+        path: verdikjede/frontendtest-output
+
