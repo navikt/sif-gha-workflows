@@ -132,6 +132,7 @@ runs:
       shell: bash
       run: |
         if [ ! ${{ env.STACK_STARTED }} ]; then
+           docker ps -a
            echo "test_result_${{inputs.test_suite}}=stack_not_started" >> $GITHUB_OUTPUT
         elif [[ ${{ steps.tester.outcome }} == success && ${{ steps.loggsjekker.outcome }} == success ]]; then
            echo "test_result_${{inputs.test_suite}}=success" >> $GITHUB_OUTPUT
