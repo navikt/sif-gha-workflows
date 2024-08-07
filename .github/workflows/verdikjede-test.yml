@@ -15,7 +15,7 @@ on:
         type: string
         description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los.'
         required: false
-        default: "pleiepenger, annet, klage, tilbake, frontend, frontend-los"
+        default: "pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los"
     outputs:
       pleiepenger: 
             description: "Utfall fra pleiepenger-test"
@@ -28,7 +28,13 @@ on:
             value: ${{ jobs.run_tests.outputs.annet }}
       frontend: 
             description: "Utfall fra frontend-test"
-            value: ${{ jobs.run_frontend_tests.outputs.frontend }}
+            value: ${{ jobs.run_tests.outputs.frontend }}
+      klage:
+        description: "Utfall fra klage-test"
+        value: ${{ jobs.run_tests.outputs.klage }}
+      tilbake:
+        description: "Utfall fra tilbake-test"
+        value: ${{ jobs.run_tests.outputs.tilbake }}
 
 jobs:
   run_tests:
