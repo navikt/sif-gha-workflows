@@ -109,13 +109,13 @@ jobs:
       matrix:
         suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
     outputs:
-      pleiepenger: ${{ steps.verdikjede-action.outputs.test_result_pleiepenger }}
-      klage: ${{ steps.verdikjede-action.outputs.test_result_klage }}
-      livetssluttfase: ${{ steps.verdikjede-action.outputs.test_result_livetssluttfase }}
-      annet: ${{ steps.verdikjede-action.outputs.test_result_annet}}
-      tilbake: ${{ steps.verdikjede-action.outputs.test_result_tilbake }}
-      frontend: ${{ steps.verdikjede-action.outputs.test_result_frontend }}
-      frontend-los: ${{ steps.verdikjede-action.outputs.test_result_frontend_los }}
+      pleiepenger: ${{ steps.resultat.outputs.pleiepenger }}
+      klage: ${{ steps.resultat.outputs.klage }}
+      livetssluttfase: ${{ steps.resultat.outputs.livetssluttfase }}
+      annet: ${{ steps.resultat.outputs.annet}}
+      tilbake: ${{ steps.resultat.outputs.tilbake }}
+      frontend: ${{ steps.resultat.outputs.frontend }}
+      frontend-los: ${{ steps.resultat.outputs.frontend_los }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test@verdikjede-stacks
         id: verdikjede-action
@@ -129,6 +129,9 @@ jobs:
           reader-token: ${{ secrets.READER_TOKEN }}
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+      - id: resultat
+        run: |
+          echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_results }}" >> $GITHUB_OUTPUT
 
   slack:
     name: Sender slack melding
