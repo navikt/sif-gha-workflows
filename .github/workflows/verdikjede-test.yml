@@ -131,7 +131,7 @@ jobs:
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
       - id: resultat
         run: |
-          echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_results }}" >> $GITHUB_OUTPUT
+          echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_result }}" >> $GITHUB_OUTPUT
 
   slack:
     name: Sender slack melding
