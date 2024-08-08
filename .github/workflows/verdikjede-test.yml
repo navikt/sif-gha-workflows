@@ -105,7 +105,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
+      matrix:
+        suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
     outputs:
       pleiepenger: ${{ steps.verdikjede-action.outputs.test_result_pleiepenger }}
       klage: ${{ steps.verdikjede-action.outputs.test_result_klage }}
