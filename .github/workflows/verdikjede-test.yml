@@ -98,6 +98,14 @@ jobs:
           echo $active_suites
           echo "active_suites=$active_suites" >> $GITHUB_OUTPUT
 
+  get_output:
+    name: test
+    needs: filter_suites
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "${{ needs.filter_suites.outputs.active_suites }}"
+          echo "${{ fromJson(needs.filter_suites.outputs.active_suites) }}"
   run_tests:
     name: Tests
     runs-on: ubuntu-latest-8-cores
