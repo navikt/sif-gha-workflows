@@ -59,12 +59,12 @@ runs:
     - name: Hent image for frontendtest
       if: inputs.test_suite == 'frontend'
       shell: bash
-      run: docker pull europe-north1-docker.pkg.dev/nais-management-233d/k9saksbehandling/k9-sak-frontend-e2e
+      run: docker pull -q europe-north1-docker.pkg.dev/nais-management-233d/k9saksbehandling/k9-sak-frontend-e2e
 
     - name: Hent image for frontend-los test
       if: inputs.test_suite == 'frontend-los'
       shell: bash
-      run: docker pull europe-north1-docker.pkg.dev/nais-management-233d/k9saksbehandling/k9-los-web-e2e
+      run: docker pull -q europe-north1-docker.pkg.dev/nais-management-233d/k9saksbehandling/k9-los-web-e2e
 
     - name: Setup saksbehandling-stack
       shell: bash
