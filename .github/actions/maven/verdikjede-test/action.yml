@@ -67,6 +67,7 @@ runs:
         ./update-versions.sh ${{ github.event.inputs.trigger }} ${{ github.event.inputs.version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
         docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d --wait || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+        echo "STACK_CREATED=true" >> $GITHUB_ENV
         echo "Alt er oppe!"
         echo "docker ps -a:"
         docker ps -a
