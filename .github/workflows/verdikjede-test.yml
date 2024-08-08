@@ -45,7 +45,8 @@ jobs:
     steps:
       - id: filterstep
         run: |
-          echo "active_suites=$(jq --arg suites "${{inputs.suites}}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]' ./verdikjede-test-testsuites.json) >> $GITHUB_OUTPUT
+          active_suites=$(jq --arg suites "${{inputs.suites}}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]' ./verdikjede-test-testsuites.json)
+          echo "$active_suites" >> $GITHUB_OUTPUT
 
   run_tests:
     name: Tests
