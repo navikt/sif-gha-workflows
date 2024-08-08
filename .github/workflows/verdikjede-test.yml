@@ -85,6 +85,7 @@ env:
 
 
 jobs:
+  # Filtrerer ut suite som skal velges i matrix kjøringen. Vanlig måte er å bruke if i matrix jobben, men det spinner opp cluster så bruker denne workarouden.
   filter_suites:
     name: Filter tests
     runs-on: ubuntu-latest
@@ -93,19 +94,11 @@ jobs:
     steps:
       - id: filterstep
         run: |
-          active_suites=$(echo $SUITES | jq -c --arg suites "${{inputs.suites}}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]' )  >> $GITHUB_OUTPUT
+          filtered_json=$(echo $SUITES | jq -c --arg suites "${{inputs.suites}}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]' )  >> $GITHUB_OUTPUT
           echo "active suites:"
-          echo $active_suites
-          echo "filtered=$active_suites" >> $GITHUB_OUTPUT
+          echo $filtered_json
+          echo "filtered=$filtered_json" >> $GITHUB_OUTPUT
 
-  get_output:
-    name: test
-    needs: filter_suites
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "${{ needs.filter_suites.outputs.active_suites }}"
-          echo "${{ fromJson(needs.filter_suites.outputs.active_suites) }}"
   run_tests:
     name: Tests
     runs-on: ubuntu-latest-8-cores
@@ -126,7 +119,6 @@ jobs:
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test@verdikjede-stacks
         id: verdikjede-action
-        if: contains(inputs.suites, matrix.suites.suite)
         with:
           test_suite: ${{ matrix.suites.suite }}
           test_groups: ${{ matrix.suites.test_groups }}
