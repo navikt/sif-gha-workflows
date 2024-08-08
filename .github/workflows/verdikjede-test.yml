@@ -111,11 +111,11 @@ jobs:
     outputs:
       pleiepenger: ${{ steps.verdikjede-action.outputs.test_result_pleiepenger }}
       klage: ${{ steps.verdikjede-action.outputs.test_result_klage }}
-      livetssluttfase: ${{ steps.livetssluttfase.outputs.test_result_livetssluttfase }}
-      annet: ${{ steps.annet.outputs.test_result_annet}}
-      tilbake: ${{ steps.annet.outputs.test_result_tilbake }}
-      frontend: ${{ steps.annet.outputs.test_result_frontend }}
-      frontend-los: ${{ steps.annet.outputs.test_result_frontend_los }}
+      livetssluttfase: ${{ steps.verdikjede-action.outputs.test_result_livetssluttfase }}
+      annet: ${{ steps.verdikjede-action.outputs.test_result_annet}}
+      tilbake: ${{ steps.verdikjede-action.outputs.test_result_tilbake }}
+      frontend: ${{ steps.verdikjede-action.outputs.test_result_frontend }}
+      frontend-los: ${{ steps.verdikjede-action.outputs.test_result_frontend_los }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test@verdikjede-stacks
         id: verdikjede-action
