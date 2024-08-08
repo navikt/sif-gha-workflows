@@ -38,11 +38,11 @@ on:
 
 env:
   SUITES: |
-      '[
+    [
       {
         "suite": "pleiepenger",
         "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger.yml ",
-        "test_groups": "-Dgroups=pleiepenger '\''-Dtest=!PleiepengerLoggTest'\''",
+        "test_groups": "-Dgroups=pleiepenger '-Dtest=!PleiepengerLoggTest'",
         "log_groups": "-Dgroups=etter-pleiepenger"
       },
       {
@@ -81,7 +81,8 @@ env:
         "test_groups": "-Dgroups=frontendtest-los ",
         "log_groups": "-Dgroups=etter "
       }
-    ]'
+    ]
+
 
 jobs:
   filter_suites:
