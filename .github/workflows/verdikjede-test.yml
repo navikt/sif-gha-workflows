@@ -130,27 +130,10 @@ jobs:
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
-
-  run_frontend_tests:
-    name: Frontend Tests
-    if: false
-    runs-on: ubuntu-latest-8-cores
-    timeout-minutes: 30
-    outputs:
-      frontend: ${{ steps.test.outputs.test_result }}
-    steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-frontend-test@main
-        id: test
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          reader-token: ${{ secrets.READER_TOKEN }}
-          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
-
   slack:
     name: Sender slack melding
     if: false
-    needs: [run_tests, run_frontend_tests]
+    needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
       - name: Bygger opp slack melding
@@ -158,12 +141,14 @@ jobs:
           pleiepenger=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.pleiepenger }}")
           livetssluttfase=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.livetssluttfase }}")
           annet=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.annet }}")
+          klage=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.klage }}")
+          tilbake=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.tilbake }}")
           frontend=${{ needs.run_frontend_tests.outputs.frontend }}
   
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend")
+          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
@@ -199,7 +184,12 @@ jobs:
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
           echo '\n' >> $GITHUB_ENV
         # https://api.slack.com/block-kit
+      - name: Slack message
+        run: |
+          echo ${{ env.SLACK_TITLE }}
+          echo ${{ env.MESSAGE }}
       - name: Slack Notification
+        if: false
         run: >
           curl -X POST
           -H 'Content-type: application/json'
