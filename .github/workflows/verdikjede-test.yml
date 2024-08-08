@@ -78,8 +78,8 @@ jobs:
           {
             suite: frontend,
             docker_compose_f: "-f docker-compose-testsuites/docker-compose-frontend.yml -f docker-compose-testsuites/gha/docker-compose-frontend.yml",
-            test_groups: "-Dgroups=frontendtest-los ",
-            log_groups: "-Dgroups=etter-frontendtest-los "
+            test_groups: "-Dgroups=frontendtest ",
+            log_groups: "-Dgroups=etter-frontendtest "
           },
           {
             suite: frontend-los,
