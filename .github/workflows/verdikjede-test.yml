@@ -96,7 +96,7 @@ jobs:
           active_suites=$(echo $SUITES | jq -c --arg suites "${{inputs.suites}}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]' )  >> $GITHUB_OUTPUT
           echo "active suites:"
           echo $active_suites
-          echo "active_suites=$active_suites" >> $GITHUB_OUTPUT
+          echo "filtered=$active_suites" >> $GITHUB_OUTPUT
 
   get_output:
     name: test
