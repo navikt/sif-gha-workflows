@@ -93,10 +93,7 @@ jobs:
     steps:
       - id: filterstep
         run: |
-          active_suites=$(echo $SUITES | jq --arg suites "${{inputs.suites}}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]' )
-          echo "active suites:"
-          echo $active_suites
-          echo "$active_suites" >> $GITHUB_OUTPUT
+          active_suites=$(echo $SUITES | jq -c --arg suites "${{inputs.suites}}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]' )  >> $GITHUB_OUTPUT
 
   run_tests:
     name: Tests
