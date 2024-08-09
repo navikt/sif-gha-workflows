@@ -164,6 +164,9 @@ runs:
         else
            echo "test_result=failed" >> $GITHUB_OUTPUT
         fi
+        
+        echo docker status
+        docker ps -a
 
     - name: Dumper logger for feilsøking
       if: always() && !cancelled() && env.STACK_STARTING == 'true'
