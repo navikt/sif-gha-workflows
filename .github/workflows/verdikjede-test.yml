@@ -101,7 +101,7 @@ jobs:
 
   run_tests:
     name: Tests
-    runs-on: ubuntu-latest #-8-cores
+    runs-on: ubuntu-latest-8-cores
     needs: filter_suites
     timeout-minutes: 30
     strategy:
@@ -195,7 +195,7 @@ jobs:
       - name: Slack message
         run: |
           echo ${{ env.SLACK_TITLE }}
-          echo ${{ env.MESSAGE }}
+          echo ${{ env.SLACK_MESSAGE }}
       - name: Slack Notification
         if: false
         run: >
