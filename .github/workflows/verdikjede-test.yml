@@ -194,8 +194,8 @@ jobs:
         # https://api.slack.com/block-kit
       - name: Slack message
         run: |
-          echo ${{ env.SLACK_TITLE }}
-          echo ${{ env.SLACK_MESSAGE }}
+          echo "${{ env.SLACK_TITLE }}"
+          echo "${{ env.SLACK_MESSAGE }}"
       - name: Slack Notification
         if: false
         run: >
