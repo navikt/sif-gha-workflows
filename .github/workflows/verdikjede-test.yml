@@ -142,19 +142,20 @@ jobs:
     steps:
       - name: Bygger opp slack melding
         run: |
-          echo "outputs" 
-          echo "${{toJson(needs.run_tests.outputs)}}"
-          pleiepenger=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.pleiepenger }}")
-          livetssluttfase=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.livetssluttfase }}")
-          annet=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.annet }}")
-          klage=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.klage }}")
-          tilbake=$([ "${{ inputs.frontend_only }}" == 'true' ] && echo 'skipped' || echo "${{ needs.run_tests.outputs.tilbake }}")
-          frontend=${{ needs.run_frontend_tests.outputs.frontend }}
+          # echo "outputs" 
+          # echo "${{toJson(needs.run_tests.outputs)}}"
+          pleiepenger=$(echo "${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}")
+          livetssluttfase=$(echo "${{ needs.run_tests.outputs.livetssluttfase || 'skipped' }}")
+          annet=$(echo "${{ needs.run_tests.outputs.annet || 'skipped' }}")
+          klage=$(echo "${{ needs.run_tests.outputs.klage || 'skipped' }}")
+          tilbake=$(echo "${{ needs.run_tests.outputs.tilbake || 'skipped' }}")
+          frontend=$(echo "${{ needs.run_tests.outputs.frontend || 'skipped' }}")
+          frontendlos=$(echo "${{ needs.run_tests.outputs.frontend-los || 'skipped' }}")
   
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake")
+          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" $frontendlos)
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
