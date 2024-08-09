@@ -130,6 +130,7 @@ jobs:
           nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
       - id: resultat
+        if: always() && !cancelled()
         run: |
           echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_result }}" >> $GITHUB_OUTPUT
 
