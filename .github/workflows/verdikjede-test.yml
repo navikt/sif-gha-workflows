@@ -142,8 +142,6 @@ jobs:
     steps:
       - name: Bygger opp slack melding
         run: |
-          # echo "outputs" 
-          # echo "${{toJson(needs.run_tests.outputs)}}"
           pleiepenger="${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}"
           livetssluttfase="${{ needs.run_tests.outputs.livetssluttfase || 'skipped' }}"
           annet="${{ needs.run_tests.outputs.annet || 'skipped' }}"
