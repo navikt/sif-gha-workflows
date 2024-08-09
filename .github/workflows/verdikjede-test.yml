@@ -87,7 +87,7 @@ env:
 jobs:
   # Filtrerer ut suite som skal velges i matrix kjøringen. Vanlig måte er å bruke if i matrix jobben, men det spinner opp cluster så bruker denne workarouden.
   filter_suites:
-    name: Lag test matrix
+    name: Avgjør testsuiter som skal kjøres
     runs-on: ubuntu-latest
     outputs:
       active_suites: ${{ steps.filterstep.outputs.filtered }}
