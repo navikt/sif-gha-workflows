@@ -144,13 +144,13 @@ jobs:
         run: |
           # echo "outputs" 
           # echo "${{toJson(needs.run_tests.outputs)}}"
-          pleiepenger=$(echo "${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}")
-          livetssluttfase=$(echo "${{ needs.run_tests.outputs.livetssluttfase || 'skipped' }}")
-          annet=$(echo "${{ needs.run_tests.outputs.annet || 'skipped' }}")
-          klage=$(echo "${{ needs.run_tests.outputs.klage || 'skipped' }}")
-          tilbake=$(echo "${{ needs.run_tests.outputs.tilbake || 'skipped' }}")
-          frontend=$(echo "${{ needs.run_tests.outputs.frontend || 'skipped' }}")
-          frontendlos=$(echo "${{ needs.run_tests.outputs.frontend-los || 'skipped' }}")
+          pleiepenger="${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}"
+          livetssluttfase="${{ needs.run_tests.outputs.livetssluttfase || 'skipped' }}"
+          annet="${{ needs.run_tests.outputs.annet || 'skipped' }}"
+          klage="${{ needs.run_tests.outputs.klage || 'skipped' }}"
+          tilbake="${{ needs.run_tests.outputs.tilbake || 'skipped' }}"
+          frontend="${{ needs.run_tests.outputs.frontend || 'skipped' }}"
+          frontendlos="${{ needs.run_tests.outputs.frontend-los || 'skipped' }}"
   
           title="Verdikjede er "
           all_success=true
