@@ -1,9 +1,6 @@
 name: 'Setup verdikjede & run tests'
 description: Setup verdikjede & run tests
 inputs:
-  apps:
-    description: 'Apps to start for verdikjede, separated by space'
-    required: true
   github-token:
     description: 'Token for accessing GitHub packages'
     required: true
@@ -25,6 +22,9 @@ inputs:
   log_groups:
     description: 'Maven log groups to check'
     required: true
+  docker_compose_f:
+    required: true
+    description: 'docker compose flag to run with one or more docker compose files'
 outputs:
   test_result:
     description: 'Test result'
@@ -35,7 +35,7 @@ runs:
     - uses: actions/checkout@v4
       with:
         repository: 'navikt/k9-verdikjede'
-        ref: 'master'
+        ref: 'docker-compose-stacks'
         token: ${{ inputs.reader-token }}
 
     - uses: actions/setup-java@v4
@@ -66,7 +66,13 @@ runs:
         cd ../saksbehandling
         ./update-versions.sh ${{ github.event.inputs.trigger }} ${{ github.event.inputs.version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
-        docker compose -f docker-compose.yml -f docker-compose-github.yml up --quiet-pull -d ${{ inputs.apps }} || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+        echo "tid før docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
+        docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+        echo "tid etter docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
+        echo "docker ps -a:"
+        docker ps -a
+        echo "docker stats --no-stream"
+        docker stats --no-stream
 
     - name: Venter på stacken og sjekker status
       shell: bash
@@ -75,27 +81,62 @@ runs:
         docker ps -a
         echo
         echo "Tester om VTP er oppe"
-        timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done' || false
+        timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
         echo Oppe!
         echo
-        echo "Tester om k9-sak er oppe"
-        timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/k9/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done' || false
-        echo Oppe!
-        echo
-        echo "Tester om abakus er oppe"
-        timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8015/k9/abakus/internal/isReady)" != "200" ]]; do sleep 2; done' || false
-        echo Oppe!
-        echo
-
+        
+        if [[ ${{ inputs.test_suite }} == klage ]]; then
+          echo "Tester om k9-klage er oppe"
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8701/k9/klage/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo Oppe!
+          echo
+        else
+          echo "Tester om k9-sak er oppe"
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/k9/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo Oppe!
+          echo
+          echo "Tester om abakus er oppe"
+          timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8015/k9/abakus/internal/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo Oppe!
+          echo
+        fi
+        
+        if [[ ${{ inputs.test_suite }} == tilbake ]]; then
+          echo
+          echo "Tester om k9-tilbake er oppe"
+          timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8030/k9/tilbake/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo Oppe!
+          echo
+        fi
+        
+        if [[ ${{ inputs.test_suite }} == frontend ]]; then
+          echo
+          echo "Tester om k9-los-web er oppe "
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/isAlive)" != "200" ]]; do sleep 2; done' || false
+          echo Oppe!
+        fi
+        
+        if [[ ${{ inputs.test_suite }} == frontend-los ]]; then
+          echo
+          echo "Tester om k9-los-web er oppe "
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8031/isReady)" != "200" ]]; do sleep 2; done' || false
+          echo Oppe!
+        fi
+        
         echo "STACK_STARTED=true" >> $GITHUB_ENV
+        echo "tid når alt er oppe: $(date +"%Y-%m-%dT%H:%M:%S")"
+
         docker stats --no-stream
+
 
     - name: Utfører tester
       id: tester
       shell: bash
       run: |
+        echo "tid før test start: $(date +"%Y-%m-%dT%H:%M:%S")"
         cd verdikjede
         mvn clean verify -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.test_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+        echo "tid etter test fullført: $(date +"%Y-%m-%dT%H:%M:%S")"
       env:
         GITHUB_USERNAME: ${{ github.actor }}
         GITHUB_PASSWORD: ${{ inputs.reader-token }}
@@ -116,12 +157,19 @@ runs:
       shell: bash
       run: |
         if [ ! ${{ env.STACK_STARTED }} ]; then
+           docker ps -a
            echo "test_result=stack_not_started" >> $GITHUB_OUTPUT
         elif [[ ${{ steps.tester.outcome }} == success && ${{ steps.loggsjekker.outcome }} == success ]]; then
            echo "test_result=success" >> $GITHUB_OUTPUT
         else
            echo "test_result=failed" >> $GITHUB_OUTPUT
         fi
+        echo "####################################"
+        echo "docker ps -a:"
+        docker ps -a
+        echo "####################################"
+        echo "docker stats --no-stream"
+        docker stats --no-stream
 
     - name: Dumper logger for feilsøking
       if: always() && !cancelled() && env.STACK_STARTING == 'true'
@@ -137,3 +185,12 @@ runs:
       with:
         name: ${{ inputs.test_suite }}-logs
         path: container-logs/
+
+    - name: Laste opp skjermbilder
+      if: contains(inputs.test_suite, 'frontend') && failure() && env.STACK_CREATED == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-test-output
+        # definert i frontend java-testene!
+        path: verdikjede/frontendtest-output
+
