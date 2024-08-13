@@ -17,24 +17,27 @@ on:
         required: false
         default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los"
     outputs:
-      pleiepenger: 
-            description: "Utfall fra pleiepenger-test"
-            value: ${{ jobs.run_tests.outputs.pleiepenger }}
+      pleiepenger:
+        description: "Utfall fra pleiepenger-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger }}
       livetssluttfase:
-            description: "Utfall fra livetssluttfase-test"
-            value: ${{ jobs.run_tests.outputs.livetssluttfase }}
+        description: "Utfall fra livetssluttfase-test"
+        value: ${{ jobs.run_tests.outputs.livetssluttfase }}
       annet:
-            description: "Utfall fra annet-test"
-            value: ${{ jobs.run_tests.outputs.annet }}
-      frontend: 
-            description: "Utfall fra frontend-test"
-            value: ${{ jobs.run_tests.outputs.frontend }}
+        description: "Utfall fra annet-test"
+        value: ${{ jobs.run_tests.outputs.annet }}
+      frontend:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend }}
       klage:
         description: "Utfall fra klage-test"
         value: ${{ jobs.run_tests.outputs.klage }}
       tilbake:
         description: "Utfall fra tilbake-test"
         value: ${{ jobs.run_tests.outputs.tilbake }}
+      frontend-los:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend-los }}
 
 jobs:
   # Filtrerer ut suite som skal velges i matrix kjøringen. Vanlig måte er å bruke if i matrix jobben, men det spinner opp cluster så bruker denne workarouden.
@@ -195,7 +198,6 @@ jobs:
           echo "${{ env.SLACK_TITLE }}"
           echo "${{ env.SLACK_MESSAGE }}"
       - name: Slack Notification
-        if: false
         run: >
           curl -X POST
           -H 'Content-type: application/json'
