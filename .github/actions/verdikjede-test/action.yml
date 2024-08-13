@@ -1,4 +1,4 @@
-name: 'Setup verdikjede & run tests'
+name: 'Setup verdikjede & run tests - v2'
 description: Setup verdikjede & run tests
 inputs:
   github-token:
@@ -25,6 +25,13 @@ inputs:
   docker_compose_f:
     required: true
     description: 'docker compose flag to run with one or more docker compose files'
+  override_image_filename:
+    required: false
+    description: 'Full path of local image to override triggering repository image instead of using latest. Downloads the overriden image from previous a job.'
+  override_image_version:
+    required: false
+    description: 'Version of overriden image. '
+
 outputs:
   test_result:
     description: 'Test result'

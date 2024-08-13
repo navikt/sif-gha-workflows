@@ -4,18 +4,21 @@ on:
     inputs:
       tag:
         type: string
-        description: 'Docker tag (from repository)'
+        description: 'Docker tag (from repository) - deprecated, use override_image_version'
         required: true
-      frontend_only:
-        type: string
-        description: 'Kun kjør frontend tester'
-        required: false
-        default: 'false'
       suites:
         type: string
         description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los.'
         required: false
         default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los"
+      override_image_filename:
+        type: string
+        required: false
+        description: 'Full path of local image to override triggering repository image instead of using latest. Downloads the overriden image from previous a job.'
+      override_image_version:
+        type: string
+        required: false
+        description: 'Version/tag of overriden image. '
     outputs:
       pleiepenger:
         description: "Utfall fra pleiepenger-test"
