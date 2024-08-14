@@ -4,7 +4,7 @@ on:
     inputs:
       tag:
         type: string
-        description: 'Docker tag (from repository) - deprecated, use override_image_version'
+        description: 'Docker tag (from repository) - deprecated, use image_version'
         required: true
       suites:
         type: string
@@ -15,10 +15,10 @@ on:
         type: string
         required: false
         description: 'Artifact name of docker image to use instead of latest. Downloads the overriden image from previous a job.'
-      override_image_version:
+      image_version:
         type: string
-        required: false
-        description: 'Version/tag of overriden image. '
+        required: true
+        description: 'Version/tag of image. '
     outputs:
       pleiepenger:
         description: "Utfall fra pleiepenger-test"
@@ -129,7 +129,7 @@ jobs:
           log_groups: ${{ matrix.suites.log_groups }}
           docker_compose_f: ${{ matrix.suites.docker_compose_f }}
           override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
-          override_image_version: ${{ inputs.override_image_version }}
+          image_version: ${{ inputs.image_version }}
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}

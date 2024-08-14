@@ -28,7 +28,7 @@ inputs:
   override_image_artifact_name:
     required: false
     description: 'Artifact name of docker image to download and load.'
-  override_image_version:
+  image_version:
     required: false
     description: 'tag or version to use of triggering repo docker image  '
 
@@ -83,7 +83,7 @@ runs:
         cd keystore
         ./make-dummy-keystore.sh
         cd ../saksbehandling
-        ./update-versions.sh ${{ github.repository }} ${{ inputs.override_image_version }}
+        ./update-versions.sh ${{ github.repository }} ${{ inputs.image_version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
         
