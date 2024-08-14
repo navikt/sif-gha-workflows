@@ -201,7 +201,6 @@ jobs:
           echo "${{ env.SLACK_TITLE }}"
           echo "${{ env.SLACK_MESSAGE }}"
       - name: Slack Notification
-        if: false
         run: >
           curl -X POST
           -H 'Content-type: application/json'
