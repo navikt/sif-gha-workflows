@@ -27,10 +27,10 @@ inputs:
     description: 'docker compose flag to run with one or more docker compose files'
   override_image_artifact_name:
     required: false
-    description: 'Full path of local image to override triggering repository image instead of using latest. Downloads the overriden image from previous a job.'
+    description: 'Artifact name of docker image to download and load.'
   override_image_version:
     required: false
-    description: 'Version of overriden image. '
+    description: 'tag or version to use of triggering repo docker image  '
 
 outputs:
   test_result:

@@ -88,7 +88,7 @@ runs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        outputs: ${{inputs.upload-image && format('type=docker,dest=/tmp/local-docker-image.tar', github.repository) || null }}
+        outputs: ${{ (inputs.upload-image && format('type=docker,dest=/tmp/local-docker-image.tar', github.repository)) || null }}
     - name: Generate SBOM, attest and sign image
       if: inputs.push-image == 'true'
       uses: nais/attest-sign@603c79b4f9c710ce3b0ab468d13563915b4da6a2 # ratchet:nais/attest-sign@v1.3.3
