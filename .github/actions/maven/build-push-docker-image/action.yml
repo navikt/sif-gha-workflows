@@ -105,4 +105,4 @@ runs:
       if: inputs.upload-image == 'true'
       shell: bash
       run: |
-        echo "image_artifact_name=local-docker-image" >> $GITHUB_OUTPUTS
+        echo "image_artifact_name=local-docker-image" >> $GITHUB_OUTPUT
