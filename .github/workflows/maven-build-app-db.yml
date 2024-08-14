@@ -61,7 +61,7 @@ on:
         description: "Build version"
         value: ${{ jobs.build-and-test.outputs.build-version }}
       image-artifact-name:
-        description: 'full path of uploaded image'
+        description: 'local docker image artifact name to be downloaded '
         value: ${{ jobs.build-and-test.outputs.image-artifact-name }}
 jobs:
   build-and-test:
@@ -126,7 +126,7 @@ jobs:
       - name: Bygg og push docker image
         id: docker-build
         if: inputs.build-image
-        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@verdikjede-branch-stotte # ratchet:exclude
+        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@main # ratchet:exclude
         with:
           build-version: ${{ steps.build-and-test.outputs.build-version }}
           push-image: ${{ inputs.push-image }}

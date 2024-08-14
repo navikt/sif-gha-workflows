@@ -51,6 +51,9 @@ on:
       build-version:
         description: "Build version"
         value: ${{ jobs.build-and-test.outputs.build-version }}
+      image-artifact-name:
+        description: 'local docker image artifact name to be downloaded '
+        value: ${{ jobs.build-and-test.outputs.image-artifact-name }}
 jobs:
   build-and-test:
     name: Build and test
@@ -64,6 +67,7 @@ jobs:
 
     outputs:
       build-version: ${{ steps.build-and-test.outputs.build-version }}
+      image-artifact-name: ${{ steps.docker-build.outputs.image-artifact-name }}
 
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
@@ -87,12 +91,14 @@ jobs:
           t-2c: ${{ inputs.t-2c }}
           skip-tests: ${{ inputs.skip-tests }}
       - name: Bygg og push docker image
+        id: docker-build
         if: inputs.build-image
         uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@main # ratchet:exclude
         with:
           build-version: ${{ steps.build-and-test.outputs.build-version }}
           push-image: ${{ inputs.push-image }}
           upload-image: ${{ inputs.upload-image }}
+          docker_platforms: ${{ inputs.upload-image && 'linux/amd64' }} # docker image tarball støtter bare én platform av gangen
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           namespace: ${{ inputs.namespace }}
