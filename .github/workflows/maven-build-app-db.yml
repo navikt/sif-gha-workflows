@@ -130,7 +130,7 @@ jobs:
         with:
           build-version: ${{ steps.build-and-test.outputs.build-version }}
           push-image: ${{ inputs.push-image }}
-          upload-image: ${{ inputs.upload_image }}
+          upload-image: ${{ inputs.upload-image }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           namespace: ${{ inputs.namespace }}
