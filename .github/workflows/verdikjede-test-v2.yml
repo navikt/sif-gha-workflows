@@ -119,7 +119,7 @@ jobs:
       annet: ${{ steps.resultat.outputs.annet}}
       tilbake: ${{ steps.resultat.outputs.tilbake }}
       frontend: ${{ steps.resultat.outputs.frontend }}
-      frontend-los: ${{ steps.resultat.outputs.frontend_los }}
+      frontend-los: ${{ steps.resultat.outputs.frontend-los }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/verdikjede-test@verdikjede-stacks
         id: verdikjede-action
