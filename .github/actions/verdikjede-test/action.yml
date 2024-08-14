@@ -73,9 +73,15 @@ runs:
         cd ../saksbehandling
         ./update-versions.sh ${{ github.event.inputs.trigger }} ${{ github.event.inputs.version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
-        echo "tid før docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
+        tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
+        
         docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
         echo "tid etter docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
+        
+        tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
+        duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
+        echo "Tid brukt på docker compose: $(date -u -d @"$duration" +"%M:%S") min"
+        
         echo "docker ps -a:"
         docker ps -a
         echo "docker stats --no-stream"
@@ -85,6 +91,8 @@ runs:
       shell: bash
       run: |
         echo "STACK_CREATED=true" >> $GITHUB_ENV
+        tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
+        
         docker ps -a
         echo
         echo "Tester om VTP er oppe"
@@ -131,8 +139,11 @@ runs:
         fi
         
         echo "STACK_STARTED=true" >> $GITHUB_ENV
-        echo "tid når alt er oppe: $(date +"%Y-%m-%dT%H:%M:%S")"
-
+        
+        tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
+        duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
+        echo "Tid brukt på å vente på at alt er oppe: $(date -u -d @"$duration" +"%M:%S") min"
+        
         docker stats --no-stream
 
 
@@ -140,10 +151,14 @@ runs:
       id: tester
       shell: bash
       run: |
-        echo "tid før test start: $(date +"%Y-%m-%dT%H:%M:%S")"
+        tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
+        
         cd verdikjede
         mvn clean verify -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.test_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
-        echo "tid etter test fullført: $(date +"%Y-%m-%dT%H:%M:%S")"
+        
+        tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
+        duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
+        echo "Tid brukt på testene: $(date -u -d @"$duration" +"%M:%S") min"
       env:
         GITHUB_USERNAME: ${{ github.actor }}
         GITHUB_PASSWORD: ${{ inputs.reader-token }}
