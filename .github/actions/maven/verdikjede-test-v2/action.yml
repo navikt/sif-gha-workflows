@@ -63,6 +63,18 @@ runs:
         identity_provider: ${{ inputs.nais-workload-identity-provider }}
         team: k9saksbehandling
 
+    - name: Download artifact
+      if: ${{ inputs.override_image_filename }}
+      uses: actions/download-artifact@v4
+      with:
+        name: myimage
+        path: /tmp
+    - name: Load local image
+      if: ${{ inputs.override_image_filename }}
+      shell: bash
+      run: |
+        docker load --input ${{ inputs.override_image_filename }}
+
     - name: Setup saksbehandling-stack
       shell: bash
       run: |
@@ -71,7 +83,7 @@ runs:
         cd keystore
         ./make-dummy-keystore.sh
         cd ../saksbehandling
-        ./update-versions.sh ${{ github.event.inputs.trigger }} ${{ github.event.inputs.version }}
+        ./update-versions.sh ${{ github.repository }} ${{ inputs.override_image_version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
         

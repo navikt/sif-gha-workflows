@@ -37,6 +37,11 @@ on:
         type: boolean
         description: Skal docker image pushes?
         default: false
+      upload-image:
+        required: false
+        type: boolean
+        description: Skal docker image lastes opp til jobben?
+        default: false
       namespace:
         required: false
         type: string
@@ -55,6 +60,9 @@ on:
       build-version:
         description: "Build version"
         value: ${{ jobs.build-and-test.outputs.build-version }}
+      upload_image_path:
+        description: 'full path of uploaded image'
+        value: ${{ jobs.build-and-test.outputs.image_path }}
 jobs:
   build-and-test:
     name: Build and test
@@ -78,6 +86,7 @@ jobs:
 
     outputs:
       build-version: ${{ steps.build-and-test.outputs.build-version }}
+      image_path: ${{ steps.docker-build.outputs.image_path }}
 
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
@@ -115,11 +124,13 @@ jobs:
           t-2c: ${{ inputs.t-2c }}
           skip-tests: ${{ inputs.skip-tests }}
       - name: Bygg og push docker image
+        id: docker-build
         if: inputs.build-image
-        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@main # ratchet:exclude
+        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@verdikjede-branch-stotte # ratchet:exclude
         with:
           build-version: ${{ steps.build-and-test.outputs.build-version }}
           push-image: ${{ inputs.push-image }}
+          upload-image: ${{ inputs.upload_image }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           namespace: ${{ inputs.namespace }}
