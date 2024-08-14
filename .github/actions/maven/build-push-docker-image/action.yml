@@ -33,7 +33,6 @@ inputs:
   docker_platforms:
     description: "Docker platforms"
     required: false
-    default: "linux/amd64,linux/arm64"
   image_suffix:
     description: "Adds a suffix to the generated docker image name"
     required: false
@@ -81,7 +80,7 @@ runs:
       with:
         context: ${{ inputs.docker_context }}
         file: ${{ inputs.dockerfile }}
-        platforms: ${{ inputs.docker_platforms }}
+        platforms: ${{ inputs.docker_platforms || 'linux/amd64,linux/arm64' }}
         pull: true
         push: ${{ inputs.push-image == 'true' }}
         tags: ${{ steps.meta.outputs.tags }}
