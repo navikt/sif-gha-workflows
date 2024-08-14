@@ -41,7 +41,7 @@ inputs:
 outputs:
   image-artifact-name:
     description: 'artifact id of uploaded image'
-    value: ${{ steps.image-artifact-name.outputs.image-artifact-name }}
+    value: ${{ steps.image-artifact-name.outputs.image_artifact_name }}
 runs:
   using: "composite"
   steps:
@@ -105,4 +105,4 @@ runs:
       if: inputs.upload-image == 'true'
       shell: bash
       run: |
-        echo image-artifact-name=local-docker-image" >> $GITHUB_OUTPUTS
+        echo "image_artifact_name=local-docker-image" >> $GITHUB_OUTPUTS
