@@ -62,7 +62,7 @@ on:
         value: ${{ jobs.build-and-test.outputs.build-version }}
       image-artifact-name:
         description: 'full path of uploaded image'
-        value: ${{ jobs.build-and-test.outputs.image_path }}
+        value: ${{ jobs.build-and-test.outputs.image-artifact-name }}
 jobs:
   build-and-test:
     name: Build and test
