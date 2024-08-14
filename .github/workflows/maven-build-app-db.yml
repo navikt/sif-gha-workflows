@@ -60,7 +60,7 @@ on:
       build-version:
         description: "Build version"
         value: ${{ jobs.build-and-test.outputs.build-version }}
-      upload_image_path:
+      image-artifact-name:
         description: 'full path of uploaded image'
         value: ${{ jobs.build-and-test.outputs.image_path }}
 jobs:
@@ -86,7 +86,7 @@ jobs:
 
     outputs:
       build-version: ${{ steps.build-and-test.outputs.build-version }}
-      image_path: ${{ steps.docker-build.outputs.image_path }}
+      image-artifact-name: ${{ steps.docker-build.outputs.image-artifact-name }}
 
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4

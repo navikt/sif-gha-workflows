@@ -11,10 +11,10 @@ on:
         description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los.'
         required: false
         default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los"
-      override_image_filename:
+      override_image_artifact_name:
         type: string
         required: false
-        description: 'Full path of local image to override triggering repository image instead of using latest. Downloads the overriden image from previous a job.'
+        description: 'Artifact name of docker image to use instead of latest. Downloads the overriden image from previous a job.'
       override_image_version:
         type: string
         required: false
@@ -128,7 +128,7 @@ jobs:
           test_groups: ${{ matrix.suites.test_groups }}
           log_groups: ${{ matrix.suites.log_groups }}
           docker_compose_f: ${{ matrix.suites.docker_compose_f }}
-          override_image_filename: ${{ inputs.override_image_filename }}
+          override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
           override_image_version: ${{ inputs.override_image_version }}
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}

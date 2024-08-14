@@ -25,7 +25,7 @@ inputs:
   docker_compose_f:
     required: true
     description: 'docker compose flag to run with one or more docker compose files'
-  override_image_filename:
+  override_image_artifact_name:
     required: false
     description: 'Full path of local image to override triggering repository image instead of using latest. Downloads the overriden image from previous a job.'
   override_image_version:
@@ -64,16 +64,16 @@ runs:
         team: k9saksbehandling
 
     - name: Download artifact
-      if: ${{ inputs.override_image_filename }}
+      if: ${{ inputs.override_image_artifact_name }}
       uses: actions/download-artifact@v4
       with:
-        name: myimage
-        path: /tmp
+        name: ${{ inputs.override_image_artifact_name }}
+        path: /tmp/
     - name: Load local image
-      if: ${{ inputs.override_image_filename }}
+      if: ${{ inputs.override_image_artifact_name }}
       shell: bash
       run: |
-        docker load --input ${{ inputs.override_image_filename }}
+        docker load --input /tmp/${{ inputs.override_image_artifact_name }}.tar
 
     - name: Setup saksbehandling-stack
       shell: bash

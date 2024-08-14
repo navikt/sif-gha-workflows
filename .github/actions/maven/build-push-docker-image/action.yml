@@ -39,9 +39,9 @@ inputs:
     required: false
     default: ""
 outputs:
-  upload_image_path:
-    description: 'full path of uploaded image'
-    value: ${{ steps.upload-image-path.outputs.image_path }}
+  image-artifact-name:
+    description: 'artifact id of uploaded image'
+    value: ${{ steps.image-artifact-name.outputs.image-artifact-name }}
 runs:
   using: "composite"
   steps:
@@ -88,7 +88,7 @@ runs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        outputs: ${{inputs.upload-image && format('type=docker,dest=/tmp/local-images/{0}', inputs.build-version) }}
+        outputs: ${{inputs.upload-image && format('type=docker,dest=/tmp/local-images/{0}-docker-image.tar', github.repository) }}
     - name: Generate SBOM, attest and sign image
       if: inputs.push-image == 'true'
       uses: nais/attest-sign@603c79b4f9c710ce3b0ab468d13563915b4da6a2 # ratchet:nais/attest-sign@v1.3.3
@@ -98,11 +98,11 @@ runs:
       if: inputs.upload-image == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.build-version }}-docker-image
-        path: /tmp/local-images/${{ inputs.build-version }}.tar
+        name: ${{ github.repository }}-docker-image
+        path: /tmp/local-images/${{ github.repository }}-docker-image.tar
     - name: Set upload image output full path
-      id: upload-image-path
+      id: image-artifact-name
       if: inputs.upload-image == 'true'
       shell: bash
       run: |
-        echo image_path="/tmp/local-images/${{ inputs.build-version }}.tar" >> $GITHUB_OUTPUTS
+        echo image-artifact-name=${{ github.repository }}-docker-image" >> $GITHUB_OUTPUTS
