@@ -1,3 +1,4 @@
+#Deprecated - bruk verdikjede-test-v2/action
 name: 'Setup verdikjede & run frontend tests'
 description: Setup verdikjede & run frontend tests
 inputs:
@@ -147,4 +148,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: skjermbilder
-        path: verdikjede/frontendtest-screenshots
+        path: verdikjede/frontendtest-output

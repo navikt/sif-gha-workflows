@@ -1,0 +1,217 @@
+name: Tester saksbehandling (reusable)
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        description: 'Docker tag (from repository) - deprecated, use override_image_version'
+        required: true
+      suites:
+        type: string
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los.'
+        required: false
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los"
+      override_image_filename:
+        type: string
+        required: false
+        description: 'Full path of local image to override triggering repository image instead of using latest. Downloads the overriden image from previous a job.'
+      override_image_version:
+        type: string
+        required: false
+        description: 'Version/tag of overriden image. '
+    outputs:
+      pleiepenger:
+        description: "Utfall fra pleiepenger-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger }}
+      livetssluttfase:
+        description: "Utfall fra livetssluttfase-test"
+        value: ${{ jobs.run_tests.outputs.livetssluttfase }}
+      annet:
+        description: "Utfall fra annet-test"
+        value: ${{ jobs.run_tests.outputs.annet }}
+      frontend:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend }}
+      klage:
+        description: "Utfall fra klage-test"
+        value: ${{ jobs.run_tests.outputs.klage }}
+      tilbake:
+        description: "Utfall fra tilbake-test"
+        value: ${{ jobs.run_tests.outputs.tilbake }}
+      frontend-los:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend-los }}
+
+jobs:
+  # Filtrerer ut suite som skal velges i matrix kjøringen. Vanlig måte er å bruke if i matrix jobben, men det spinner opp cluster så bruker denne workarouden.
+  filter_suites:
+    env:
+      SUITES: |
+        [
+          {
+            "suite": "pleiepenger",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+            "test_groups": "-Dgroups=pleiepenger '-Dtest=!PleiepengerLoggTest'",
+            "log_groups": "-Dgroups=etter-pleiepenger"
+          },
+          {
+            "suite": "livetssluttfase",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml",
+            "test_groups": "-Dgroups=livetssluttfase",
+            "log_groups": "-Dgroups=etter-livetssluttfase"
+          },
+          {
+            "suite": "klage",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-klage.yml -f docker-compose-testsuites/gha/docker-compose-klage-gha.yml ",
+            "test_groups": "-Dgroups=klage ",
+            "log_groups": "-Dgroups=etter"
+          },
+          {
+            "suite": "annet",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-omsorgspenger.yml -f docker-compose-testsuites/gha/docker-compose-omsorgspenger-gha.yml",
+            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,pleiepenger,livetssluttfase,klage,tilbakekreving,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter",
+            "log_groups": "-Dgroups=etter"
+          },
+          {
+            "suite": "tilbake",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-tilbake.yml -f docker-compose-testsuites/gha/docker-compose-tilbake-gha.yml",
+            "test_groups": "-Dgroups=tilbakekreving ",
+            "log_groups": "-Dgroups=etter-tilbakekreving "
+          },
+          {
+            "suite": "frontend",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-frontend.yml -f docker-compose-testsuites/gha/docker-compose-frontend-gha.yml",
+            "test_groups": "-Dgroups=frontendtest ",
+            "log_groups": "-Dgroups=etter-frontendtest "
+          },
+          {
+            "suite": "frontend-los",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-frontend-los.yml -f docker-compose-testsuites/gha/docker-compose-frontend-los-gha.yml",
+            "test_groups": "-Dgroups=frontendtest-los ",
+            "log_groups": "-Dgroups=etter "
+          }
+        ]
+    name: Avgjør testsuiter som skal kjøres
+    runs-on: ubuntu-latest
+    outputs:
+      active_suites: ${{ steps.filterstep.outputs.filtered }}
+    steps:
+      - id: filterstep
+        run: |
+          filtered_json=$(echo $SUITES | jq -c --arg suites "${{inputs.suites}}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]' )  >> $GITHUB_OUTPUT
+          echo "active suites:"
+          echo $filtered_json
+          echo "filtered=$filtered_json" >> $GITHUB_OUTPUT
+
+  run_tests:
+    name: Tests
+    runs-on: ubuntu-latest-8-cores
+    needs: filter_suites
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
+    outputs:
+      pleiepenger: ${{ steps.resultat.outputs.pleiepenger }}
+      klage: ${{ steps.resultat.outputs.klage }}
+      livetssluttfase: ${{ steps.resultat.outputs.livetssluttfase }}
+      annet: ${{ steps.resultat.outputs.annet}}
+      tilbake: ${{ steps.resultat.outputs.tilbake }}
+      frontend: ${{ steps.resultat.outputs.frontend }}
+      frontend-los: ${{ steps.resultat.outputs.frontend-los }}
+    steps:
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@verdikjede-stacks
+        id: verdikjede-action
+        with:
+          test_suite: ${{ matrix.suites.suite }}
+          test_groups: ${{ matrix.suites.test_groups }}
+          log_groups: ${{ matrix.suites.log_groups }}
+          docker_compose_f: ${{ matrix.suites.docker_compose_f }}
+          # Composite actions arver ikke secrets så vi må få dem in som input
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reader-token: ${{ secrets.READER_TOKEN }}
+          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+      - id: resultat
+        if: always() && !cancelled()
+        run: |
+          echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_result }}" >> $GITHUB_OUTPUT
+
+  slack:
+    name: Sender slack melding
+    if: ${{ always() && !cancelled() }}
+    needs: [run_tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bygger opp slack melding
+        run: |
+          pleiepenger="${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}"
+          livetssluttfase="${{ needs.run_tests.outputs.livetssluttfase || 'skipped' }}"
+          annet="${{ needs.run_tests.outputs.annet || 'skipped' }}"
+          klage="${{ needs.run_tests.outputs.klage || 'skipped' }}"
+          tilbake="${{ needs.run_tests.outputs.tilbake || 'skipped' }}"
+          frontend="${{ needs.run_tests.outputs.frontend || 'skipped' }}"
+          frontendlos="${{ needs.run_tests.outputs.frontend-los || 'skipped' }}"
+  
+          title="Verdikjede er "
+          all_success=true
+
+          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" $frontendlos)
+          for result in "${test_results[@]}"; do
+            if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
+              all_success=false
+              break
+            fi
+          done
+  
+          if [[ "$all_success" == true ]]; then
+            title+="kjørt UTEN feil :rocket:"
+          else
+            title+="brukket :boom:"
+          fi
+  
+          echo "SLACK_TITLE=$title" >> $GITHUB_ENV
+  
+          function echoStatus() {
+            if [[ "$2" == 'success' ]]; then
+              echo ":heavy_check_mark:  $1"
+            elif [[ "$2" == 'skipped' ]]; then
+              return
+            else
+              echo ":x:  $1"
+            fi
+          }
+  
+          echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
+          echoStatus "Pleiepenger" $pleiepenger >> $GITHUB_ENV
+          echoStatus "Livets sluttfase" $livetssluttfase >> $GITHUB_ENV
+          echoStatus "Frontend" $frontend >> $GITHUB_ENV
+          echoStatus "Omsorgspenger og annet" $annet >> $GITHUB_ENV
+          echoStatus "Klage" $klage >> $GITHUB_ENV
+          echoStatus "Tilbakekreving" $tilbake >> $GITHUB_ENV
+          echoStatus "Frontend Los" $frontendlos >> $GITHUB_ENV
+          echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
+          echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
+          echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
+          echo '\n' >> $GITHUB_ENV
+        # https://api.slack.com/block-kit
+      - name: Slack message
+        run: |
+          echo "${{ env.SLACK_TITLE }}"
+          echo "${{ env.SLACK_MESSAGE }}"
+      - name: Slack Notification
+        run: >
+          curl -X POST
+          -H 'Content-type: application/json'
+          --data '{"blocks": [
+            {
+              "type": "header",
+              "text": {"type": "plain_text", "text": "${{ env.SLACK_TITLE }}"}
+            },
+            {
+              "type": "section",
+              "text": {"type": "mrkdwn", "text": "${{ env.SLACK_MESSAGE }}"}
+            }
+          ]}'
+          ${{ secrets.SLACKBOT_WEBHOOK }}

@@ -1,3 +1,4 @@
+#Deprecated - bruk verdikjede-test-v2/action
 name: 'Setup verdikjede & run tests'
 description: Setup verdikjede & run tests
 inputs:
