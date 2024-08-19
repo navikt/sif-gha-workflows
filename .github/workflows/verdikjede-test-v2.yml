@@ -14,7 +14,7 @@ on:
       override_image_artifact_name:
         type: string
         required: false
-        description: 'Artifact name of docker image to use instead of latest. Downloads the overriden image from previous a job.'
+        description: 'Artifact name of docker image to download and load.'
       image_version:
         type: string
         required: true
