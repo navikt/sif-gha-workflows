@@ -1,24 +1,24 @@
-name: Tester saksbehandling (reusable)
+name: Tester saksbehandling - v2 (reusable)
 on:
   workflow_call:
     inputs:
       tag:
         type: string
-        description: 'Docker tag (from repository) - deprecated, use override_image_version'
+        description: 'Docker tag (from repository) - deprecated, use image_version'
         required: true
       suites:
         type: string
         description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los.'
         required: false
         default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los"
-      override_image_filename:
+      override_image_artifact_name:
         type: string
         required: false
-        description: 'Full path of local image to override triggering repository image instead of using latest. Downloads the overriden image from previous a job.'
-      override_image_version:
+        description: 'Artifact name of docker image to download and load.'
+      image_version:
         type: string
-        required: false
-        description: 'Version/tag of overriden image. '
+        required: true
+        description: 'Version/tag of image. '
     outputs:
       pleiepenger:
         description: "Utfall fra pleiepenger-test"
@@ -128,6 +128,8 @@ jobs:
           test_groups: ${{ matrix.suites.test_groups }}
           log_groups: ${{ matrix.suites.log_groups }}
           docker_compose_f: ${{ matrix.suites.docker_compose_f }}
+          override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
+          image_version: ${{ inputs.image_version }}
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}
@@ -140,7 +142,7 @@ jobs:
 
   slack:
     name: Sender slack melding
-    if: ${{ always() && !cancelled() }}
+    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
     needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
