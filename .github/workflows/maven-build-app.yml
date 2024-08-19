@@ -93,12 +93,12 @@ jobs:
       - name: Bygg og push docker image
         id: docker-build
         if: inputs.build-image
-        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@main # ratchet:exclude
+        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@verdikjede-branch-stotte # ratchet:exclude
         with:
           build-version: ${{ steps.build-and-test.outputs.build-version }}
           push-image: ${{ inputs.push-image }}
           upload-image: ${{ inputs.upload-image }}
-          docker_platforms: ${{ (inputs.upload-image == 'true' && 'linux/amd64') || null }} # docker image tarball støtter bare én platform av gangen
+          docker_platforms: ${{ (inputs.upload-image && 'linux/amd64') || null }} # docker image tarball støtter bare én platform av gangen
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           namespace: ${{ inputs.namespace }}
