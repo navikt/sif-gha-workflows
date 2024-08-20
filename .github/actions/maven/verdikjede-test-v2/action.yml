@@ -31,6 +31,9 @@ inputs:
   image_version:
     required: false
     description: 'tag or version to use of triggering repo docker image  '
+  timeout_test_increase:
+    required: false
+    description: 'custom timeout increase for tests - typically used on slow github action runners'
 
 outputs:
   test_result:
@@ -174,6 +177,7 @@ runs:
       env:
         GITHUB_USERNAME: ${{ github.actor }}
         GITHUB_PASSWORD: ${{ inputs.reader-token }}
+        VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
 
     - name: Utfører loggsjekker
       id: loggsjekker
