@@ -130,7 +130,7 @@ jobs:
           docker_compose_f: ${{ matrix.suites.docker_compose_f }}
           override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
           image_version: ${{ inputs.image_version }}
-          timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '30' || '0' }}
+          timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}
