@@ -105,7 +105,8 @@ jobs:
 
   run_tests:
     name: Tests
-    runs-on: ${{ github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest' }}
+    # for public repo er ubuntu-latest godt nok og gratis. For private repo så kjører vi med en billigere runner på branch
+    runs-on: ${{ (github.event.repository.private == false && 'ubuntu-latest') || (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
     needs: filter_suites
     timeout-minutes: 30
     strategy:
