@@ -19,6 +19,11 @@ on:
         type: string
         required: true
         description: 'Version/tag of image. '
+      k9-verdikjede-sha:
+        type: string
+        required: false
+        default: 'master'
+        description: 'branch, tag or sha of k9-verdikjede to checkout'
     outputs:
       pleiepenger:
         description: "Utfall fra pleiepenger-test"
@@ -132,6 +137,7 @@ jobs:
           override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
           image_version: ${{ inputs.image_version }}
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
+          k9-verdikjede-sha: ${{ inputs.k9-verdikjede-sha }}
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}

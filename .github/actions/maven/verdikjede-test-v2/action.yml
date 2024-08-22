@@ -34,6 +34,9 @@ inputs:
   timeout_test_increase:
     required: false
     description: 'custom timeout increase for tests - typically used on slow github action runners'
+  k9-verdikjede-sha:
+    required: true
+    description: 'sha of k9-verdikjede to use'
 
 outputs:
   test_result:
@@ -45,7 +48,7 @@ runs:
     - uses: actions/checkout@v4
       with:
         repository: 'navikt/k9-verdikjede'
-        ref: 'master'
+        ref: ${{ inputs.k9-verdikjede-sha || 'master'}}
         token: ${{ inputs.reader-token }}
 
     - uses: actions/setup-java@v4
