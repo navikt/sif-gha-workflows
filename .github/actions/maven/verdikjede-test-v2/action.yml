@@ -48,7 +48,7 @@ runs:
     - uses: actions/checkout@v4
       with:
         repository: 'navikt/k9-verdikjede'
-        ref: ${{ inputs.k9-verdikjede-sha || 'master'}}
+        ref: ${{ inputs.k9-verdikjede-sha }}
         token: ${{ inputs.reader-token }}
 
     - uses: actions/setup-java@v4
