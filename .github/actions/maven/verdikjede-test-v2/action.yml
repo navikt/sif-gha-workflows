@@ -93,6 +93,8 @@ runs:
         echo "STACK_STARTING=true" >> $GITHUB_ENV
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
         cat .env
+        ls -a
+        cat .env.new
         
         docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
         echo "tid etter docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
