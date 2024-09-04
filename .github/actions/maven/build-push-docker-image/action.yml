@@ -71,6 +71,7 @@ runs:
         fi
     - name: Generate docker image name
       id: docker_image_name
+      shell: bash
       run: |
         if [ "${{ inputs.without_navikt_prefix }}" == "true" ]; then
             repo_name_without_owner=$(echo ${{ github.repository }} | cut -d'/' -f2)
