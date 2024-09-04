@@ -37,10 +37,6 @@ inputs:
     description: "Adds a suffix to the generated docker image name"
     required: false
     default: ""
-  without_navikt_prefix:
-    description: "Do not include navikt prefix in docker image name"
-    required: false
-    default: "false"
 outputs:
   image-artifact-name:
     description: 'artifact id of uploaded image'
@@ -69,20 +65,11 @@ runs:
           echo "::error ::Docker context not found: ${{ inputs.docker_context }}."
           exit 1
         fi
-    - name: Generate docker image name
-      id: docker_image_name
-      run: |
-        if [ "${{ inputs.without_navikt_prefix }}" == "true" ]; then
-            repo_name_without_owner=$(echo ${{ github.repository }} | cut -d'/' -f2)
-            echo "REPO_NAME=${{ steps.login.outputs.registry }}/${repo_name_without_owner}${{ inputs.image_suffix }}" >> $GITHUB_OUTPUT
-        else
-            echo "REPO_NAME=${{ steps.login.outputs.registry }}/${{ github.repository }}${{ inputs.image_suffix }}" >> $GITHUB_OUTPUT
-        fi
     - name: Docker meta
       uses: docker/metadata-action@9dc751fe249ad99385a2583ee0d084c400eee04e # ratchet:docker/metadata-action@v4
       id: meta
       with:
-        images: ${{ steps.docker_image_name.outputs.REPO_NAME}}
+        images: ${{ steps.login.outputs.registry }}/${{ github.repository }}${{ inputs.image_suffix }}
         tags: |
           type=raw,value=${{ inputs.build-version }}
           # set latest tag for default branch (master)
