@@ -8,7 +8,7 @@ on:
         required: true
       suites:
         type: string
-        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los.'
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung.'
         required: false
         default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los"
       override_image_artifact_name:
@@ -46,6 +46,9 @@ on:
       frontend-los:
         description: "Utfall fra frontend-test"
         value: ${{ jobs.run_tests.outputs.frontend-los }}
+      ung:
+        description: "Utfall fra ungdomsytelse-test"
+        value: ${{ jobs.run_tests.outputs.ung }}
 
 jobs:
   # Filtrerer ut suite som skal velges i matrix kjøringen. Vanlig måte er å bruke if i matrix jobben, men det spinner opp cluster så bruker denne workarouden.
@@ -94,6 +97,12 @@ jobs:
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-frontend-los.yml -f docker-compose-testsuites/gha/docker-compose-frontend-los-gha.yml",
             "test_groups": "-Dgroups=frontendtest-los ",
             "log_groups": "-Dgroups=etter "
+          },
+                    {
+            "suite": "ung",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-ung.yml -f docker-compose-testsuites/gha/docker-compose-ung-gha.yml ",
+            "test_groups": "-Dgroups=ung",
+            "log_groups": "-Dgroups=etter-pleiepenger"
           }
         ]
     name: Avgjør testsuiter som skal kjøres
@@ -125,6 +134,7 @@ jobs:
       tilbake: ${{ steps.resultat.outputs.tilbake }}
       frontend: ${{ steps.resultat.outputs.frontend }}
       frontend-los: ${{ steps.resultat.outputs.frontend-los }}
+      ung: ${{ steps.resultat.outputs.ung }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
@@ -162,11 +172,12 @@ jobs:
           tilbake="${{ needs.run_tests.outputs.tilbake || 'skipped' }}"
           frontend="${{ needs.run_tests.outputs.frontend || 'skipped' }}"
           frontendlos="${{ needs.run_tests.outputs.frontend-los || 'skipped' }}"
-  
+          ung="${{ needs.run_tests.outputs.ung || 'skipped' }}"
+
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" $frontendlos)
+          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
@@ -200,6 +211,7 @@ jobs:
           echoStatus "Klage" $klage >> $GITHUB_ENV
           echoStatus "Tilbakekreving" $tilbake >> $GITHUB_ENV
           echoStatus "Frontend Los" $frontendlos >> $GITHUB_ENV
+          echoStatus "Ungdomsytelsen" $ung >> $GITHUB_ENV
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
           echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
