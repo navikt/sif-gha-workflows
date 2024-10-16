@@ -42,6 +42,10 @@ on:
         type: boolean
         description: Skal docker image lastes opp til jobben?
         default: false
+      additional-tag:
+        required: false
+        type: string
+        description: Ekstra label å tagge docker image med - nyttig for repoer med dev brancher som pushes til dev
       namespace:
         required: false
         type: string
@@ -98,6 +102,7 @@ jobs:
           build-version: ${{ steps.build-and-test.outputs.build-version }}
           push-image: ${{ inputs.push-image }}
           upload-image: ${{ inputs.upload-image }}
+          additional-tag: ${{ inputs.additional-tag }}
           docker_platforms: ${{ (inputs.upload-image && 'linux/amd64') || null }} # docker image tarball støtter bare én platform av gangen
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
