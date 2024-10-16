@@ -89,7 +89,7 @@ runs:
         images: ${{ steps.docker_image_name.outputs.REPO_NAME}}
         tags: |
           type=raw,value=${{ inputs.build-version }}
-          type=raw,value=${{ inputs.additional-tag }},enable=${{ inputs.additional-tag }}
+          type=raw,value=${{ inputs.additional-tag }},enable=${{ inputs.additional-tag != null }}
           # set latest tag for default branch (master)
           type=raw,value=latest,enable={{is_default_branch}}
     - name: Bygg og push docker image
