@@ -22,6 +22,9 @@ inputs:
     required: false
     description: "upload the docker image to job (true|false)"
     default: "false"
+  additional-tag:
+    required: false
+    description: "Additional labels to tag docker image with"
   dockerfile:
     description: "Dockerfile"
     required: true
@@ -86,6 +89,7 @@ runs:
         images: ${{ steps.docker_image_name.outputs.REPO_NAME}}
         tags: |
           type=raw,value=${{ inputs.build-version }}
+          type=raw,value=${{ inputs.additional-tag }},enable=${{ inputs.additional-tag }}
           # set latest tag for default branch (master)
           type=raw,value=latest,enable={{is_default_branch}}
     - name: Bygg og push docker image
