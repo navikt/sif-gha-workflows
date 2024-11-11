@@ -1,0 +1,76 @@
+name: Generate openapi
+description: Generate new openapi spec, and generate typescript from it.
+inputs:
+  readerToken:
+    description: The secrets.READER_TOKEN allowing read of internal packages.
+    required: true
+  githubToken:
+    description: The secrets.GITHUB_TOKEN allowing commit on the repo.
+    required: true
+  openapiFileName:
+    description: What filename to use for generated openapi.json file.
+    required: true
+    default: openapi.json
+outputs:
+  openapiVersion:
+    description: "generated openapi spec version"
+    value: ${{ steps.openapi-version.outputs.openapiVersion }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup java and maven
+      uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main
+      with:
+        github-token: ${{ inputs.readerToken }}
+    - name: Maven install
+      uses: navikt/sif-gha-workflows/.github/actions/maven/test-and-build@main
+      with:
+        skip-tests: true
+    - name: Openapi generate
+      shell: bash
+      run: mvn exec:java --projects web
+    - name: Openapi version
+      id: openapi-version
+      shell: bash
+      # extract version number from generated openapi.json
+      run: |
+        echo "openapiVersion=$(jq --exit-status --raw-output '.info.version | capture("^(?<major>\\d+)\\.(?<minor>\\d+)$") | .major + "." + .minor' ./web/src/main/resources/openapi-ts-client/${{ inputs.openapiFileName }} || echo 'FEIL')" >> $GITHUB_OUTPUT
+    - name: Feilsjekk OPENAPI_VERSION
+      if: "${{ env.OPENAPI_VERSION == 'FEIL'}}"
+      env:
+        OPENAPI_VERSION: "${{ steps.openapi-version.outputs.openapiVersion }}"
+      uses: actions/github-script@v7
+      with:
+        script: |
+          core.setFailed('fant ikkje korrekt openapi version frå ${{ inputs.openapiFileName }}')
+    # Commit and push any changes to openapi.json
+    - name: Commit api endringer
+      if: ${{ success() }}
+      id: change-commit
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.githubToken }}
+        FILE_NAME: ${{ inputs.openapiFileName }}
+        FILE_DIRECTORY: web/src/main/resources/openapi-ts-client
+        DESTINATION_BRANCH: ${{ github.head_ref || github.ref_name }}
+      run: |
+        # Use git to detect changes, only commit and push if there are changes
+        git add --force ${FILE_DIRECTORY}/${FILE_NAME}
+        git diff --quiet --staged || 
+        (
+        export MESSAGE="$FILE_NAME updated by build pipeline 
+        
+        
+        skip-checks:true"
+        export SHA=$( git rev-parse $DESTINATION_BRANCH:$FILE_DIRECTORY/$FILE_NAME )
+        gh api --method PUT /repos/:owner/:repo/contents/$FILE_DIRECTORY/$FILE_NAME \
+          --field message="$MESSAGE" \
+          --field content=@<( base64 -i "${FILE_DIRECTORY}/${FILE_NAME}" ) \
+          --field branch="$DESTINATION_BRANCH" \
+          --field sha="$SHA"
+        )
+      # ^-Use the REST API to commit changes, so we get automatic commit signing
+      # Use skip-checks:true to prevent github complaining about missing checks and thereby preventing PR merge.
+      # The committed changes has been checked during the current workflow run anyways.
+
