@@ -48,6 +48,12 @@ inputs:
     description: "Use this as docker image name instead of github.repository name"
     required: false
     default: ""
+  build-args:
+    description: "List of build-time variables to pass on to docker/build-push-action"
+    required: false
+  labels:
+    description: "List of labels to pass on to docker/metadata-action, for overwriting the defaults"
+    required: false
 outputs:
   image-artifact-name:
     description: 'artifact id of uploaded image'
@@ -102,12 +108,14 @@ runs:
           type=raw,value=${{ inputs.additional-tag }},enable=${{ inputs.additional-tag != null }}
           # set latest tag for default branch (master)
           type=raw,value=latest,enable={{is_default_branch}}
+        labels: ${{ inputs.labels }}
     - name: Bygg og push docker image
       uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # ratchet:docker/build-push-action@v4
       id: build_push
       with:
         context: ${{ inputs.docker_context }}
         file: ${{ inputs.dockerfile }}
+        build-args: ${{ inputs.build-args }}
         platforms: ${{ inputs.docker_platforms || 'linux/amd64,linux/arm64' }}
         pull: true
         push: ${{ inputs.push-image == 'true' }}
@@ -120,7 +128,7 @@ runs:
       if: inputs.push-image == 'true'
       uses: nais/attest-sign@5e9450cc8a617286ca2d22859011e078ad1ef583 # ratchet:nais/attest-sign@v1
       with:
-        image_ref: ${{ steps.login.outputs.registry }}/${{ github.repository }}${{ inputs.image_suffix }}@${{ steps.build_push.outputs.digest }}
+        image_ref: "${{ steps.docker_image_name.outputs.REPO_NAME}}@${{ steps.build_push.outputs.digest }}"
     - name: Upload image
       if: inputs.upload-image == 'true'
       uses: actions/upload-artifact@v4
