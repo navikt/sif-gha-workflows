@@ -126,7 +126,7 @@ jobs:
       - name: Bygg og push docker image
         id: docker-build
         if: inputs.build-image
-        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@main # ratchet:exclude
+        uses: navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@custom-image-name # ratchet:exclude
         with:
           build-version: ${{ steps.build-and-test.outputs.build-version }}
           push-image: ${{ inputs.push-image }}
