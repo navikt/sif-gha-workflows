@@ -105,7 +105,8 @@ runs:
       with:
         images: ${{ steps.docker_image_name.outputs.REPO_NAME}}
         tags: |
-          type=sha,prefix={{date 'YYYY.MM.DD-HH.mm'}}-,priority=50
+          # Create build-version tag if it is not set:
+          type=sha,prefix={{date 'YYYY.MM.DD-HH.mm'}}-,priority=50,enable=${{ inputs.build-version == '' }}
           type=raw,value=${{ inputs.build-version }}
           type=raw,value=${{ inputs.additional-tag }},enable=${{ inputs.additional-tag != null }}
           # set latest tag for default branch (master)
