@@ -141,6 +141,7 @@ runs:
     - name: Set outputs
       shell: bash
       id: set-outputs
+      if: inputs.push-image == 'true'
       run: |
         echo "NEW_VERSION=${{ steps.meta.outputs.version }}" >> $GITHUB_OUTPUT
         echo "IMAGE=${{ fromJSON(steps.meta.outputs.json).tags[0] }}" >> $GITHUB_OUTPUT
