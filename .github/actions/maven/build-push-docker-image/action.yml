@@ -59,6 +59,12 @@ outputs:
   image-artifact-name:
     description: 'artifact id of uploaded image'
     value: ${{ steps.image-artifact-name.outputs.image_artifact_name }}
+  image:
+    description: "Image name"
+    value: ${{ steps.set-outputs.outputs.IMAGE }}
+  tag:
+    description: "Release tag"
+    value: ${{ steps.set-outputs.outputs.NEW_VERSION }}
 runs:
   using: "composite"
   steps:
@@ -132,6 +138,12 @@ runs:
       uses: nais/attest-sign@5e9450cc8a617286ca2d22859011e078ad1ef583 # ratchet:nais/attest-sign@v1
       with:
         image_ref: "${{ steps.docker_image_name.outputs.REPO_NAME}}@${{ steps.build_push.outputs.digest }}"
+    - name: Set outputs
+      shell: bash
+      id: set-outputs
+      run: |
+        echo "NEW_VERSION=${{ steps.meta.outputs.version }}" >> $GITHUB_OUTPUT
+        echo "IMAGE=${{ fromJSON(steps.meta.outputs.json).tags[0] }}" >> $GITHUB_OUTPUT
     - name: Upload image
       if: inputs.upload-image == 'true'
       uses: actions/upload-artifact@v4
