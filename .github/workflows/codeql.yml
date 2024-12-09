@@ -22,6 +22,7 @@ jobs:
         with:
           languages: ${{ inputs.language }}
           config-file: ${{ inputs.config-file }}
+          build-mode: "manual"
       - name: Create maven .m2 settings for READER
         uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d
         with:
@@ -42,8 +43,6 @@ jobs:
           echo "Building artifacts ${{ steps.generate-build-version.outputs.build-version }}"
           mvn versions:set -DnewVersion="${{ steps.generate-build-version.outputs.build-version }}" -DprocessAllModules -s settings.xml -q -e -B
           mvn install -s settings.xml -q -e -B -DskipTests
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@429e1977040da7a23b6822b13c129cd1ba93dbb2 # ratchet:github/codeql-action/autobuild@v2
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@429e1977040da7a23b6822b13c129cd1ba93dbb2 # ratchet:github/codeql-action/analyze@v2
         with:
