@@ -6,7 +6,12 @@ on:
         required: false
         type: string
         description: Java SDK versjon som skal brukes.
-        default: '17'
+        default: '21'
+      language:
+        required: false
+        type: string
+        description: språk som skal brukes av codeql
+        default: 'java-kotlin'
 jobs:
   analyze:
     name: Analyze code
