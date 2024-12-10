@@ -98,10 +98,16 @@ jobs:
             "test_groups": "-Dgroups=frontendtest-los ",
             "log_groups": "-Dgroups=etter "
           },
-                    {
+          {
             "suite": "ung",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-ung.yml -f docker-compose-testsuites/gha/docker-compose-ung-gha.yml ",
             "test_groups": "-Dgroups=ung",
+            "log_groups": "-Dgroups=etter-pleiepenger"
+          },
+          {
+            "suite": "fordel",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+            "test_groups": "-Dgroups=med-k9-fordel",
             "log_groups": "-Dgroups=etter-pleiepenger"
           }
         ]
@@ -135,6 +141,7 @@ jobs:
       frontend: ${{ steps.resultat.outputs.frontend }}
       frontend-los: ${{ steps.resultat.outputs.frontend-los }}
       ung: ${{ steps.resultat.outputs.ung }}
+      fordel: ${{ steps.resultat.outputs.fordel }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
@@ -173,11 +180,12 @@ jobs:
           frontend="${{ needs.run_tests.outputs.frontend || 'skipped' }}"
           frontendlos="${{ needs.run_tests.outputs.frontend-los || 'skipped' }}"
           ung="${{ needs.run_tests.outputs.ung || 'skipped' }}"
+          fordel="${{ needs.run_tests.outputs.fordel || 'skipped' }}"
 
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung")
+          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$fordel")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
@@ -212,6 +220,7 @@ jobs:
           echoStatus "Tilbakekreving" $tilbake >> $GITHUB_ENV
           echoStatus "Frontend Los" $frontendlos >> $GITHUB_ENV
           echoStatus "Ungdomsytelsen" $ung >> $GITHUB_ENV
+          echoStatus "Fordel" $fordel >> $GITHUB_ENV
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
           echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
