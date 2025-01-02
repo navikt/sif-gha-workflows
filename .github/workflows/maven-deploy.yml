@@ -43,7 +43,16 @@ on:
         required: false
         type: string
         description: 'Alternativ branch å deploye fra'
-
+      override_image_name:
+        required: false
+        type: string
+        description: 'Overstyrer hele image navnet. Nødvendig når man bruker nais/docker-build-push@v0 for å pushe image, da denne ikke inkluderer navikt/ i image navnet.'
+        ## eks 
+        ## med navikt/sif-gha-workflows/.github/actions/maven/build-push-docker-image@main: 
+        ### europe-north1-docker.pkg.dev/nais-management-233d/k9saksbehandling/navikt/k9-los-web:2025.01.02-07.21-592847c
+        ## med nais/docker-build-push@v0
+        ## europe-north1-docker.pkg.dev/nais-management-233d/k9saksbehandling/k9-los-web:2025.01.02-07.21-592847c
+        default: ''
 env:
   IMAGE: ${{ inputs.image }} # Brukes i naiserator.yaml
   PROD_TAG: latest_${{ inputs.cluster }}_${{ inputs.namespace }}${{ inputs.image_suffix }}
