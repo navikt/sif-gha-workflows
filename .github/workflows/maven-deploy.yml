@@ -29,11 +29,6 @@ on:
         required: false
         type: string
         description: 'The naiserator.yaml file name in .deploy/ to use'
-      deploy_context:
-        required: false
-        type: string
-        description: 'The deploy context /'
-        default: ''
       image_suffix:
         required: false
         type: string
