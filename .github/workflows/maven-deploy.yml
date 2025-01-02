@@ -104,7 +104,7 @@ jobs:
         env:
           PRINT_PAYLOAD: true
           CLUSTER: ${{ inputs.cluster }}
-          IMAGE: ${{ steps.login.outputs.registry }}/${{ github.repository }}${{ inputs.image_suffix }}:${{ inputs.image }}
+          IMAGE: ${{ inputs.override_image_name != '' && inputs.override_image_name || format('{0}/{1}{2}:{3}', steps.login.outputs.registry, github.repository, inputs.image_suffix, inputs.image) }}
           RESOURCE: ${{ inputs.naiserator_file }}
           VARS: ${{ inputs.input_vars_file }}
       - name: Finn commit sha fra image navn
