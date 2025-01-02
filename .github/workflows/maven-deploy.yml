@@ -41,7 +41,7 @@ on:
       override_image_name:
         required: false
         type: string
-        description: 'Complete image name to deploy. When set, image and image_suffix inputs are ignored. For use when image to upload don't have navikt/ prefix'
+        description: 'Complete image name to deploy. When set, image and image_suffix inputs are ignored. For use when image to upload does not have /navikt prefix'
         default: ''
 env:
   IMAGE: ${{ inputs.image }} # Brukes i naiserator.yaml
