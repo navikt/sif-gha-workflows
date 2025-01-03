@@ -31,7 +31,7 @@ runs:
               ref: latestRef,
               sha: full_sha,
             });
-            console.log(Satte tag " + latestName + " på commit " + full_sha);
+            console.log("Satte tag " + latestName + " på commit " + full_sha);
           } catch (updateError) {
             if (updateError.status === 422) {
               try {
