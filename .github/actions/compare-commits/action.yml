@@ -15,5 +15,5 @@ runs:
     - name: URL comparing two commits
       shell: bash
       run: |
-        url="https://github.com/${{ github.repository }}/compare/${{ inputs.base_commit }}...${inputs.newest_commit}" >> $GITHUB_OUTPUT
+        url="https://github.com/${{ github.repository }}/compare/${{ inputs.base_commit }}...${{inputs.newest_commit}}" >> $GITHUB_OUTPUT
         echo "Diff base commit to ${{ inputs.newest_commit }} : <${url}>" >> $GITHUB_STEP_SUMMARY
