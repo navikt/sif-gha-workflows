@@ -20,36 +20,34 @@ runs:
       with:
         github-token: ${{ inputs.github_token }}
         script: |
-          const latestName = '${{ inputs.tag }}'
-          const latestRef = 'tags/' + latestName
-          const full_sha = '${{inputs.sha}}'
+          const latestName = '${{ inputs.tag }}';
+          const latestRef = 'tags/' + latestName;
+          const full_sha = '${{inputs.sha}}';
 
           try {
             await github.rest.git.updateRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: latestRef,
-                sha: full_sha
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: latestRef,
+              sha: full_sha,
             });
-          console.log("lager tagg=" + latestName + " på commit " + full_sha)
+            console.log("lager tagg=" + latestName + " på commit " + full_sha);
           } catch (updateError) {
-          // catch if does not exist
-          if (updateError.status === 422) {
-              try { 
-                  await github.rest.git.createRef({
+            if (updateError.status === 422) {
+              try {
+                await github.rest.git.createRef({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   ref: 'refs/tags/' + latestName,
-                  sha: full_sha
-                  }).then((res) => {
-                  console.log("Tag fantes ikke fra før av. Oppretter" + latestName + " på commit " + full_sha)
-                  })
-                } catch (createError) {
-                    console.log(err)
-                    throw Error("Feil ved oppretting av " + latestRef + ": " + err.status)
-                }
+                  sha: full_sha,
+                });
+                console.log("Tag fantes ikke fra før av. Oppretter " + latestName + " på commit " + full_sha);
+              } catch (createError) {
+                console.log("Feil ved oppretting av " + latestRef + ": ", createError);
+                throw createError;
+              }
+            } else {
+              console.log("Feil ved oppdatering av " + latestRef + ": ", updateError);
+              throw updateError;
             }
-
-            console.log("Error", updateError)
-            throw Error("Feil ved oppdatering av " + latestRef + ": " + err.status)
           }
