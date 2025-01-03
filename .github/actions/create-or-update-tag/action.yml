@@ -35,13 +35,13 @@ runs:
           } catch (updateError) {
             if (updateError.status === 422) {
               try {
+                console.log("Tag fantes ikke fra før av. Oppretter " + latestName + " på commit " + full_sha);
                 await github.rest.git.createRef({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   ref: 'refs/tags/' + latestName,
                   sha: full_sha,
                 });
-                console.log("Tag fantes ikke fra før av. Oppretter " + latestName + " på commit " + full_sha);
               } catch (createError) {
                 console.log("Feil ved oppretting av " + latestRef + ": ", createError);
                 throw createError;
