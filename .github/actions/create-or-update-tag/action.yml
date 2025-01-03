@@ -43,11 +43,11 @@ runs:
                   sha: full_sha,
                 });
               } catch (createError) {
-                console.log("Feil ved oppretting av " + latestRef + ": ", createError);
+                console.log("Feil ved oppretting av ny tag " + latestRef);
                 throw createError;
               }
             } else {
-              console.log("Feil ved oppdatering av " + latestRef + ": ", updateError);
+              console.log("Feil ved oppdatering av tag " + latestRef);
               throw updateError;
             }
           }
