@@ -32,7 +32,7 @@ runs:
               ref: latestRef,
           });
           } catch (err) {
-          if (err.status !== 404) throw err; // Ignore "not found" errors
+          if (err.status !== 422) throw err; // Ignore reference does not exist error
           }
 
           console.log("lager tagg=" + latestName + " på commit " + full_sha)
