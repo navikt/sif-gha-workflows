@@ -24,24 +24,33 @@ runs:
           const latestRef = 'tags/' + latestName
           const full_sha = '${{inputs.sha}}'
 
-          // Delete existing tag if it exists
+
           try {
-          await github.rest.git.deleteRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: latestRef,
-          });
-          } catch (err) {
-          if (err.status !== 422) throw err; // Ignore reference does not exist error
-          }
-
+            await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: latestRef,
+                sha: full_sha
+            });
           console.log("lager tagg=" + latestName + " på commit " + full_sha)
+          } catch (updateError) {
+          // catch if does not exist
+          if (updateError.status === 422) {
+              try { 
+                  await github.rest.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: 'refs/tags/' + latestName,
+                  sha: full_sha
+                  }).then((res) => {
+                  console.log("Tag fantes ikke fra før av. Oppretter + latestName + " på commit " + full_sha)
+                  })
+                } catch (createError) {
+                    console.log(err)
+                    throw Error("Feil ved oppretting av " + latestRef + ": " + err.status)
+                }
+            }
 
-          await github.rest.git.createRef({
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          ref: 'refs/tags/' + latestName,
-          sha: full_sha
-          }).then((res) => {
-          console.log("laget tagg=" + latestName)
-          })
+            console.log("Error", updateError)
+            throw Error("Feil ved oppdatering av " + latestRef + ": " + err.status)
+          }
