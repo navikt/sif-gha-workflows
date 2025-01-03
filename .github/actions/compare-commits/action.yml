@@ -1,0 +1,19 @@
+name: Compare commits
+description: Compares two commits
+
+inputs:
+  base_commit:
+    required: true
+    description: Oldest commit or tag
+  newest_commit:
+    required: true
+    description: Newest commit or tag
+
+runs:
+  using: "composite"
+  steps:
+    - name: URL comparing two commits
+      shell: bash
+      run: |
+        url="https://github.com/${{ github.repository }}/compare/${{ inputs.base_commit }}...${inputs.newest_commit}" >> $GITHUB_OUTPUT
+        echo "Diff base commit to ${{ inputs.newest_commit }} : <${url}>" >> $GITHUB_STEP_SUMMARY
