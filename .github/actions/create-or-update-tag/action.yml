@@ -24,7 +24,6 @@ runs:
           const latestRef = 'tags/' + latestName
           const full_sha = '${{inputs.sha}}'
 
-
           try {
             await github.rest.git.updateRef({
                 owner: context.repo.owner,
@@ -43,7 +42,7 @@ runs:
                   ref: 'refs/tags/' + latestName,
                   sha: full_sha
                   }).then((res) => {
-                  console.log("Tag fantes ikke fra før av. Oppretter + latestName + " på commit " + full_sha)
+                  console.log("Tag fantes ikke fra før av. Oppretter" + latestName + " på commit " + full_sha)
                   })
                 } catch (createError) {
                     console.log(err)
