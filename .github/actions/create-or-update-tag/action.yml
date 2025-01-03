@@ -2,9 +2,9 @@ name: Create or Update Git Tag
 description: Creates or updates a Git tag for a specific commit based on the provided partial SHA in image_name. Automatically deletes the existing tag if it already exists, ensuring the tag always points to the desired commit.
 
 inputs:
-  image_name:
+  sha:
     required: true
-    description: "Image name containing the commit SHA. Format: *-b2b3762"
+    description: "The full commit SHA"
   tag:
     required: true
     description: "Tag name for commit"
@@ -15,32 +15,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Extract Partial Commit SHA
-      shell: bash
-      run: echo "PARTIAL_SHA=$(echo '${{ inputs.image_name }}' | awk -F'-' '{print $2}')" >> $GITHUB_ENV
     - name: Tagg prodsatt commit
       uses: actions/github-script@v7
       with:
         github-token: ${{ inputs.github_token }}
         script: |
-          const partial_sha = '${{ env.PARTIAL_SHA }}'
           const latestName = '${{ inputs.tag }}'
           const latestRef = 'tags/' + latestName
-
-          let full_sha;
-          try {
-              const commit_path = 'GET /repos/' + context.repo.owner + '/' + context.repo.repo + '/commits/' + partial_sha
-              let commitDetails = await github.request(commit_path, {
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: partial_sha
-              });
-              full_sha = commitDetails.data.sha;
-              console.log("Fant full sha: " + full_sha);
-          } catch (err) {
-              console.log("feilet ved henting av commit", err);
-              throw Error("feilet ved henting av commit: " + partial_sha);
-          }
+          const full_sha = '${{inputs.sha}}'
 
           // Delete existing tag if it exists
           try {
