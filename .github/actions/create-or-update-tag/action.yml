@@ -1,5 +1,5 @@
-name: Create or Update Git Tag
-description: Creates or updates a Git tag for a specific commit. Automatically deletes the existing tag if it already exists, ensuring the tag is always unique.
+name: Update or create Git tag
+description: Updates or creates a Git tag for a specific commit. Automatically deletes the existing tag if it already exists, ensuring the tag is always unique.
 
 inputs:
   sha:
