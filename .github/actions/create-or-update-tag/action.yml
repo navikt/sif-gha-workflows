@@ -1,5 +1,5 @@
 name: Create or Update Git Tag
-description: Creates or updates a Git tag for a specific commit based on the provided partial SHA in image_name. Automatically deletes the existing tag if it already exists, ensuring the tag always points to the desired commit.
+description: Creates or updates a Git tag for a specific commit. Automatically deletes the existing tag if it already exists, ensuring the tag is always unique.
 
 inputs:
   sha:
