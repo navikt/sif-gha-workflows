@@ -104,8 +104,8 @@ runs:
         
         echo "docker ps -a:"
         docker ps -a
-        echo "docker stats --no-stream"
-        docker stats --no-stream
+        echo "docker stats --no-stream -a"
+        docker stats --no-stream -a
 
     - name: Venter på stacken og sjekker status
       shell: bash
@@ -171,8 +171,8 @@ runs:
         
         echo "docker ps -a:"
         docker ps -a
-        echo "docker stats --no-stream"
-        docker stats --no-stream
+        echo "docker stats --no-stream -a"
+        docker stats --no-stream -a
 
 
     - name: Utfører tester
@@ -219,8 +219,8 @@ runs:
         echo "docker ps -a:"
         docker ps -a
         echo "####################################"
-        echo "docker stats --no-stream"
-        docker stats --no-stream
+        echo "docker stats --no-stream -a"
+        docker stats --no-stream -a
 
     - name: Dumper logger for feilsøking
       if: always() && !cancelled() && env.STACK_STARTING == 'true'
