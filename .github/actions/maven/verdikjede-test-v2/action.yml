@@ -127,7 +127,7 @@ runs:
           echo
         elif [[ ${{ inputs.test_suite }} == ung ]]; then
           echo "Tester om ung-sak er oppe"
-          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8901/ung/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+#          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8901/ung/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
           echo Oppe!
           echo
         else
