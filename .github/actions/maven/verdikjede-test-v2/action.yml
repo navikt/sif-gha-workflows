@@ -169,6 +169,9 @@ runs:
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
         echo "Tid brukt på å vente på at alt er oppe: $(date -u -d @"$duration" +"%M:%S") min"
         
+        echo "docker ps -a:"
+        docker ps -a
+        echo "docker stats --no-stream"
         docker stats --no-stream
 
 
