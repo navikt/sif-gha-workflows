@@ -59,7 +59,7 @@ runs:
     - name: Install frontend dependencies
       if: contains(inputs.test_suite, 'frontend') 
       shell: bash
-      run: if [ -d "frontend" ]; then cd frontend && yarn install && npx playwright install; fi    
+      run: if [ -d "frontend" ]; then cd frontend && yarn install && npx playwright install --with-deps; fi    
 
     - uses: actions/setup-java@v4
       with:
