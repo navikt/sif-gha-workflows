@@ -57,10 +57,10 @@ runs:
         node-version: '22'
 
     - name: Install frontend dependencies
-      if: contains(inputs.test_suite, 'frontend')
+      if: contains(inputs.test_suite, 'frontend') 
       shell: bash
-      run: cd frontend && yarn install && npx playwright install
-      
+      run: if [ -d "frontend" ]; then cd frontend && yarn install && npx playwright install; fi    
+
     - uses: actions/setup-java@v4
       with:
         java-version: '21'
