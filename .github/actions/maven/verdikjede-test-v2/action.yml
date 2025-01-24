@@ -52,9 +52,15 @@ runs:
         token: ${{ inputs.reader-token }}
 
     - uses: actions/setup-node@v4
+      if: contains(inputs.test_suite, 'frontend')
       with:
         node-version: '22'
 
+    - name: Yarn install
+      if: contains(inputs.test_suite, 'frontend')
+      shell: bash
+      run: cd frontend &6 yarn install
+      
     - uses: actions/setup-java@v4
       with:
         java-version: '21'
