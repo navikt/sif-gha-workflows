@@ -57,9 +57,15 @@ runs:
         node-version: lts/*
 
     - name: Install frontend dependencies
-      if: contains(inputs.test_suite, 'frontend') 
+      if: contains(inputs.test_suite, 'frontend') && [ -d "frontend" ]
       shell: bash
-      run: if [ -d "frontend" ]; then cd frontend/k9-sak-web-e2e && yarn install && npx playwright install --with-deps; fi    
+      run: cd frontend && yarn install
+    
+    - name: Install playwright deps
+      if: contains(inputs.test_suite, 'frontend') && [ -d "frontend" ]
+      shell: bash
+      run: npx playwright install --with-deps
+    
 
     - uses: actions/setup-java@v4
       with:
