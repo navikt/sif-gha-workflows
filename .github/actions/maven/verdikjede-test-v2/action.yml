@@ -51,6 +51,11 @@ runs:
         ref: ${{ inputs.k9-verdikjede-sha }}
         token: ${{ inputs.reader-token }}
 
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'yarn'
+
     - uses: actions/setup-java@v4
       with:
         java-version: '21'
