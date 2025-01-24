@@ -59,7 +59,7 @@ runs:
     - name: Yarn install
       if: contains(inputs.test_suite, 'frontend')
       shell: bash
-      run: cd frontend &6 yarn install
+      run: cd frontend && yarn install
       
     - uses: actions/setup-java@v4
       with:
