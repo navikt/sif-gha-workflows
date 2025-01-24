@@ -54,7 +54,7 @@ runs:
     - uses: actions/setup-node@v4
       if: contains(inputs.test_suite, 'frontend')
       with:
-        node-version: '22'
+        node-version: lts/*
 
     - name: Install frontend dependencies
       if: contains(inputs.test_suite, 'frontend') 
