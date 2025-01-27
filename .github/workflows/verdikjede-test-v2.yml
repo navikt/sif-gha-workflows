@@ -123,46 +123,6 @@ jobs:
           echo $filtered_json
           echo "filtered=$filtered_json" >> $GITHUB_OUTPUT
 
-  run_tests:
-    name: Tests
-    runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
-    needs: filter_suites
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
-    outputs:
-      pleiepenger: ${{ steps.resultat.outputs.pleiepenger }}
-      klage: ${{ steps.resultat.outputs.klage }}
-      livetssluttfase: ${{ steps.resultat.outputs.livetssluttfase }}
-      annet: ${{ steps.resultat.outputs.annet}}
-      tilbake: ${{ steps.resultat.outputs.tilbake }}
-      frontend-los: ${{ steps.resultat.outputs.frontend-los }}
-      ung: ${{ steps.resultat.outputs.ung }}
-      fordel: ${{ steps.resultat.outputs.fordel }}
-    steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
-        id: verdikjede-action
-        with:
-          test_suite: ${{ matrix.suites.suite }}
-          test_groups: ${{ matrix.suites.test_groups }}
-          log_groups: ${{ matrix.suites.log_groups }}
-          docker_compose_f: ${{ matrix.suites.docker_compose_f }}
-          override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
-          image_version: ${{ inputs.image_version }}
-          timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
-          k9-verdikjede-sha: ${{ inputs.k9-verdikjede-sha }}
-          # Composite actions arver ikke secrets så vi må få dem in som input
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          reader-token: ${{ secrets.READER_TOKEN }}
-          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
-      - id: resultat
-        if: always() && !cancelled()
-        run: |
-          echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_result }}" >> $GITHUB_OUTPUT
-
   run_tests_frontend:
     name: Tests
     runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
