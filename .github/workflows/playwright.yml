@@ -2,15 +2,6 @@ name: "Setup verdikjede & run frontend tests"
 on: 
   workflow_dispatch:
     inputs:
-      github-token:
-        description: "Token for accessing GitHub packages"
-        required: true
-      reader-token:
-        description: "Token for setting up settings.xml for internal packages"
-        required: true
-      nais-management-project-id:
-        description: "NAIS management project ID"
-        required: true
       nais-workload-identity-provider:
         description: "NAIS workload identity provider"
         required: true
@@ -45,222 +36,222 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.50.0-noble
       options: --user 1001
-      steps:
-        - uses: actions/checkout@v4
-          with:
-            repository: "navikt/k9-verdikjede"
-            ref: ${{ inputs.k9-verdikjede-sha }}
-            token: ${{ inputs.reader-token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: "navikt/k9-verdikjede"
+          ref: ${{ inputs.k9-verdikjede-sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-        - uses: actions/setup-node@v4
-          if: contains(inputs.test_suite, 'frontend')
-          with:
-            node-version: lts/*
+      - uses: actions/setup-node@v4
+        if: contains(inputs.test_suite, 'frontend')
+        with:
+          node-version: lts/*
 
-        - name: Install frontend dependencies
-          if: contains(inputs.test_suite, 'frontend')
-          shell: bash
-          working-directory: ./frontend/k9-sak-web-e2e
-          run: yarn install
+      - name: Install frontend dependencies
+        if: contains(inputs.test_suite, 'frontend')
+        shell: bash
+        working-directory: ./frontend/k9-sak-web-e2e
+        run: yarn install
 
-        - name: check yarn version
-          shell: bash
-          run: yarn -v
+      - name: check yarn version
+        shell: bash
+        run: yarn -v
 
-        - name: Install playwright dependencies
-          working-directory: ./frontend/k9-sak-web-e2e
-          shell: bash
-          run: npx playwright install --with-deps chromium
+      - name: Install playwright dependencies
+        working-directory: ./frontend/k9-sak-web-e2e
+        shell: bash
+        run: npx playwright install --with-deps chromium
 
-        - uses: actions/setup-java@v4
-          with:
-            java-version: "21"
-            distribution: "temurin"
-            cache: "maven"
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
 
-        - uses: docker/login-action@v3
-          with:
-            registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ inputs.github-token }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ inputs.github-token }}
 
-        - uses: nais/login@v0
-          with:
-            project_id: ${{ inputs.nais-management-project-id }}
-            identity_provider: ${{ inputs.nais-workload-identity-provider }}
-            team: k9saksbehandling
+      - uses: nais/login@v0
+        with:
+          project_id: ${{ inputs.nais-management-project-id }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          team: k9saksbehandling
 
-        - name: Download artifact
-          if: ${{ inputs.override_image_artifact_name }}
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ inputs.override_image_artifact_name }}
-            path: /tmp/
-        - name: Load local image
-          if: ${{ inputs.override_image_artifact_name }}
-          shell: bash
-          run: |
-            docker load --input /tmp/${{ inputs.override_image_artifact_name }}.tar
+      - name: Download artifact
+        if: ${{ inputs.override_image_artifact_name }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.override_image_artifact_name }}
+          path: /tmp/
+      - name: Load local image
+        if: ${{ inputs.override_image_artifact_name }}
+        shell: bash
+        run: |
+          docker load --input /tmp/${{ inputs.override_image_artifact_name }}.tar
 
-        - name: Setup saksbehandling-stack
-          shell: bash
-          run: |
-            echo "STACK_STARTED=false" >> $GITHUB_ENV
-            echo "Oppretter dummy keystore for testing"
-            cd keystore
-            ./make-dummy-keystore.sh
-            cd ../saksbehandling
-            repo_name_without_owner=$(echo ${{ github.repository }} | cut -d'/' -f2)
-            ./update-versions.sh $repo_name_without_owner ${{ inputs.image_version }}
-            echo "STACK_STARTING=true" >> $GITHUB_ENV
-            tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
-            cat .env
+      - name: Setup saksbehandling-stack
+        shell: bash
+        run: |
+          echo "STACK_STARTED=false" >> $GITHUB_ENV
+          echo "Oppretter dummy keystore for testing"
+          cd keystore
+          ./make-dummy-keystore.sh
+          cd ../saksbehandling
+          repo_name_without_owner=$(echo ${{ github.repository }} | cut -d'/' -f2)
+          ./update-versions.sh $repo_name_without_owner ${{ inputs.image_version }}
+          echo "STACK_STARTING=true" >> $GITHUB_ENV
+          tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
+          cat .env
 
-            docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
-            echo "tid etter docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
+          docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+          echo "tid etter docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
 
-            tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
-            duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
-            echo "Tid brukt på docker compose: $(date -u -d @"$duration" +"%M:%S") min"
+          tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
+          duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
+          echo "Tid brukt på docker compose: $(date -u -d @"$duration" +"%M:%S") min"
 
-            echo "docker ps -a:"
-            docker ps -a
-            echo "docker stats --no-stream -a"
-            docker stats --no-stream -a
+          echo "docker ps -a:"
+          docker ps -a
+          echo "docker stats --no-stream -a"
+          docker stats --no-stream -a
 
-        - name: Venter på stacken og sjekker status
-          shell: bash
-          run: |
-            echo "STACK_CREATED=true" >> $GITHUB_ENV
-            tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
+      - name: Venter på stacken og sjekker status
+        shell: bash
+        run: |
+          echo "STACK_CREATED=true" >> $GITHUB_ENV
+          tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
 
-            docker ps -a
-            echo
-            echo "Tester om VTP er oppe"
-            timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          docker ps -a
+          echo
+          echo "Tester om VTP er oppe"
+          timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo Oppe!
+          echo
+
+          if [[ ${{ inputs.test_suite }} == klage ]]; then
+            echo "Tester om k9-klage er oppe"
+            timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8701/k9/klage/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
             echo Oppe!
             echo
+          elif [[ ${{ inputs.test_suite }} == ung ]]; then
+            echo "Tester om ung-sak er oppe"
+            timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8901/ung/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+            echo Oppe!
+            echo
+          else
+            echo "Tester om k9-sak er oppe"
+            timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/k9/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+            echo Oppe!
+            echo
+            echo "Tester om abakus er oppe"
+            timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8015/k9/abakus/internal/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+            echo Oppe!
+            echo
+          fi
 
-            if [[ ${{ inputs.test_suite }} == klage ]]; then
-              echo "Tester om k9-klage er oppe"
-              timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8701/k9/klage/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-              echo Oppe!
-              echo
-            elif [[ ${{ inputs.test_suite }} == ung ]]; then
-              echo "Tester om ung-sak er oppe"
-              timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8901/ung/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-              echo Oppe!
-              echo
-            else
-              echo "Tester om k9-sak er oppe"
-              timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/k9/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-              echo Oppe!
-              echo
-              echo "Tester om abakus er oppe"
-              timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8015/k9/abakus/internal/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-              echo Oppe!
-              echo
-            fi
+          if [[ ${{ inputs.test_suite }} == tilbake ]]; then
+            echo
+            echo "Tester om k9-tilbake er oppe"
+            timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8030/k9/tilbake/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+            echo Oppe!
+            echo
+          fi
 
-            if [[ ${{ inputs.test_suite }} == tilbake ]]; then
-              echo
-              echo "Tester om k9-tilbake er oppe"
-              timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8030/k9/tilbake/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-              echo Oppe!
-              echo
-            fi
+          if [[ ${{ inputs.test_suite }} == frontend ]]; then
+            echo
+            echo "Tester om k9-los-web er oppe "
+            timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/isAlive)" != "200" ]]; do sleep 2; done' || false
+            echo Oppe!
+          fi
 
-            if [[ ${{ inputs.test_suite }} == frontend ]]; then
-              echo
-              echo "Tester om k9-los-web er oppe "
-              timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/isAlive)" != "200" ]]; do sleep 2; done' || false
-              echo Oppe!
-            fi
+          if [[ ${{ inputs.test_suite }} == frontend-los ]]; then
+            echo
+            echo "Tester om k9-los-web er oppe "
+            timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8031/isReady)" != "200" ]]; do sleep 2; done' || false
+            echo Oppe!
+          fi
 
-            if [[ ${{ inputs.test_suite }} == frontend-los ]]; then
-              echo
-              echo "Tester om k9-los-web er oppe "
-              timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8031/isReady)" != "200" ]]; do sleep 2; done' || false
-              echo Oppe!
-            fi
+          echo "STACK_STARTED=true" >> $GITHUB_ENV
 
-            echo "STACK_STARTED=true" >> $GITHUB_ENV
+          tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
+          duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
+          echo "Tid brukt på å vente på at alt er oppe: $(date -u -d @"$duration" +"%M:%S") min"
 
-            tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
-            duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
-            echo "Tid brukt på å vente på at alt er oppe: $(date -u -d @"$duration" +"%M:%S") min"
+          echo "docker stats --no-stream -a"
+          docker stats --no-stream -a
+          echo "docker ps -a:"
+          docker ps -a
 
-            echo "docker stats --no-stream -a"
-            docker stats --no-stream -a
-            echo "docker ps -a:"
+      - name: Utfører tester
+        id: tester
+        shell: bash
+        run: |
+          tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
+
+          cd verdikjede
+          mvn clean verify -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.test_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+
+          tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
+          duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
+          echo "Tid brukt på testene: $(date -u -d @"$duration" +"%M:%S") min"
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_PASSWORD: ${{ inputs.reader-token }}
+          VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
+
+      - name: Utfører loggsjekker
+        id: loggsjekker
+        shell: bash
+        run: |
+          cd verdikjede
+          mvn test -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.log_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_PASSWORD: ${{ inputs.reader-token }}
+
+      - name: Henter testresultat og setter outcome
+        id: outcome
+        if: always() && !cancelled()
+        shell: bash
+        run: |
+          if [ ! ${{ env.STACK_STARTED }} ]; then
             docker ps -a
+            echo "test_result=stack_not_started" >> $GITHUB_OUTPUT
+          elif [[ ${{ steps.tester.outcome }} == success && ${{ steps.loggsjekker.outcome }} == success ]]; then
+            echo "test_result=success" >> $GITHUB_OUTPUT
+          else
+            echo "test_result=failed" >> $GITHUB_OUTPUT
+          fi
+          echo "####################################"
+          echo "docker ps -a:"
+          docker ps -a
+          echo "####################################"
+          echo "docker stats --no-stream -a"
+          docker stats --no-stream -a
 
-        - name: Utfører tester
-          id: tester
-          shell: bash
-          run: |
-            tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
+      - name: Dumper logger for feilsøking
+        if: always() && !cancelled() && env.STACK_STARTING == 'true'
+        shell: bash
+        run: |
+          mkdir container-logs
+          cd container-logs
+          docker ps -a --format '{{.Names}}' | while read pod; do docker logs $pod > $pod.log 2>&1; done
 
-            cd verdikjede
-            mvn clean verify -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.test_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+      - name: Laste opp logger
+        if: always() && !cancelled() && env.STACK_STARTING == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.test_suite }}-logs
+          path: container-logs/
 
-            tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
-            duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
-            echo "Tid brukt på testene: $(date -u -d @"$duration" +"%M:%S") min"
-          env:
-            GITHUB_USERNAME: ${{ github.actor }}
-            GITHUB_PASSWORD: ${{ inputs.reader-token }}
-            VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
-
-        - name: Utfører loggsjekker
-          id: loggsjekker
-          shell: bash
-          run: |
-            cd verdikjede
-            mvn test -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.log_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
-          env:
-            GITHUB_USERNAME: ${{ github.actor }}
-            GITHUB_PASSWORD: ${{ inputs.reader-token }}
-
-        - name: Henter testresultat og setter outcome
-          id: outcome
-          if: always() && !cancelled()
-          shell: bash
-          run: |
-            if [ ! ${{ env.STACK_STARTED }} ]; then
-              docker ps -a
-              echo "test_result=stack_not_started" >> $GITHUB_OUTPUT
-            elif [[ ${{ steps.tester.outcome }} == success && ${{ steps.loggsjekker.outcome }} == success ]]; then
-              echo "test_result=success" >> $GITHUB_OUTPUT
-            else
-              echo "test_result=failed" >> $GITHUB_OUTPUT
-            fi
-            echo "####################################"
-            echo "docker ps -a:"
-            docker ps -a
-            echo "####################################"
-            echo "docker stats --no-stream -a"
-            docker stats --no-stream -a
-
-        - name: Dumper logger for feilsøking
-          if: always() && !cancelled() && env.STACK_STARTING == 'true'
-          shell: bash
-          run: |
-            mkdir container-logs
-            cd container-logs
-            docker ps -a --format '{{.Names}}' | while read pod; do docker logs $pod > $pod.log 2>&1; done
-
-        - name: Laste opp logger
-          if: always() && !cancelled() && env.STACK_STARTING == 'true'
-          uses: actions/upload-artifact@v4
-          with:
-            name: ${{ inputs.test_suite }}-logs
-            path: container-logs/
-
-        - name: Laste opp skjermbilder
-          if: contains(inputs.test_suite, 'frontend') && failure() && env.STACK_CREATED == 'true'
-          uses: actions/upload-artifact@v4
-          with:
-            name: frontend-test-output
-            # definert i frontend java-testene!
-            path: ./frontend/playwright-output
+      - name: Laste opp skjermbilder
+        if: contains(inputs.test_suite, 'frontend') && failure() && env.STACK_CREATED == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-output
+          # definert i frontend java-testene!
+          path: ./frontend/playwright-output
