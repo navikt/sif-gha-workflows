@@ -69,7 +69,7 @@ runs:
     - name: Install playwright dependencies
       working-directory: ./frontend/k9-sak-web-e2e
       shell: bash
-      run: npx playwright install --with-deps
+      run: npx playwright install --with-deps chromium
 
     - uses: actions/setup-java@v4
       with:
