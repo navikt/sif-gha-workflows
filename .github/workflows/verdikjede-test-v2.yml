@@ -135,7 +135,7 @@ jobs:
     outputs:
       frontend: ${{ steps.resultat.outputs.frontend }}
     steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjedetest-frontend@3b5280b38d3e194523137a10924e44588e72ecaa
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjedetest-frontend@baefe7e9cd64ce81be000cfec3639d1e2fb8bbbe
         id: verdikjede-action
         with:
           test_suite: ${{ matrix.suites.suite }}
