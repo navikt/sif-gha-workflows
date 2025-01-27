@@ -1,53 +1,53 @@
-name: 'Setup verdikjede & run frontend tests'
+name: "Setup verdikjede & run frontend tests"
 description: Setup verdikjede & run frontend tests
 inputs:
   github-token:
-    description: 'Token for accessing GitHub packages'
+    description: "Token for accessing GitHub packages"
     required: true
   reader-token:
-    description: 'Token for setting up settings.xml for internal packages'
+    description: "Token for setting up settings.xml for internal packages"
     required: true
   nais-management-project-id:
-    description: 'NAIS management project ID'
+    description: "NAIS management project ID"
     required: true
   nais-workload-identity-provider:
-    description: 'NAIS workload identity provider'
+    description: "NAIS workload identity provider"
     required: true
   test_suite:
-    description: 'Test suite to run'
+    description: "Test suite to run"
     required: true
   test_groups:
-    description: 'Maven test groups to run'
+    description: "Maven test groups to run"
     required: true
   log_groups:
-    description: 'Maven log groups to check'
+    description: "Maven log groups to check"
     required: true
   docker_compose_f:
     required: true
-    description: 'docker compose flag to run with one or more docker compose files'
+    description: "docker compose flag to run with one or more docker compose files"
   override_image_artifact_name:
     required: false
-    description: 'Artifact name of docker image to download and load.'
+    description: "Artifact name of docker image to download and load."
   image_version:
     required: false
-    description: 'tag or version to use of triggering repo docker image  '
+    description: "tag or version to use of triggering repo docker image  "
   timeout_test_increase:
     required: false
-    description: 'custom timeout increase for tests - typically used on slow github action runners'
+    description: "custom timeout increase for tests - typically used on slow github action runners"
   k9-verdikjede-sha:
     required: true
-    description: 'sha of k9-verdikjede to use'
+    description: "sha of k9-verdikjede to use"
 
 outputs:
   test_result:
-    description: 'Test result'
+    description: "Test result"
     value: ${{ steps.outcome.outputs.test_result }}
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v4
       with:
-        repository: 'navikt/k9-verdikjede'
+        repository: "navikt/k9-verdikjede"
         ref: ${{ inputs.k9-verdikjede-sha }}
         token: ${{ inputs.reader-token }}
 
@@ -57,34 +57,21 @@ runs:
         node-version: lts/*
 
     - name: Install frontend dependencies
-      if: contains(inputs.test_suite, 'frontend') 
+      if: contains(inputs.test_suite, 'frontend')
       shell: bash
-      run: if [ -d "frontend" ]; then cd frontend/k9-sak-web-e2e && yarn install && npx playwright install --with-deps; fi
+      working-directory: frontend/k9-sak-web-e2e
+      run: yarn install
 
     - name: Install playwright dependencies
-      if: contains(inputs.test_suite, 'frontend') 
+      working-directory: frontend/k9-sak-web-e2e
       shell: bash
-      run: if [ -d "frontend" ]; then npx playwright install --with-deps; fi    
+      run: npx playwright install --with-deps
 
-    - name: debug frontend deps
-      shell: bash
-      run: |
-        set +e
-        echo "Checking Node.js version..."
-        node -v || echo "Node.js is not installed"
-        echo "Checking npm version..."
-        npm -v || echo "npm is not installed"
-        echo "Checking Yarn version..."
-        yarn -v || echo "Yarn is not installed"
-        echo "Checking Playwright version..."
-        npx playwright --version || echo "Playwright is not installed"
-        set -e
-        
     - uses: actions/setup-java@v4
       with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: 'maven'
+        java-version: "21"
+        distribution: "temurin"
+        cache: "maven"
 
     - uses: docker/login-action@v3
       with:
@@ -123,14 +110,14 @@ runs:
         echo "STACK_STARTING=true" >> $GITHUB_ENV
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
         cat .env
-        
+
         docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
         echo "tid etter docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
-        
+
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
         echo "Tid brukt på docker compose: $(date -u -d @"$duration" +"%M:%S") min"
-        
+
         echo "docker ps -a:"
         docker ps -a
         echo "docker stats --no-stream -a"
@@ -141,14 +128,14 @@ runs:
       run: |
         echo "STACK_CREATED=true" >> $GITHUB_ENV
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
-        
+
         docker ps -a
         echo
         echo "Tester om VTP er oppe"
         timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
         echo Oppe!
         echo
-        
+
         if [[ ${{ inputs.test_suite }} == klage ]]; then
           echo "Tester om k9-klage er oppe"
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8701/k9/klage/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
@@ -169,7 +156,7 @@ runs:
           echo Oppe!
           echo
         fi
-        
+
         if [[ ${{ inputs.test_suite }} == tilbake ]]; then
           echo
           echo "Tester om k9-tilbake er oppe"
@@ -177,43 +164,41 @@ runs:
           echo Oppe!
           echo
         fi
-        
+
         if [[ ${{ inputs.test_suite }} == frontend ]]; then
           echo
           echo "Tester om k9-los-web er oppe "
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/isAlive)" != "200" ]]; do sleep 2; done' || false
           echo Oppe!
         fi
-        
+
         if [[ ${{ inputs.test_suite }} == frontend-los ]]; then
           echo
           echo "Tester om k9-los-web er oppe "
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8031/isReady)" != "200" ]]; do sleep 2; done' || false
           echo Oppe!
         fi
-        
+
         echo "STACK_STARTED=true" >> $GITHUB_ENV
-        
+
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
         echo "Tid brukt på å vente på at alt er oppe: $(date -u -d @"$duration" +"%M:%S") min"
-        
+
         echo "docker stats --no-stream -a"
         docker stats --no-stream -a
         echo "docker ps -a:"
         docker ps -a
-
-
 
     - name: Utfører tester
       id: tester
       shell: bash
       run: |
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
-        
+
         cd verdikjede
         mvn clean verify -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.test_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
-        
+
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
         echo "Tid brukt på testene: $(date -u -d @"$duration" +"%M:%S") min"
@@ -274,4 +259,3 @@ runs:
         name: frontend-test-output
         # definert i frontend java-testene!
         path: verdikjede/frontendtest-output
-
