@@ -2,8 +2,8 @@ name: "Setup verdikjede & run frontend tests"
 on: 
   workflow_call:
     inputs:
-      nais-workload-identity-provider:
-        description: "NAIS workload identity provider"
+      nais-management-project-id:
+        description: "NAIS management project ID"
         type: string
         required: true
       test_suite:
