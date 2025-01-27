@@ -59,11 +59,15 @@ runs:
     - name: Install frontend dependencies
       if: contains(inputs.test_suite, 'frontend')
       shell: bash
-      working-directory: frontend/k9-sak-web-e2e
+      working-directory: ./frontend/k9-sak-web-e2e
       run: yarn install
+    
+    - name: check yarn version
+      shell: bash
+      run: yarn -v
 
     - name: Install playwright dependencies
-      working-directory: frontend/k9-sak-web-e2e
+      working-directory: ./frontend/k9-sak-web-e2e
       shell: bash
       run: npx playwright install --with-deps
 
