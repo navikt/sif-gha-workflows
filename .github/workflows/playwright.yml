@@ -1,33 +1,42 @@
 name: "Setup verdikjede & run frontend tests"
 on: 
-  workflow_dispatch:
+  workflow_call:
     inputs:
       nais-workload-identity-provider:
         description: "NAIS workload identity provider"
+        type: string
         required: true
       test_suite:
         description: "Test suite to run"
+        type: string
         required: true
       test_groups:
         description: "Maven test groups to run"
+        type: string
         required: true
       log_groups:
         description: "Maven log groups to check"
+        type: string
         required: true
       docker_compose_f:
         required: true
+        type: string
         description: "docker compose flag to run with one or more docker compose files"
       override_image_artifact_name:
         required: false
+        type: string
         description: "Artifact name of docker image to download and load."
       image_version:
         required: false
+        type: string
         description: "tag or version to use of triggering repo docker image  "
       timeout_test_increase:
         required: false
+        type: string
         description: "custom timeout increase for tests - typically used on slow github action runners"
       k9-verdikjede-sha:
         required: true
+        type: string
         description: "sha of k9-verdikjede to use"
 
 jobs:
