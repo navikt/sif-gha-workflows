@@ -1,5 +1,5 @@
-name: 'Setup verdikjede & run tests - v2'
-description: Setup verdikjede & run tests
+name: 'Setup verdikjede & run frontend tests'
+description: Setup verdikjede & run frontend tests
 inputs:
   github-token:
     description: 'Token for accessing GitHub packages'
@@ -51,6 +51,35 @@ runs:
         ref: ${{ inputs.k9-verdikjede-sha }}
         token: ${{ inputs.reader-token }}
 
+    - uses: actions/setup-node@v4
+      if: contains(inputs.test_suite, 'frontend')
+      with:
+        node-version: lts/*
+
+    - name: Install frontend dependencies
+      if: contains(inputs.test_suite, 'frontend') 
+      shell: bash
+      run: if [ -d "frontend" ]; then cd frontend/k9-sak-web-e2e && yarn install && npx playwright install --with-deps; fi
+
+    - name: Install playwright dependencies
+      if: contains(inputs.test_suite, 'frontend') 
+      shell: bash
+      run: if [ -d "frontend" ]; then npx playwright install --with-deps; fi    
+
+    - name: debug frontend deps
+      shell: bash
+      run: |
+        set +e
+        echo "Checking Node.js version..."
+        node -v || echo "Node.js is not installed"
+        echo "Checking npm version..."
+        npm -v || echo "npm is not installed"
+        echo "Checking Yarn version..."
+        yarn -v || echo "Yarn is not installed"
+        echo "Checking Playwright version..."
+        npx playwright --version || echo "Playwright is not installed"
+        set -e
+        
     - uses: actions/setup-java@v4
       with:
         java-version: '21'
