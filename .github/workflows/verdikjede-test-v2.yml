@@ -158,7 +158,7 @@ jobs:
 
   frontend-tests:
     name: frontend tests
-    uses: './playwright.yml'
+    uses: navikt/sif-gha-workflows/.github/workflows/playwright.yml@verdikjedetest-frontend
     needs: filter_suites
     strategy:
       fail-fast: false
