@@ -262,4 +262,4 @@ runs:
       with:
         name: frontend-test-output
         # definert i frontend java-testene!
-        path: verdikjede/frontendtest-output
+        path: ./frontend/playwright-output
