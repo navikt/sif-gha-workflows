@@ -77,10 +77,11 @@ jobs:
           project_id: ${{ inputs.nais-management-project-id }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           team: k9saksbehandling
-          
+
       - name: Add custom host
         shell: bash
-        run: echo "127.0.0.1 vtp" | sudo tee -a /etc/hosts
+        run: |
+          echo "127.0.0.1 vtp localhost" | sudo tee -a /etc/hosts
 
       - name: Download artifact
         if: ${{ inputs.override_image_artifact_name }}
