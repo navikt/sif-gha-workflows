@@ -42,9 +42,6 @@ on:
 jobs:
   playwright:
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.50.0-noble
-      options: --user 1001
     steps:
       - uses: actions/checkout@v4
         with:
@@ -80,6 +77,10 @@ jobs:
           project_id: ${{ inputs.nais-management-project-id }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           team: k9saksbehandling
+          
+      - name: Add custom host
+        shell: bash
+        run: echo "127.0.0.1 vtp" | sudo tee -a /etc/hosts
 
       - name: Download artifact
         if: ${{ inputs.override_image_artifact_name }}
