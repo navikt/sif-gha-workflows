@@ -88,6 +88,10 @@ runs:
         project_id: ${{ inputs.nais-management-project-id }}
         identity_provider: ${{ inputs.nais-workload-identity-provider }}
         team: k9saksbehandling
+        
+    - name: Add custom host
+      shell: bash
+      run: echo "127.0.0.1 vtp" | sudo tee -a /etc/hosts
 
     - name: Download artifact
       if: ${{ inputs.override_image_artifact_name }}
