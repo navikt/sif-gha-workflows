@@ -73,6 +73,11 @@ runs:
       working-directory: ./frontend/k9-sak-web-e2e
       shell: bash
       run: npx playwright install --with-deps chromium
+  
+    - name: Hosts for frontend testing
+      shell: bash
+      run: |
+        echo "127.0.0.1 vtp localhost" | sudo tee -a /etc/hosts
 
     - uses: docker/login-action@v3
       with:
