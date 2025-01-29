@@ -54,7 +54,7 @@ runs:
     - uses: actions/setup-node@v4
       if: contains(inputs.test_suite, 'frontend')
       with:
-        node-version: lts/*
+        node-version: "22"
 
     - name: Install frontend dependencies
       if: contains(inputs.test_suite, 'frontend')
@@ -62,10 +62,6 @@ runs:
       working-directory: ./frontend/k9-sak-web-e2e
       run: yarn install
     
-    - name: check yarn version
-      shell: bash
-      run: yarn -v
-
     - name: Install playwright dependencies
       working-directory: ./frontend/k9-sak-web-e2e
       shell: bash

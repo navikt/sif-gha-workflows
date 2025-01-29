@@ -78,7 +78,7 @@ jobs:
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           team: k9saksbehandling
 
-      - name: Add custom host
+      - name: Hosts for å kjøre verdikjede uten problemer
         shell: bash
         run: |
           echo "127.0.0.1 vtp localhost" | sudo tee -a /etc/hosts

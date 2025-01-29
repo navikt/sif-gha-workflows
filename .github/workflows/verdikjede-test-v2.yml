@@ -133,9 +133,17 @@ jobs:
       matrix:
         suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
     outputs:
+      pleiepenger: ${{ steps.resultat.outputs.pleiepenger }}
+      klage: ${{ steps.resultat.outputs.klage }}
+      livetssluttfase: ${{ steps.resultat.outputs.livetssluttfase }}
+      annet: ${{ steps.resultat.outputs.annet}}
+      tilbake: ${{ steps.resultat.outputs.tilbake }}
       frontend: ${{ steps.resultat.outputs.frontend }}
+      frontend-los: ${{ steps.resultat.outputs.frontend-los }}
+      ung: ${{ steps.resultat.outputs.ung }}
+      fordel: ${{ steps.resultat.outputs.fordel }}
     steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjedetest-frontend@verdikjedetest-frontend
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
         with:
           test_suite: ${{ matrix.suites.suite }}
