@@ -57,6 +57,23 @@ runs:
         distribution: 'temurin'
         cache: 'maven'
 
+    - uses: actions/setup-node@v4
+      if: contains(inputs.test_suite, 'frontend')
+      with:
+        node-version: "22"
+
+    - name: Install frontend dependencies
+      if: contains(inputs.test_suite, 'frontend')
+      shell: bash
+      working-directory: ./frontend/k9-sak-web-e2e
+      run: yarn install
+    
+    - name: Install playwright dependencies
+      if: contains(inputs.test_suite, 'frontend')
+      working-directory: ./frontend/k9-sak-web-e2e
+      shell: bash
+      run: npx playwright install --with-deps chromium
+
     - uses: docker/login-action@v3
       with:
         registry: ghcr.io
