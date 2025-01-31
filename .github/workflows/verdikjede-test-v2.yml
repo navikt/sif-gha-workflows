@@ -164,10 +164,11 @@ jobs:
         run: |
           echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_result }}" >> $GITHUB_OUTPUT
 
+  
   slack:
     name: Sender slack melding
     if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
-    needs: [run_tests]
+    needs: [run_tests]  
     runs-on: ubuntu-latest
     steps:
       - name: Bygger opp slack melding
