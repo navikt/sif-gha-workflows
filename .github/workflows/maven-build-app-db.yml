@@ -132,8 +132,6 @@ jobs:
           push-image: ${{ inputs.push-image }}
           upload-image: ${{ inputs.upload-image }}
           docker_platforms: ${{ (inputs.upload-image && 'linux/amd64') || null }} # docker image tarball støtter bare én platform av gangen
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           namespace: ${{ inputs.namespace }}
       - name: Clean up generated stuff before caching
         run: |
