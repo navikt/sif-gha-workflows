@@ -128,12 +128,6 @@ runs:
         docker ps -a
         echo "docker stats --no-stream -a"
         docker stats --no-stream -a
-        
-        echo "Printer repo digest for alle imager"
-        echo "RepoDigest  image.version"
-        set -v
-        docker ps --format "{{.Image}}" | xargs -I {} docker inspect --format '{{ index .RepoDigests 0 }}  {{ index .Config.Labels "org.opencontainers.image.version" }}' {}
-        set +v
 
     - name: Venter på stacken og sjekker status
       shell: bash
