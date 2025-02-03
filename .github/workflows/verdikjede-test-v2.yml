@@ -8,9 +8,9 @@ on:
         required: true
       suites:
         type: string
-        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung.'
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, beregning, pleiepenger-samtidiguttak.'
         required: false
-        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los"
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,beregning,pleiepenger-samtidiguttak"
       override_image_artifact_name:
         type: string
         required: false
@@ -25,6 +25,12 @@ on:
         default: 'master'
         description: 'branch, tag or sha of k9-verdikjede to checkout'
     outputs:
+      pleiepenger-samtidiguttak:
+        description: "Utfall fra pleiepenger-samtidiguttak-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-samtidiguttak }}
+      beregning:
+        description: "Utfall fra beregning-test"
+        value: ${{ jobs.run_tests.outputs.beregning }}
       pleiepenger:
         description: "Utfall fra pleiepenger-test"
         value: ${{ jobs.run_tests.outputs.pleiepenger }}
@@ -56,6 +62,18 @@ jobs:
     env:
       SUITES: |
         [
+          {
+            "suite": "pleiepenger-samtidiguttak",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+            "test_groups": "-Dgroups=pleiepenger-samtidiguttak '-Dtest=!PleiepengerLoggTest'",
+            "log_groups": "-Dgroups=etter-pleiepenger"
+          },
+          {
+            "suite": "beregning",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+            "test_groups": "-Dgroups=beregning '-Dtest=!PleiepengerLoggTest'",
+            "log_groups": "-Dgroups=etter-pleiepenger"
+          },
           {
             "suite": "pleiepenger",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
@@ -173,6 +191,8 @@ jobs:
     steps:
       - name: Bygger opp slack melding
         run: |
+          beregning="${{ needs.run_tests.outputs.beregning || 'skipped' }}"
+          pleiepengersamtidiguttak="${{ needs.run_tests.outputs.pleiepenger-samtidiguttak || 'skipped' }}"
           pleiepenger="${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}"
           livetssluttfase="${{ needs.run_tests.outputs.livetssluttfase || 'skipped' }}"
           annet="${{ needs.run_tests.outputs.annet || 'skipped' }}"
@@ -186,7 +206,7 @@ jobs:
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$fordel")
+          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$fordel")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
@@ -213,6 +233,8 @@ jobs:
           }
   
           echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
+          echoStatus "Pleiepenger samtidig uttak" $pleiepengersamtidiguttak >> $GITHUB_ENV
+          echoStatus "Beregning" $beregning >> $GITHUB_ENV
           echoStatus "Pleiepenger" $pleiepenger >> $GITHUB_ENV
           echoStatus "Livets sluttfase" $livetssluttfase >> $GITHUB_ENV
           echoStatus "Frontend" $frontend >> $GITHUB_ENV
