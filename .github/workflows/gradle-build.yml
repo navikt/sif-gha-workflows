@@ -48,7 +48,7 @@ jobs:
         with:
           dependency-graph: generate-and-submit
           arguments: ${{ inputs.buildcommand }}
-      - uses: nais/docker-build-push@0abf17674d94d1011c7acd2d91c1f0002f6108d2 # ratchet:nais/docker-build-push@v0
+      - uses: nais/docker-build-push@b456950f126babd98088910e4dc8ac9373823bda
         id: docker-push
         with:
           team: ${{ inputs.team }}
@@ -57,5 +57,3 @@ jobs:
           pull: true
           dockerfile: Dockerfile
           docker_context: ${{ inputs.dockercontext }}
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}

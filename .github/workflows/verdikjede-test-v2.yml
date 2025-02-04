@@ -193,8 +193,6 @@ jobs:
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}
-          nais-management-project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-          nais-workload-identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
       - id: resultat
         if: always() && !cancelled()
         run: |
