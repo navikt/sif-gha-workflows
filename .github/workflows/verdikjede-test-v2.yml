@@ -178,6 +178,10 @@ jobs:
       frontend-los: ${{ steps.resultat.outputs.frontend-los }}
       ung: ${{ steps.resultat.outputs.ung }}
       fordel: ${{ steps.resultat.outputs.fordel }}
+      beregning: ${{ steps.resultat.outputs.beregning }}
+      pleiepenger-samtidiguttak: ${{ steps.resultat.outputs.pleiepenger-samtidiguttak }}
+      pleiepenger-pleietrengende: ${{ steps.resultat.outputs.pleiepenger-pleietrengende }}
+      pleiepenger-soker: ${{ steps.resultat.outputs.pleiepenger-soker }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
