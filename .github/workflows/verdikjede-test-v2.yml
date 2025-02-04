@@ -8,9 +8,9 @@ on:
         required: true
       suites:
         type: string
-        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, beregning, pleiepenger-samtidiguttak.'
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker.'
         required: false
-        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,beregning,pleiepenger-samtidiguttak"
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker"
       override_image_artifact_name:
         type: string
         required: false
@@ -25,6 +25,12 @@ on:
         default: 'master'
         description: 'branch, tag or sha of k9-verdikjede to checkout'
     outputs:
+      pleiepenger-pleietrengende:
+        description: "Utfall fra pleiepenger-pleietrengende-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-pleietrengende }}
+      pleiepenger-soker:
+        description: "Utfall fra pleiepenger-soker-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-soker }}
       pleiepenger-samtidiguttak:
         description: "Utfall fra pleiepenger-samtidiguttak-test"
         value: ${{ jobs.run_tests.outputs.pleiepenger-samtidiguttak }}
@@ -62,6 +68,18 @@ jobs:
     env:
       SUITES: |
         [
+          {
+            "suite": "pleiepenger-pleietrengende",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+            "test_groups": "-Dgroups=pleiepenger-pleietrengende '-Dtest=!PleiepengerLoggTest'",
+            "log_groups": "-Dgroups=etter-pleiepenger"
+          },
+          {
+            "suite": "pleiepenger-soker",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+            "test_groups": "-Dgroups=pleiepenger-soker '-Dtest=!PleiepengerLoggTest'",
+            "log_groups": "-Dgroups=etter-pleiepenger"
+          },
           {
             "suite": "pleiepenger-samtidiguttak",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
@@ -193,6 +211,8 @@ jobs:
         run: |
           beregning="${{ needs.run_tests.outputs.beregning || 'skipped' }}"
           pleiepengersamtidiguttak="${{ needs.run_tests.outputs.pleiepenger-samtidiguttak || 'skipped' }}"
+          pleiepengerpleietrengende="${{ needs.run_tests.outputs.pleiepenger-pleietrengende || 'skipped' }}"
+          pleiepengersoker="${{ needs.run_tests.outputs.pleiepenger-soker || 'skipped' }}"
           pleiepenger="${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}"
           livetssluttfase="${{ needs.run_tests.outputs.livetssluttfase || 'skipped' }}"
           annet="${{ needs.run_tests.outputs.annet || 'skipped' }}"
@@ -206,7 +226,7 @@ jobs:
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$fordel")
+          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$fordel")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
@@ -234,6 +254,8 @@ jobs:
   
           echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
           echoStatus "Pleiepenger samtidig uttak" $pleiepengersamtidiguttak >> $GITHUB_ENV
+          echoStatus "Pleiepenger pleietrengende" $pleiepengerpleietrengende >> $GITHUB_ENV
+          echoStatus "Pleiepenger søker" $pleiepengersoker >> $GITHUB_ENV
           echoStatus "Beregning" $beregning >> $GITHUB_ENV
           echoStatus "Pleiepenger" $pleiepenger >> $GITHUB_ENV
           echoStatus "Livets sluttfase" $livetssluttfase >> $GITHUB_ENV
