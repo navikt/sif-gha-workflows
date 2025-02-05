@@ -1,0 +1,21 @@
+name: 'Setup Java Environment'
+description: 'Sets up Java with Maven cache'
+
+inputs:
+  java-version:
+    description: 'Version of Java to use'
+    required: false
+    default: '21'
+  distribution:
+    description: 'Java distribution to use'
+    required: false
+    default: 'temurin'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: ${{ inputs.distribution }}
+        cache: 'maven' 

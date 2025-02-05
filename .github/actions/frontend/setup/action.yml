@@ -1,0 +1,30 @@
+name: 'Setup Frontend Testing Environment'
+description: 'Sets up Node.js, Playwright, and necessary frontend dependencies'
+
+inputs:
+  node-version:
+    description: 'Version of Node.js to use'
+    required: false
+    default: '22'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install frontend dependencies
+      shell: bash
+      working-directory: ./frontend/k9-sak-web-e2e
+      run: yarn install
+    
+    - name: Install playwright dependencies
+      working-directory: ./frontend/k9-sak-web-e2e
+      shell: bash
+      run: npx playwright install --with-deps chromium
+  
+    - name: Configure hosts for frontend testing
+      shell: bash
+      run: |
+        echo "127.0.0.1 vtp localhost" | sudo tee -a /etc/hosts 

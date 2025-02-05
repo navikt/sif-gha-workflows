@@ -1,0 +1,51 @@
+name: 'Send Slack Notification'
+description: 'Sends test results to Slack'
+
+inputs:
+  webhook-url:
+    description: 'Slack webhook URL'
+    required: true
+  test-results:
+    description: 'JSON string containing test results'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Send notification
+      shell: bash
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.webhook-url }}
+        TEST_RESULTS: ${{ inputs.test-results }}
+      run: |
+        # Build message
+        message="*Test Results:*\\n"
+        all_success=true
+        
+        # Parse results and build message
+        echo "$TEST_RESULTS" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' | while read -r line; do
+          key=$(echo "$line" | cut -d= -f1)
+          value=$(echo "$line" | cut -d= -f2)
+          
+          if [[ "$value" == "success" ]]; then
+            message="${message}✅ ${key}\\n"
+          elif [[ "$value" == "skipped" ]]; then
+            message="${message}⏭️ ${key}\\n"
+          else
+            message="${message}❌ ${key}\\n"
+            all_success=false
+          fi
+        done
+        
+        # Add summary
+        if [[ "$all_success" == "true" ]]; then
+          message="${message}\\n🚀 *Verdikjede er kjørt UTEN feil*"
+        else
+          message="${message}\\n💥 *Verdikjede er brukket*"
+        fi
+        
+        # Send to Slack
+        curl -X POST \
+          -H 'Content-type: application/json' \
+          --data "{\"text\":\"$message\"}" \
+          "$SLACK_WEBHOOK_URL" 

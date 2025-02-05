@@ -1,0 +1,176 @@
+name: Tester saksbehandling - v3 (reusable)
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        description: 'Docker tag (from repository) - deprecated, use image_version'
+        required: true
+      suites:
+        type: string
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker.'
+        required: false
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker"
+      override_image_artifact_name:
+        type: string
+        required: false
+        description: 'Artifact name of docker image to download and load.'
+      image_version:
+        type: string
+        required: true
+        description: 'Version/tag of image. '
+      k9-verdikjede-sha:
+        type: string
+        required: false
+        default: 'master'
+        description: 'branch, tag or sha of k9-verdikjede to checkout'
+    outputs:
+      pleiepenger-pleietrengende:
+        description: "Utfall fra pleiepenger-pleietrengende-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-pleietrengende }}
+      pleiepenger-soker:
+        description: "Utfall fra pleiepenger-soker-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-soker }}
+      pleiepenger-samtidiguttak:
+        description: "Utfall fra pleiepenger-samtidiguttak-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-samtidiguttak }}
+      beregning:
+        description: "Utfall fra beregning-test"
+        value: ${{ jobs.run_tests.outputs.beregning }}
+      pleiepenger:
+        description: "Utfall fra pleiepenger-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger }}
+      livetssluttfase:
+        description: "Utfall fra livetssluttfase-test"
+        value: ${{ jobs.run_tests.outputs.livetssluttfase }}
+      annet:
+        description: "Utfall fra annet-test"
+        value: ${{ jobs.run_tests.outputs.annet }}
+      frontend:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend }}
+      klage:
+        description: "Utfall fra klage-test"
+        value: ${{ jobs.run_tests.outputs.klage }}
+      tilbake:
+        description: "Utfall fra tilbake-test"
+        value: ${{ jobs.run_tests.outputs.tilbake }}
+      frontend-los:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend-los }}
+      ung:
+        description: "Utfall fra ungdomsytelse-test"
+        value: ${{ jobs.run_tests.outputs.ung }}
+
+jobs:
+  filter_suites:
+    name: Avgjør testsuiter som skal kjøres
+    runs-on: ubuntu-latest
+    outputs:
+      active_suites: ${{ steps.filter.outputs.filtered }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - id: read-config
+        run: echo "config=$(cat .github/config/test-suites.json)" >> $GITHUB_OUTPUT
+      
+      - uses: ./.github/actions/filter/suites
+        id: filter
+        with:
+          suites: ${{ inputs.suites }}
+          suites-config: ${{ steps.read-config.outputs.config }}
+
+  run_tests:
+    name: Tests
+    runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
+    needs: filter_suites
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
+    outputs:
+      matrix-results: ${{ steps.collect-results.outputs.results }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'navikt/k9-verdikjede'
+          ref: ${{ inputs.k9-verdikjede-sha }}
+          token: ${{ secrets.READER_TOKEN }}
+
+      # Setup Java environment
+      - uses: ./.github/actions/java/setup
+
+      # Setup frontend environment if needed
+      - uses: ./.github/actions/frontend/setup
+        if: contains(matrix.suites.suite, 'frontend')
+        with:
+          node-version: '22'
+
+      # Setup Docker environment
+      - uses: ./.github/actions/docker/setup
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
+
+      # Setup and verify test stack
+      - uses: ./.github/actions/stack/setup
+        with:
+          docker_compose_f: ${{ matrix.suites.docker_compose_f }}
+          image_version: ${{ inputs.image_version }}
+          test_suite: ${{ matrix.suites.suite }}
+
+      # Run tests and log checks
+      - uses: ./.github/actions/test/run
+        id: test-run
+        with:
+          test_groups: ${{ matrix.suites.test_groups }}
+          log_groups: ${{ matrix.suites.log_groups }}
+          reader-token: ${{ secrets.READER_TOKEN }}
+          timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
+
+      # Collect results in a format suitable for the matrix
+      - id: collect-results
+        if: always() && !cancelled()
+        run: |
+          echo "{\"${{ matrix.suites.suite }}\": \"${{ steps.test-run.outputs.test_result }}\"}" >> $GITHUB_OUTPUT
+
+  aggregate_results:
+    name: Aggregate Results
+    needs: run_tests
+    runs-on: ubuntu-latest
+    outputs:
+      pleiepenger: ${{ steps.aggregate.outputs.pleiepenger }}
+      klage: ${{ steps.aggregate.outputs.klage }}
+      livetssluttfase: ${{ steps.aggregate.outputs.livetssluttfase }}
+      annet: ${{ steps.aggregate.outputs.annet }}
+      tilbake: ${{ steps.aggregate.outputs.tilbake }}
+      frontend: ${{ steps.aggregate.outputs.frontend }}
+      frontend-los: ${{ steps.aggregate.outputs.frontend-los }}
+      ung: ${{ steps.aggregate.outputs.ung }}
+      beregning: ${{ steps.aggregate.outputs.beregning }}
+      pleiepenger-samtidiguttak: ${{ steps.aggregate.outputs.pleiepenger-samtidiguttak }}
+      pleiepenger-pleietrengende: ${{ steps.aggregate.outputs.pleiepenger-pleietrengende }}
+      pleiepenger-soker: ${{ steps.aggregate.outputs.pleiepenger-soker }}
+    steps:
+      - id: aggregate
+        run: |
+          # Combine all matrix results into a single JSON object
+          results='{}'
+          for result in ${{ toJSON(needs.run_tests.outputs.matrix-results) }}; do
+            results=$(echo "$results $result" | jq -s add)
+          done
+          
+          # Output each test result individually
+          echo "$results" | jq -r 'to_entries | .[] | "echo \"\(.key)=\(.value)\" >> $GITHUB_OUTPUT"' | bash
+
+  slack:
+    name: Sender slack melding
+    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
+    needs: [aggregate_results]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/slack/notify
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          test-results: ${{ toJSON(needs.aggregate_results.outputs) }} 
