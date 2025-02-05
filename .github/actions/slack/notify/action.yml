@@ -29,8 +29,6 @@ runs:
           
           if [[ "$value" == "success" ]]; then
             message="${message}✅ ${key}\\n"
-          elif [[ "$value" == "skipped" ]]; then
-            message="${message}⏭️ ${key}\\n"
           else
             message="${message}❌ ${key}\\n"
             all_success=false

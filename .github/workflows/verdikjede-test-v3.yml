@@ -80,15 +80,29 @@ jobs:
           suites: ${{ inputs.suites }}
           suites-config: ${{ steps.read-config.outputs.config }}
 
+  prepare_parallel_runners:
+    name: Konfigurer parallelle test-kjøringer
+    runs-on: ubuntu-latest
+    needs: filter_suites
+    outputs:
+      parallel_config: ${{ steps.parallel.outputs.parallel_config }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test/parallel-config
+        id: parallel
+        with:
+          test-suites: ${{ needs.filter_suites.outputs.active_suites }}
+
   run_tests:
     name: Tests
     runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
-    needs: filter_suites
+    needs: [filter_suites, prepare_parallel_runners]
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
+        parallel_config: ${{ fromJson(needs.prepare_parallel_runners.outputs.parallel_config) }}
     outputs:
       matrix-results: ${{ steps.collect-results.outputs.results }}
     steps:
@@ -103,6 +117,7 @@ jobs:
 
       # Setup frontend environment if needed
       - uses: ./.github/actions/frontend/setup
+        id: frontend-setup
         if: contains(matrix.suites.suite, 'frontend')
         with:
           node-version: '22'
@@ -128,6 +143,7 @@ jobs:
           log_groups: ${{ matrix.suites.log_groups }}
           reader-token: ${{ secrets.READER_TOKEN }}
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
+          playwright_shard: ${{ matrix.suites.parallel_config.enabled && format('{0}/{1}', matrix.parallel_config.shardIndex, matrix.parallel_config.shardTotal) || '' }}
 
       # Collect results in a format suitable for the matrix
       - id: collect-results
@@ -155,22 +171,18 @@ jobs:
     steps:
       - id: aggregate
         run: |
-          # Combine all matrix results into a single JSON object
           results='{}'
           for result in ${{ toJSON(needs.run_tests.outputs.matrix-results) }}; do
             results=$(echo "$results $result" | jq -s add)
           done
           
-          # Output each test result individually
           echo "$results" | jq -r 'to_entries | .[] | "echo \"\(.key)=\(.value)\" >> $GITHUB_OUTPUT"' | bash
 
-  slack:
-    name: Sender slack melding
-    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
-    needs: [aggregate_results]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ./.github/actions/slack/notify
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          test-results: ${{ toJSON(needs.aggregate_results.outputs) }} 
+      - name: Print test results
+        run: |
+          echo "Test Results:"
+          echo "--------------"
+          for output in $(echo '${{ toJSON(steps.aggregate.outputs) }}' | jq -r 'to_entries[] | select(.value != null) | "\(.key)=\(.value)"'); do
+            echo "$output"
+          done
+

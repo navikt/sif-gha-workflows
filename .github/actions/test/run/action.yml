@@ -1,24 +1,28 @@
-name: 'Run Tests'
-description: 'Executes test suite and log checks'
+name: "Run Tests"
+description: "Executes test suite and log checks"
 
 inputs:
   test_groups:
-    description: 'Maven test groups to run'
+    description: "Maven test groups to run"
     required: true
   log_groups:
-    description: 'Maven log groups to check'
+    description: "Maven log groups to check"
     required: true
   reader-token:
-    description: 'Token for setting up settings.xml for internal packages'
+    description: "Token for setting up settings.xml for internal packages"
     required: true
   timeout_test_increase:
     required: false
-    description: 'custom timeout increase for tests'
-    default: '0'
+    description: "custom timeout increase for tests"
+    default: "0"
+  playwright_shard:
+    required: false
+    description: "Playwright shard configuration (format: shardIndex/totalShards)"
+    default: ""
 
 outputs:
   test_result:
-    description: 'Test result'
+    description: "Test result"
     value: ${{ steps.outcome.outputs.test_result }}
 
 runs:
@@ -29,7 +33,26 @@ runs:
       shell: bash
       run: |
         cd verdikjede
-        mvn clean verify -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.test_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
+        if [[ ! -z "${{ inputs.playwright_shard }}" ]]; then
+          mvn clean verify -e --batch-mode \
+            --settings ./../.github/.m2/settings.xml \
+            --file pom.xml \
+            ${{ inputs.test_groups }} \
+            -DtrimStackTrace=false \
+            -Dchangelist= \
+            -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) \
+            -Dfile.encoding=UTF-8 \
+            -Dplaywright.shard=${{ inputs.playwright_shard }}
+        else
+          mvn clean verify -e --batch-mode \
+            --settings ./../.github/.m2/settings.xml \
+            --file pom.xml \
+            ${{ inputs.test_groups }} \
+            -DtrimStackTrace=false \
+            -Dchangelist= \
+            -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) \
+            -Dfile.encoding=UTF-8
+        fi
       env:
         GITHUB_USERNAME: ${{ github.actor }}
         GITHUB_PASSWORD: ${{ inputs.reader-token }}
@@ -51,16 +74,19 @@ runs:
       shell: bash
       run: |
         if [ ! ${{ env.STACK_STARTED }} ]; then
-           docker ps -a
-           echo "test_result=stack_not_started" >> $GITHUB_OUTPUT
+          echo "test_result=stack_not_started" >> $GITHUB_OUTPUT
         elif [[ ${{ steps.tester.outcome }} == success && ${{ steps.loggsjekker.outcome }} == success ]]; then
-           echo "test_result=success" >> $GITHUB_OUTPUT
+          echo "test_result=success" >> $GITHUB_OUTPUT
         else
-           echo "test_result=failed" >> $GITHUB_OUTPUT
+          echo "test_result=failed" >> $GITHUB_OUTPUT
         fi
-        echo "####################################"
-        echo "docker ps -a:"
-        docker ps -a
-        echo "####################################"
-        echo "docker stats --no-stream -a"
-        docker stats --no-stream -a 
+
+        # Only show info for test suites that ran
+        if [[ ${{ steps.tester.outcome }} != skipped ]]; then
+          echo "####################################"
+          echo "docker ps -a:"
+          docker ps -a
+          echo "####################################"
+          echo "docker stats --no-stream -a"
+          docker stats --no-stream -a
+        fi

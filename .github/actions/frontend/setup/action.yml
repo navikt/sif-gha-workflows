@@ -1,11 +1,10 @@
-name: 'Setup Frontend Testing Environment'
-description: 'Sets up Node.js, Playwright, and necessary frontend dependencies'
+name: 'Setup Frontend Environment'
+description: 'Sets up Node.js and configures frontend test environment'
 
 inputs:
   node-version:
-    description: 'Version of Node.js to use'
-    required: false
-    default: '22'
+    description: 'Node.js version to use'
+    required: true
 
 runs:
   using: "composite"
@@ -13,7 +12,7 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-
+        
     - name: Install frontend dependencies
       shell: bash
       working-directory: ./frontend/k9-sak-web-e2e

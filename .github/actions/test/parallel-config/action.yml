@@ -1,0 +1,44 @@
+name: 'Configure Parallel Test Runners'
+description: 'Prepares parallel test configuration based on test suite settings'
+
+inputs:
+  test-suites:
+    description: 'JSON array of test suites to configure'
+    required: true
+
+outputs:
+  parallel_config:
+    description: 'Matrix configuration for parallel test runners'
+    value: ${{ steps.prepare-runners.outputs.matrix }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: prepare-runners
+      shell: bash
+      run: |
+        suites='${{ inputs.test-suites }}'
+        matrix='['
+        first=true
+        
+        for suite in $(echo "$suites" | jq -c '.[]'); do
+          parallel_config=$(echo "$suite" | jq -r '.parallel_config // empty')
+          if [ ! -z "$parallel_config" ] && [ "$(echo "$parallel_config" | jq -r '.enabled')" = "true" ]; then
+            runners=$(echo "$parallel_config" | jq -r '.runners')
+            for ((i=1; i<=$runners; i++)); do
+              if [ "$first" = "true" ]; then
+                first=false
+              else
+                matrix+=','
+              fi
+              matrix+="{\"shardIndex\":$i,\"shardTotal\":$runners}"
+            done
+          fi
+        done
+        
+        if [ "$first" = "true" ]; then
+          matrix+="{\"shardIndex\":0,\"shardTotal\":1}"
+        fi
+        
+        matrix+=']'
+        echo "matrix=$matrix" >> $GITHUB_OUTPUT 
