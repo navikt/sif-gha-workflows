@@ -134,7 +134,7 @@ jobs:
       # Setup frontend environment if needed
       - uses: navikt/sif-gha-workflows/.github/actions/frontend/setup@verdikjede-test-v3
         id: frontend-setup
-        if: contains(matrix.suites.suite, 'frontend')
+        if: contains(matrix.suite.suite, 'frontend')
         with:
           node-version: '22'
 
@@ -147,9 +147,9 @@ jobs:
       # Setup and verify test stack
       - uses: navikt/sif-gha-workflows/.github/actions/stack/setup@verdikjede-test-v3
         with:
-          docker_compose_f: ${{ matrix.suites.docker_compose_f }}
+          docker_compose_f: ${{ matrix.suite.docker_compose_f }}
           image_version: ${{ inputs.image_version }}
-          test_suite: ${{ matrix.suites.suite }}
+          test_suite: ${{ matrix.suite.suite }}
 
       # Run tests and log checks
       - uses: navikt/sif-gha-workflows/.github/actions/test/run@verdikjede-test-v3
