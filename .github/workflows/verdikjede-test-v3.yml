@@ -91,22 +91,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: filter_suites
     outputs:
-      parallel_config: ${{ steps.parallel.outputs.parallel_config || '{"enabled":false}' }}
+      matrix_config: ${{ steps.prepare-matrix.outputs.config }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: 'navikt/sif-gha-workflows'
-          ref: verdikjede-test-v3
-          token: ${{ secrets.READER_TOKEN }}
-      
-      - id: prepare-input
+      - id: prepare-matrix
         run: |
-          echo '${{ needs.filter_suites.outputs.active_suites }}' | jq -c . > test-suites.json
-      
-      - uses: navikt/sif-gha-workflows/.github/actions/test/parallel-config@verdikjede-test-v3
-        id: parallel
-        with:
-          test-suites: $(cat test-suites.json)
+          suites='${{ needs.filter_suites.outputs.active_suites }}'
+          matrix_config=$(echo "$suites" | jq -c '[.[] | 
+            if (.suite | contains("frontend")) then
+              [1,2,3,4] | map({"suite": ., "shard": .})
+            else
+              [{"suite": ., "shard": 1}]
+            end
+          ] | add')
+          echo "config=$matrix_config" >> $GITHUB_OUTPUT
 
   run_tests:
     name: Tests
@@ -116,8 +113,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
-        parallel_config: ${{ fromJson(needs.prepare_parallel_runners.outputs.parallel_config) }}
+        include: ${{ fromJson(needs.prepare_parallel_runners.outputs.matrix_config) }}
     outputs:
       matrix-results: ${{ steps.collect-results.outputs.results }}
     steps:
@@ -154,19 +150,23 @@ jobs:
       - uses: navikt/sif-gha-workflows/.github/actions/test/run@verdikjede-test-v3
         id: test-run
         with:
-          test_groups: ${{ matrix.suites.test_groups }}
-          log_groups: ${{ matrix.suites.log_groups }}
+          test_groups: ${{ matrix.suite.test_groups }}
+          log_groups: ${{ matrix.suite.log_groups }}
           reader-token: ${{ secrets.READER_TOKEN }}
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
-          playwright_shard: ${{ matrix.suites.parallel_config.enabled && format('{0}/{1}', matrix.parallel_config.shardIndex, matrix.parallel_config.shardTotal) || '' }}
+          playwright_shard: ${{ contains(matrix.suite.suite, 'frontend') && format('{0}/4', matrix.shard) || '' }}
 
       # Collect results in a format suitable for the matrix
       - id: collect-results
         if: always() && !cancelled()
         run: |
-          suite="${{ matrix.suites.suite }}"
+          suite="${{ matrix.suite.suite }}"
           result="${{ steps.test-run.outputs.test_result }}"
-          echo "results={\"$suite\":\"$result\"}" >> $GITHUB_OUTPUT
+          if [[ "$suite" == *"frontend"* ]]; then
+            echo "results={\"${suite}_shard${{ matrix.shard }}\":\"$result\"}" >> $GITHUB_OUTPUT
+          else
+            echo "results={\"${suite}\":\"$result\"}" >> $GITHUB_OUTPUT
+          fi
 
   aggregate_results:
     name: Aggregate Results
@@ -192,6 +192,25 @@ jobs:
           for result in ${{ toJSON(needs.run_tests.outputs.matrix-results) }}; do
             results=$(echo "$results $result" | jq -s add)
           done
+          
+          # Combine frontend shard results
+          frontend_success=true
+          frontend_los_success=true
+          
+          for i in {1..4}; do
+            if [[ "$(echo "$results" | jq -r ".frontend_shard${i} // \"success\"")" != "success" ]]; then
+              frontend_success=false
+            fi
+            if [[ "$(echo "$results" | jq -r ".frontend-los_shard${i} // \"success\"")" != "success" ]]; then
+              frontend_los_success=false
+            fi
+          done
+          
+          # Output final results
+          results=$(echo "$results" | jq -c \
+            --arg frontend "$([[ "$frontend_success" == "true" ]] && echo "success" || echo "failure")" \
+            --arg frontend_los "$([[ "$frontend_los_success" == "true" ]] && echo "success" || echo "failure")" \
+            'del(.|select(.key|test("_shard[0-9]+$"))) + {"frontend": $frontend, "frontend-los": $frontend_los}')
           
           echo "$results" | jq -r 'to_entries | .[] | "echo \"\(.key)=\(.value)\" >> $GITHUB_OUTPUT"' | bash
 
