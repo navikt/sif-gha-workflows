@@ -76,7 +76,9 @@ jobs:
           token: ${{ secrets.READER_TOKEN }}
       
       - id: read-config
-        run: echo "config=$(cat .github/config/test-suites.json)" >> $GITHUB_OUTPUT
+        run: |
+          config=$(cat .github/config/test-suites.json | jq -c .)
+          echo "config=$config" >> $GITHUB_OUTPUT
       
       - uses: navikt/sif-gha-workflows/.github/actions/filter/suites@verdikjede-test-v3
         id: filter
