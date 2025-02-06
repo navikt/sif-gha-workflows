@@ -94,10 +94,19 @@ jobs:
       parallel_config: ${{ steps.parallel.outputs.parallel_config || '{"enabled":false}' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: 'navikt/sif-gha-workflows'
+          ref: verdikjede-test-v3
+          token: ${{ secrets.READER_TOKEN }}
+      
+      - id: prepare-input
+        run: |
+          echo '${{ needs.filter_suites.outputs.active_suites }}' | jq -c . > test-suites.json
+      
       - uses: navikt/sif-gha-workflows/.github/actions/test/parallel-config@verdikjede-test-v3
         id: parallel
         with:
-          test-suites: ${{ needs.filter_suites.outputs.active_suites }}
+          test-suites: $(cat test-suites.json)
 
   run_tests:
     name: Tests
