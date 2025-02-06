@@ -98,10 +98,11 @@ jobs:
           suites='${{ needs.filter_suites.outputs.active_suites }}'
           matrix_config=$(echo "$suites" | jq -c '[.[] | 
             if (.suite | contains("frontend")) then
+              . as $suite |
               [1,2,3,4] | map({
-                "suite": .,
+                "suite": $suite,
                 "shard": .,
-                "name": (.suite + " (shard " + (.|tostring) + "/4)")
+                "name": ($suite.suite + " (shard " + (.|tostring) + "/4)")
               })
             else
               [{"suite": ., "shard": 1, "name": .suite}]
