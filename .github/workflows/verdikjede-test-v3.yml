@@ -98,15 +98,19 @@ jobs:
           suites='${{ needs.filter_suites.outputs.active_suites }}'
           matrix_config=$(echo "$suites" | jq -c '[.[] | 
             if (.suite | contains("frontend")) then
-              [1,2,3,4] | map({"suite": ., "shard": .})
+              [1,2,3,4] | map({
+                "suite": .,
+                "shard": .,
+                "name": (.suite + " (shard " + (.|tostring) + "/4)")
+              })
             else
-              [{"suite": ., "shard": 1}]
+              [{"suite": ., "shard": 1, "name": .suite}]
             end
           ] | add')
           echo "config=$matrix_config" >> $GITHUB_OUTPUT
 
   run_tests:
-    name: Tests
+    name: ${{ matrix.name }}
     runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
     needs: [filter_suites, prepare_parallel_runners]
     timeout-minutes: 30
