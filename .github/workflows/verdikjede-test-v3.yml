@@ -67,9 +67,13 @@ jobs:
     name: Avgjør testsuiter som skal kjøres
     runs-on: ubuntu-latest
     outputs:
-      active_suites: ${{ steps.filter.outputs.filtered }}
+      active_suites: ${{ steps.filter.outputs.filtered || '[]' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: 'navikt/sif-gha-workflows'
+          ref: verdikjede-test-v3
+          token: ${{ secrets.READER_TOKEN }}
       
       - id: read-config
         run: echo "config=$(cat .github/config/test-suites.json)" >> $GITHUB_OUTPUT
@@ -85,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: filter_suites
     outputs:
-      parallel_config: ${{ steps.parallel.outputs.parallel_config }}
+      parallel_config: ${{ steps.parallel.outputs.parallel_config || '{"enabled":false}' }}
     steps:
       - uses: actions/checkout@v4
       - uses: navikt/sif-gha-workflows/.github/actions/test/parallel-config@verdikjede-test-v3
