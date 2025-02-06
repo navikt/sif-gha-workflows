@@ -60,7 +60,7 @@
     "log_groups": "-Dgroups=etter-frontendtest ",
     "parallel_config": {
       "enabled": true,
-      "runners": 4
+      "runners": 2
     }
   },
   {
@@ -70,7 +70,7 @@
     "log_groups": "-Dgroups=etter ",
     "parallel_config": {
       "enabled": true,
-      "runners": 4
+      "runners": 2
     }
   },
   {
