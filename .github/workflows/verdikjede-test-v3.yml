@@ -164,7 +164,9 @@ jobs:
       - id: collect-results
         if: always() && !cancelled()
         run: |
-          echo "{\"${{ matrix.suites.suite }}\": \"${{ steps.test-run.outputs.test_result }}\"}" >> $GITHUB_OUTPUT
+          suite="${{ matrix.suites.suite }}"
+          result="${{ steps.test-run.outputs.test_result }}"
+          echo "results={\"$suite\":\"$result\"}" >> $GITHUB_OUTPUT
 
   aggregate_results:
     name: Aggregate Results
