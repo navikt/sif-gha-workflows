@@ -86,41 +86,15 @@ jobs:
           suites: ${{ inputs.suites }}
           suites-config: ${{ steps.read-config.outputs.config }}
 
-  prepare_parallel_runners:
-    name: Konfigurer parallelle test-kjøringer
-    runs-on: ubuntu-latest
-    needs: filter_suites
-    outputs:
-      matrix_config: ${{ steps.prepare-matrix.outputs.config }}
-    steps:
-      - id: prepare-matrix
-        run: |
-          suites='${{ needs.filter_suites.outputs.active_suites }}'
-          matrix_config=$(echo "$suites" | jq -c '[.[] | 
-            if (.suite | contains("frontend")) then
-              . as $suite |
-              [1,2,3,4] | map({
-                "suite": $suite,
-                "shard": .,
-                "name": ($suite.suite + " (shard " + (.|tostring) + "/4)")
-              })
-            else
-              [{"suite": ., "shard": 1, "name": .suite}]
-            end
-          ] | add')
-          echo "config=$matrix_config" >> $GITHUB_OUTPUT
-
   run_tests:
-    name: ${{ matrix.name }}
+    name: ${{ matrix.suite.suite }}
     runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
-    needs: [filter_suites, prepare_parallel_runners]
+    needs: [filter_suites]
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.prepare_parallel_runners.outputs.matrix_config) }}
-    outputs:
-      matrix-results: ${{ steps.collect-results.outputs.results }}
+        suite: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -159,71 +133,10 @@ jobs:
           log_groups: ${{ matrix.suite.log_groups }}
           reader-token: ${{ secrets.READER_TOKEN }}
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
-          playwright_shard: ${{ contains(matrix.suite.suite, 'frontend') && format('{0}/4', matrix.shard) || '' }}
 
-      # Collect results in a format suitable for the matrix
-      - id: collect-results
+      # Print test result
+      - name: Print test result
         if: always() && !cancelled()
         run: |
-          suite="${{ matrix.suite.suite }}"
-          result="${{ steps.test-run.outputs.test_result }}"
-          if [[ "$suite" == *"frontend"* ]]; then
-            echo "results={\"${suite}_shard${{ matrix.shard }}\":\"$result\"}" >> $GITHUB_OUTPUT
-          else
-            echo "results={\"${suite}\":\"$result\"}" >> $GITHUB_OUTPUT
-          fi
-
-  aggregate_results:
-    name: Aggregate Results
-    needs: run_tests
-    runs-on: ubuntu-latest
-    outputs:
-      pleiepenger: ${{ steps.aggregate.outputs.pleiepenger }}
-      klage: ${{ steps.aggregate.outputs.klage }}
-      livetssluttfase: ${{ steps.aggregate.outputs.livetssluttfase }}
-      annet: ${{ steps.aggregate.outputs.annet }}
-      tilbake: ${{ steps.aggregate.outputs.tilbake }}
-      frontend: ${{ steps.aggregate.outputs.frontend }}
-      frontend-los: ${{ steps.aggregate.outputs.frontend-los }}
-      ung: ${{ steps.aggregate.outputs.ung }}
-      beregning: ${{ steps.aggregate.outputs.beregning }}
-      pleiepenger-samtidiguttak: ${{ steps.aggregate.outputs.pleiepenger-samtidiguttak }}
-      pleiepenger-pleietrengende: ${{ steps.aggregate.outputs.pleiepenger-pleietrengende }}
-      pleiepenger-soker: ${{ steps.aggregate.outputs.pleiepenger-soker }}
-    steps:
-      - id: aggregate
-        run: |
-          results='{}'
-          for result in ${{ toJSON(needs.run_tests.outputs.matrix-results) }}; do
-            results=$(echo "$results $result" | jq -s add)
-          done
-          
-          # Combine frontend shard results
-          frontend_success=true
-          frontend_los_success=true
-          
-          for i in {1..4}; do
-            if [[ "$(echo "$results" | jq -r ".frontend_shard${i} // \"success\"")" != "success" ]]; then
-              frontend_success=false
-            fi
-            if [[ "$(echo "$results" | jq -r ".frontend-los_shard${i} // \"success\"")" != "success" ]]; then
-              frontend_los_success=false
-            fi
-          done
-          
-          # Output final results
-          results=$(echo "$results" | jq -c \
-            --arg frontend "$([[ "$frontend_success" == "true" ]] && echo "success" || echo "failure")" \
-            --arg frontend_los "$([[ "$frontend_los_success" == "true" ]] && echo "success" || echo "failure")" \
-            'del(.|select(.key|test("_shard[0-9]+$"))) + {"frontend": $frontend, "frontend-los": $frontend_los}')
-          
-          echo "$results" | jq -r 'to_entries | .[] | "echo \"\(.key)=\(.value)\" >> $GITHUB_OUTPUT"' | bash
-
-      - name: Print test results
-        run: |
-          echo "Test Results:"
-          echo "--------------"
-          for output in $(echo '${{ toJSON(steps.aggregate.outputs) }}' | jq -r 'to_entries[] | select(.value != null) | "\(.key)=\(.value)"'); do
-            echo "$output"
-          done
+          echo "${{ matrix.suite.suite }} test result: ${{ steps.test-run.outputs.test_result }}"
 
