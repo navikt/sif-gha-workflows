@@ -135,8 +135,7 @@ jobs:
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
 
       # Print test result
-      - name: Print test result
-        if: always() && !cancelled()
-        run: |
-          echo "${{ matrix.suite.suite }} test result: ${{ steps.test-run.outputs.test_result }}"
-
+      - uses: navikt/sif-gha-workflows/.github/actions/slack/notify@verdikjede-test-v3
+        with:
+          webhook-url: ${{ secrets.SLACKBOT_WEBHOOK }}
+          test-results: ${{ steps.test-run.outputs.test_result }}
