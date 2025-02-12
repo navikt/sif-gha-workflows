@@ -99,7 +99,11 @@ jobs:
           token: ${{ secrets.READER_TOKEN }}
 
       # Setup Java environment
-      - uses: navikt/sif-gha-workflows/.github/actions/java/setup@main
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
 
       # Setup frontend environment if needed
       - uses: navikt/sif-gha-workflows/.github/actions/frontend/setup@main
