@@ -15,10 +15,6 @@ inputs:
     required: false
     description: "custom timeout increase for tests"
     default: "0"
-  playwright_shard:
-    required: false
-    description: "Playwright shard configuration (format: shardIndex/totalShards)"
-    default: ""
 
 outputs:
   test_result:
@@ -33,26 +29,14 @@ runs:
       shell: bash
       run: |
         cd verdikjede
-        if [[ ! -z "${{ inputs.playwright_shard }}" ]]; then
-          mvn clean verify -e --batch-mode \
-            --settings ./../.github/.m2/settings.xml \
-            --file pom.xml \
-            ${{ inputs.test_groups }} \
-            -DtrimStackTrace=false \
-            -Dchangelist= \
-            -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) \
-            -Dfile.encoding=UTF-8 \
-            -Dplaywright.shard=${{ inputs.playwright_shard }}
-        else
-          mvn clean verify -e --batch-mode \
-            --settings ./../.github/.m2/settings.xml \
-            --file pom.xml \
-            ${{ inputs.test_groups }} \
-            -DtrimStackTrace=false \
-            -Dchangelist= \
-            -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) \
-            -Dfile.encoding=UTF-8
-        fi
+        mvn clean verify -e --batch-mode \
+          --settings ./../.github/.m2/settings.xml \
+          --file pom.xml \
+          ${{ inputs.test_groups }} \
+          -DtrimStackTrace=false \
+          -Dchangelist= \
+          -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) \
+          -Dfile.encoding=UTF-8
       env:
         GITHUB_USERNAME: ${{ github.actor }}
         GITHUB_PASSWORD: ${{ inputs.reader-token }}

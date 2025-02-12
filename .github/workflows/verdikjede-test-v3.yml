@@ -134,7 +134,7 @@ jobs:
           reader-token: ${{ secrets.READER_TOKEN }}
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
 
-      # Print test result
+      # slack notification
       - uses: navikt/sif-gha-workflows/.github/actions/slack/notify@verdikjede-test-v3
         with:
           webhook-url: ${{ secrets.SLACKBOT_WEBHOOK }}
