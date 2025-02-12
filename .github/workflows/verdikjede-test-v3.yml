@@ -2,10 +2,6 @@ name: Tester saksbehandling - v3 (reusable)
 on:
   workflow_call:
     inputs:
-      tag:
-        type: string
-        description: 'Docker tag (from repository) - deprecated, use image_version'
-        required: true
       suites:
         type: string
         description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker.'
@@ -23,7 +19,7 @@ on:
         type: string
         required: false
         default: 'master'
-        description: 'branch, tag or sha of k9-verdikjede to checkout'
+        description: 'Reference (branch, commit SHA) of k9-verdikjede to checkout'
     outputs:
       pleiepenger-pleietrengende:
         description: "Utfall fra pleiepenger-pleietrengende-test"
@@ -80,7 +76,7 @@ jobs:
           config=$(cat .github/config/test-suites.json | jq -c .)
           echo "config=$config" >> $GITHUB_OUTPUT
       
-      - uses: navikt/sif-gha-workflows/.github/actions/filter/suites@verdikjede-test-v3
+      - uses: navikt/sif-gha-workflows/.github/actions/filter/suites@main
         id: filter
         with:
           suites: ${{ inputs.suites }}
@@ -103,30 +99,30 @@ jobs:
           token: ${{ secrets.READER_TOKEN }}
 
       # Setup Java environment
-      - uses: navikt/sif-gha-workflows/.github/actions/java/setup@verdikjede-test-v3
+      - uses: navikt/sif-gha-workflows/.github/actions/java/setup@main
 
       # Setup frontend environment if needed
-      - uses: navikt/sif-gha-workflows/.github/actions/frontend/setup@verdikjede-test-v3
+      - uses: navikt/sif-gha-workflows/.github/actions/frontend/setup@main
         id: frontend-setup
         if: contains(matrix.suite.suite, 'frontend')
         with:
           node-version: '22'
 
       # Setup Docker environment
-      - uses: navikt/sif-gha-workflows/.github/actions/docker/setup@verdikjede-test-v3
+      - uses: navikt/sif-gha-workflows/.github/actions/docker/setup@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
 
       # Setup and verify test stack
-      - uses: navikt/sif-gha-workflows/.github/actions/stack/setup@verdikjede-test-v3
+      - uses: navikt/sif-gha-workflows/.github/actions/stack/setup@main
         with:
           docker_compose_f: ${{ matrix.suite.docker_compose_f }}
           image_version: ${{ inputs.image_version }}
           test_suite: ${{ matrix.suite.suite }}
 
       # Run tests and log checks
-      - uses: navikt/sif-gha-workflows/.github/actions/test/run@verdikjede-test-v3
+      - uses: navikt/sif-gha-workflows/.github/actions/test/run@main
         id: test-run
         with:
           test_groups: ${{ matrix.suite.test_groups }}
@@ -135,7 +131,7 @@ jobs:
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
 
       # slack notification
-      - uses: navikt/sif-gha-workflows/.github/actions/slack/notify@verdikjede-test-v3
+      - uses: navikt/sif-gha-workflows/.github/actions/slack/notify@main
         with:
           webhook-url: ${{ secrets.SLACKBOT_WEBHOOK }}
           test-results: ${{ steps.test-run.outputs.test_result }}
