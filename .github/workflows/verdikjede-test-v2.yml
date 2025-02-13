@@ -113,7 +113,7 @@ jobs:
           {
             "suite": "annet",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-omsorgspenger.yml -f docker-compose-testsuites/gha/docker-compose-omsorgspenger-gha.yml",
-            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter",
+            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator",
             "log_groups": "-Dgroups=etter"
           },
           {
