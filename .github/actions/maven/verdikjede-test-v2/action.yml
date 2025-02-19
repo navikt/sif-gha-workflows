@@ -109,7 +109,7 @@ runs:
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
         cat .env
         
-        docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+        docker compose --env-file .env ${{ inputs.docker_compose_f }} up -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
         echo "tid etter docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
         
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
