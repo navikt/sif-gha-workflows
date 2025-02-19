@@ -1,0 +1,74 @@
+[
+  {
+    "suite": "pleiepenger-pleietrengende",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+    "test_groups": "-Dgroups=pleiepenger-pleietrengende '-Dtest=!PleiepengerLoggTest'",
+    "log_groups": "-Dgroups=etter-pleiepenger"
+  },
+  {
+    "suite": "pleiepenger-soker",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+    "test_groups": "-Dgroups=pleiepenger-soker '-Dtest=!PleiepengerLoggTest'",
+    "log_groups": "-Dgroups=etter-pleiepenger"
+  },
+  {
+    "suite": "pleiepenger-samtidiguttak",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+    "test_groups": "-Dgroups=pleiepenger-samtidiguttak '-Dtest=!PleiepengerLoggTest'",
+    "log_groups": "-Dgroups=etter-pleiepenger"
+  },
+  {
+    "suite": "beregning",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+    "test_groups": "-Dgroups=beregning '-Dtest=!PleiepengerLoggTest'",
+    "log_groups": "-Dgroups=etter-pleiepenger"
+  },
+  {
+    "suite": "pleiepenger",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+    "test_groups": "-Dgroups=pleiepenger '-Dtest=!PleiepengerLoggTest'",
+    "log_groups": "-Dgroups=etter-pleiepenger"
+  },
+  {
+    "suite": "livetssluttfase",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml",
+    "test_groups": "-Dgroups=livetssluttfase",
+    "log_groups": "-Dgroups=etter-livetssluttfase"
+  },
+  {
+    "suite": "klage",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-klage.yml -f docker-compose-testsuites/gha/docker-compose-klage-gha.yml ",
+    "test_groups": "-Dgroups=klage ",
+    "log_groups": "-Dgroups=etter"
+  },
+  {
+    "suite": "annet",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-omsorgspenger.yml -f docker-compose-testsuites/gha/docker-compose-omsorgspenger-gha.yml",
+    "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter",
+    "log_groups": "-Dgroups=etter"
+  },
+  {
+    "suite": "tilbake",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-tilbake.yml -f docker-compose-testsuites/gha/docker-compose-tilbake-gha.yml",
+    "test_groups": "-Dgroups=tilbakekreving ",
+    "log_groups": "-Dgroups=etter-tilbakekreving "
+  },
+  {
+    "suite": "frontend",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-frontend.yml -f docker-compose-testsuites/gha/docker-compose-frontend-gha.yml",
+    "test_groups": "-Dgroups=frontendtest ",
+    "log_groups": "-Dgroups=etter-frontendtest "
+  },
+  {
+    "suite": "frontend-los",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-frontend-los.yml -f docker-compose-testsuites/gha/docker-compose-frontend-los-gha.yml",
+    "test_groups": "-Dgroups=frontendtest-los ",
+    "log_groups": "-Dgroups=etter "
+  },
+  {
+    "suite": "ung",
+    "docker_compose_f": "-f docker-compose-testsuites/docker-compose-ung.yml -f docker-compose-testsuites/gha/docker-compose-ung-gha.yml ",
+    "test_groups": "-Dgroups=ung",
+    "log_groups": "-Dgroups=etter-pleiepenger"
+  }
+] 

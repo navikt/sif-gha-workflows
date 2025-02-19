@@ -1,0 +1,34 @@
+name: 'Setup Docker Environment'
+description: 'Sets up Docker environment and loads necessary images'
+
+inputs:
+  github-token:
+    description: 'Token for accessing GitHub packages'
+    required: true
+  override_image_artifact_name:
+    required: false
+    description: 'Artifact name of docker image to download and load'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.github-token }}
+
+    - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
+      with:
+        team: k9saksbehandling
+
+    - name: Download and load artifact
+      if: ${{ inputs.override_image_artifact_name }}
+      shell: bash
+      run: |
+        # Download artifact
+        mkdir -p /tmp/artifacts
+        gh artifact download ${{ inputs.override_image_artifact_name }} /tmp/artifacts
+        
+        # Load image
+        docker load --input /tmp/artifacts/${{ inputs.override_image_artifact_name }}.tar 
