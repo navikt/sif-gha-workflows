@@ -108,7 +108,8 @@ runs:
         cd keystore
         ./make-dummy-keystore.sh
         cd ../saksbehandling
-        repo_name_without_owner=$(echo ${{ github.repository }} | cut -d'/' -f2)
+        repo=${{ github.repository }}
+        repo_name_without_owner=${repo#navikt/}
         ./update-versions.sh $repo_name_without_owner ${{ inputs.image_version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
