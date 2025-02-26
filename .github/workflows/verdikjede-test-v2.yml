@@ -132,7 +132,7 @@ jobs:
             "suite": "frontend-los",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-frontend-los.yml -f docker-compose-testsuites/gha/docker-compose-frontend-los-gha.yml",
             "test_groups": "-Dgroups=frontendtest-los ",
-            "log_groups": "-Dgroups=etter "
+            "log_groups": "-Dgroups=etter-frontendtest "
           },
           {
             "suite": "ung",
