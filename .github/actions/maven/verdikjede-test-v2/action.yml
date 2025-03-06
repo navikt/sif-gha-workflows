@@ -115,7 +115,7 @@ runs:
         cat .env
         
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")        
-        docker compose --ignore-pull-failures --quiet --env-file .env ${{ inputs.docker_compose_f }} pull || (docker ps ; echo "Nedlasting av images feilet." ; exit 1)        
+        docker compose --env-file .env ${{ inputs.docker_compose_f }} pull --ignore-pull-failures --quiet || (docker ps ; echo "Nedlasting av images feilet." ; exit 1)        
         tid_etter_pull=$(date +"%Y-%m-%dT%H:%M:%S")        
         docker compose --env-file .env ${{ inputs.docker_compose_f }} up -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)        
         tid_etter_up=$(date +"%Y-%m-%dT%H:%M:%S")
