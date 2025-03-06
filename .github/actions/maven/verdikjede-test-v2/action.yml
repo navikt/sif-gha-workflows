@@ -104,22 +104,26 @@ runs:
       shell: bash
       run: |
         echo "STACK_STARTED=false" >> $GITHUB_ENV
-        echo "Oppretter dummy keystore for testing"
+        echo "$(date) Oppretter dummy keystore for testing"
         cd keystore
         ./make-dummy-keystore.sh
         cd ../saksbehandling
+        echo "$(date) Opprettet dummy keystore"
         repo_name_without_owner=$(echo ${{ github.repository }} | cut -d'/' -f2)
         ./update-versions.sh $repo_name_without_owner ${{ inputs.image_version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
-        tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
         cat .env
         
-        docker compose --env-file .env ${{ inputs.docker_compose_f }} up -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
-        echo "tid etter docker compose: $(date +"%Y-%m-%dT%H:%M:%S")"
+        tid_for=$(date +"%Y-%m-%dT%H:%M:%S")        
+        docker compose --env-file .env ${{ inputs.docker_compose_f }} pull || (docker ps ; echo "Nedlasting av images feilet." ; exit 1)        
+        tid_etter_pull=$(date +"%Y-%m-%dT%H:%M:%S")        
+        docker compose --env-file .env ${{ inputs.docker_compose_f }} up -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)        
+        tid_etter_up=$(date +"%Y-%m-%dT%H:%M:%S")
         
-        tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
-        duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
-        echo "Tid brukt på docker compose: $(date -u -d @"$duration" +"%M:%S") min"
+        duration_pull=$(( $(date -d "tid_etter_pull" +%s) - $(date -d "$tid_for" +%s) ))
+        duration_up=$(( $(date -d "$tid_etter_up" +%s) - $(date -d "$tid_etter_pull" +%s) ))        
+        echo "Tid brukt på docker compose pull: $(date -u -d @"$duration_pull" +"%M:%S") min"
+        echo "Tid brukt på docker compose up: $(date -u -d @"$duration_up" +"%M:%S") min"                
         
         echo "docker ps -a:"
         docker ps -a
