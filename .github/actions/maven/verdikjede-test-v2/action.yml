@@ -120,7 +120,7 @@ runs:
         docker compose --env-file .env ${{ inputs.docker_compose_f }} up -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)        
         tid_etter_up=$(date +"%Y-%m-%dT%H:%M:%S")
         
-        duration_pull=$(( $(date -d "tid_etter_pull" +%s) - $(date -d "$tid_for" +%s) ))
+        duration_pull=$(( $(date -d "$tid_etter_pull" +%s) - $(date -d "$tid_for" +%s) ))
         duration_up=$(( $(date -d "$tid_etter_up" +%s) - $(date -d "$tid_etter_pull" +%s) ))        
         echo "Tid brukt på docker compose pull: $(date -u -d @"$duration_pull" +"%M:%S") min"
         echo "Tid brukt på docker compose up: $(date -u -d @"$duration_up" +"%M:%S") min"                
