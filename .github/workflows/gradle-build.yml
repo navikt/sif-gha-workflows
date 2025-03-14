@@ -34,6 +34,7 @@ jobs:
     permissions:
       contents: write # for dependency submission
       id-token: write # for nais/docker-build-push
+      packages: write # for push to ghcr
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.docker-push.outputs.image }}
