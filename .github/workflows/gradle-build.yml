@@ -22,10 +22,6 @@ on:
         required: false
         type: string
         default: 21
-      push_ghcr:
-        required: false
-        type: boolean
-        default: false
     outputs:
       image:
         value: ${{ jobs.build.outputs.image }}
@@ -61,10 +57,3 @@ jobs:
           pull: true
           dockerfile: Dockerfile
           docker_context: ${{ inputs.dockercontext }}
-      - name: Push image to ghcr.io
-        if: ${{ inputs.push_ghcr }}
-        run: |
-          # Log in to the GitHub Container Registry
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          # Tag the image, e.g. ghcr.io/owner/repo:latest
-          docker buildx imagetools create -t ghcr.io/${{ github.repository }}:latest ${{ steps.docker-push.outputs.image }}
