@@ -16,7 +16,7 @@ runs:
   using: "composite"
   steps:
     - name: Tagg prodsatt commit
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # ratchet:actions/github-script@v7
       with:
         github-token: ${{ inputs.github_token }}
         script: |
