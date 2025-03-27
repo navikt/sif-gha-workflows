@@ -153,7 +153,7 @@ jobs:
             "suite": "opplæringspenger",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
             "test_groups": "-Dgroups:opplæringspenger",
-              "log_groups": "-Dgroups=etter-pleiepenger"
+            "log_groups": "-Dgroups=etter-pleiepenger"
           }
         ]
     name: Avgjør testsuiter som skal kjøres
