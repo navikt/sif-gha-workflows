@@ -8,9 +8,9 @@ on:
         required: true
       suites:
         type: string
-        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplæringspenger.'
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger.'
         required: false
-        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplæringspenger"
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger"
       override_image_artifact_name:
         type: string
         required: false
@@ -61,9 +61,9 @@ on:
       ung:
         description: "Utfall fra ungdomsytelse-test"
         value: ${{ jobs.run_tests.outputs.ung }}
-      opplæringspenger:
-        description: "Utfall fra opplæringspenger-test"
-        value: ${{ jobs.run_tests.outputs.opplæringspenger }}
+      opplaeringspenger:
+        description: "Utfall fra opplaeringspenger-test"
+        value: ${{ jobs.run_tests.outputs.opplaeringspenger }}
 
 jobs:
   # Filtrerer ut suite som skal velges i matrix kjøringen. Vanlig måte er å bruke if i matrix jobben, men det spinner opp cluster så bruker denne workarouden.
@@ -116,7 +116,7 @@ jobs:
           {
             "suite": "annet",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-omsorgspenger.yml -f docker-compose-testsuites/gha/docker-compose-omsorgspenger-gha.yml",
-            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,opplæringspenger,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator",
+            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,opplaeringspenger,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator",
             "log_groups": "-Dgroups=etter"
           },
           {
@@ -150,9 +150,9 @@ jobs:
             "log_groups": "-Dgroups=etter-pleiepenger"
           },
           {
-            "suite": "opplæringspenger",
+            "suite": "opplaeringspenger",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
-            "test_groups": "-Dgroups:opplæringspenger",
+            "test_groups": "-Dgroups:opplaeringspenger",
             "log_groups": "-Dgroups=etter-pleiepenger"
           }
         ]
@@ -191,6 +191,7 @@ jobs:
       pleiepenger-samtidiguttak: ${{ steps.resultat.outputs.pleiepenger-samtidiguttak }}
       pleiepenger-pleietrengende: ${{ steps.resultat.outputs.pleiepenger-pleietrengende }}
       pleiepenger-soker: ${{ steps.resultat.outputs.pleiepenger-soker }}
+      opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
@@ -233,12 +234,12 @@ jobs:
           frontendlos="${{ needs.run_tests.outputs.frontend-los || 'skipped' }}"
           ung="${{ needs.run_tests.outputs.ung || 'skipped' }}"
           fordel="${{ needs.run_tests.outputs.fordel || 'skipped' }}"
-          opplæringspenger="${{ needs.run_tests.outputs.opplæringspenger || 'skipped' }}"
+          opplaeringspenger="${{ needs.run_tests.outputs.opplaeringspenger || 'skipped' }}"
 
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$fordel" "$opplæringspenger")
+          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$fordel" "$opplaeringspenger")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
@@ -278,7 +279,7 @@ jobs:
           echoStatus "Frontend Los" $frontendlos >> $GITHUB_ENV
           echoStatus "Ungdomsytelsen" $ung >> $GITHUB_ENV
           echoStatus "Fordel" $fordel >> $GITHUB_ENV
-          echoStatus "Opplæringspenger" $opplæringspenger >> $GITHUB_ENV
+          echoStatus "Opplaeringspenger" $opplaeringspenger >> $GITHUB_ENV
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
           echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
