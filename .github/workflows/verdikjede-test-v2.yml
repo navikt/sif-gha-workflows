@@ -152,7 +152,7 @@ jobs:
           {
             "suite": "opplaeringspenger",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
-            "test_groups": "-Dgroups:opplaeringspenger",
+            "test_groups": "-Dgroups=opplaeringspenger",
             "log_groups": "-Dgroups=etter-pleiepenger"
           }
         ]
