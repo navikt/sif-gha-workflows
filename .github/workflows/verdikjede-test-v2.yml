@@ -193,7 +193,7 @@ jobs:
       pleiepenger-soker: ${{ steps.resultat.outputs.pleiepenger-soker }}
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
     steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@opplæringspenger-test-suite # VIKTIG! Fjern før merge
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
         with:
           test_suite: ${{ matrix.suites.suite }}
