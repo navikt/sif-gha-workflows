@@ -279,7 +279,7 @@ jobs:
           echoStatus "Frontend Los" $frontendlos >> $GITHUB_ENV
           echoStatus "Ungdomsytelsen" $ung >> $GITHUB_ENV
           echoStatus "Fordel" $fordel >> $GITHUB_ENV
-          echoStatus "Opplaeringspenger" $opplaeringspenger >> $GITHUB_ENV
+          echoStatus "Opplæringspenger" $opplaeringspenger >> $GITHUB_ENV
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
           echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
