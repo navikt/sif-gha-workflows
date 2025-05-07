@@ -26,7 +26,6 @@ jobs:
       - name: Deploy til dev-${{ inputs.environment }}
         uses: nais/deploy/actions/deploy@7e3c2dd373a307827e55a757b5f3b51e9fe352d5 # ratchet:nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-${{ inputs.environment }}
           RESOURCE: nais/naiserator.yaml
           VARS: nais/dev-${{ inputs.environment }}.json
@@ -34,7 +33,6 @@ jobs:
         if: ${{ inputs.deploy-prod }}
         uses: nais/deploy/actions/deploy@7e3c2dd373a307827e55a757b5f3b51e9fe352d5 # ratchet:nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           RESOURCE: nais/naiserator.yaml
           CLUSTER: prod-${{ inputs.environment }}
           VARS: nais/prod-${{ inputs.environment }}.json
