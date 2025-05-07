@@ -1,0 +1,141 @@
+name: Tester saksbehandling - v3 (reusable)
+on:
+  workflow_call:
+    inputs:
+      suites:
+        type: string
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker.'
+        required: false
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker"
+      override_image_artifact_name:
+        type: string
+        required: false
+        description: 'Artifact name of docker image to download and load.'
+      image_version:
+        type: string
+        required: true
+        description: 'Version/tag of image. '
+      k9-verdikjede-sha:
+        type: string
+        required: false
+        default: 'master'
+        description: 'Reference (branch, commit SHA) of k9-verdikjede to checkout'
+    outputs:
+      pleiepenger-pleietrengende:
+        description: "Utfall fra pleiepenger-pleietrengende-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-pleietrengende }}
+      pleiepenger-soker:
+        description: "Utfall fra pleiepenger-soker-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-soker }}
+      pleiepenger-samtidiguttak:
+        description: "Utfall fra pleiepenger-samtidiguttak-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-samtidiguttak }}
+      beregning:
+        description: "Utfall fra beregning-test"
+        value: ${{ jobs.run_tests.outputs.beregning }}
+      pleiepenger:
+        description: "Utfall fra pleiepenger-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger }}
+      livetssluttfase:
+        description: "Utfall fra livetssluttfase-test"
+        value: ${{ jobs.run_tests.outputs.livetssluttfase }}
+      annet:
+        description: "Utfall fra annet-test"
+        value: ${{ jobs.run_tests.outputs.annet }}
+      frontend:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend }}
+      klage:
+        description: "Utfall fra klage-test"
+        value: ${{ jobs.run_tests.outputs.klage }}
+      tilbake:
+        description: "Utfall fra tilbake-test"
+        value: ${{ jobs.run_tests.outputs.tilbake }}
+      frontend-los:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend-los }}
+      ung:
+        description: "Utfall fra ungdomsytelse-test"
+        value: ${{ jobs.run_tests.outputs.ung }}
+
+jobs:
+  filter_suites:
+    name: Avgjør testsuiter som skal kjøres
+    runs-on: ubuntu-latest
+    outputs:
+      active_suites: ${{ steps.filter.outputs.filtered || '[]' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'navikt/sif-gha-workflows'
+          ref: verdikjede-test-v3
+          token: ${{ secrets.READER_TOKEN }}
+      
+      - id: read-config
+        run: |
+          config=$(cat .github/config/test-suites.json | jq -c .)
+          echo "config=$config" >> $GITHUB_OUTPUT
+      
+      - uses: navikt/sif-gha-workflows/.github/actions/filter/suites@main
+        id: filter
+        with:
+          suites: ${{ inputs.suites }}
+          suites-config: ${{ steps.read-config.outputs.config }}
+
+  run_tests:
+    name: ${{ matrix.suite.suite }}
+    runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
+    needs: [filter_suites]
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'navikt/k9-verdikjede'
+          ref: ${{ inputs.k9-verdikjede-sha }}
+          token: ${{ secrets.READER_TOKEN }}
+
+      # Setup Java environment
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Setup frontend environment if needed
+      - uses: navikt/sif-gha-workflows/.github/actions/frontend/setup@main
+        id: frontend-setup
+        if: contains(matrix.suite.suite, 'frontend')
+        with:
+          node-version: '22'
+
+      # Setup Docker environment
+      - uses: navikt/sif-gha-workflows/.github/actions/docker/setup@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          override_image_artifact_name: ${{ inputs.override_image_artifact_name }}
+
+      # Setup and verify test stack
+      - uses: navikt/sif-gha-workflows/.github/actions/stack/setup@main
+        with:
+          docker_compose_f: ${{ matrix.suite.docker_compose_f }}
+          image_version: ${{ inputs.image_version }}
+          test_suite: ${{ matrix.suite.suite }}
+
+      # Run tests and log checks
+      - uses: navikt/sif-gha-workflows/.github/actions/test/run@main
+        id: test-run
+        with:
+          test_groups: ${{ matrix.suite.test_groups }}
+          log_groups: ${{ matrix.suite.log_groups }}
+          reader-token: ${{ secrets.READER_TOKEN }}
+          timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
+
+      # slack notification
+      - uses: navikt/sif-gha-workflows/.github/actions/slack/notify@main
+        with:
+          webhook-url: ${{ secrets.SLACKBOT_WEBHOOK }}
+          test-results: ${{ steps.test-run.outputs.test_result }}

@@ -1,0 +1,26 @@
+name: 'Filter Test Suites'
+description: 'Filters test suites based on input'
+
+inputs:
+  suites:
+    description: 'Comma-separated list of suites to run'
+    required: true
+  suites-config:
+    description: 'JSON configuration of all available suites'
+    required: true
+
+outputs:
+  filtered:
+    description: 'JSON array of filtered suites'
+    value: ${{ steps.filter.outputs.filtered }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: filter
+      shell: bash
+      run: |
+        filtered_json=$(echo '${{ inputs.suites-config }}' | jq -c --arg suites "${{ inputs.suites }}" '[.[] | select(.suite as $suite | ($suites | split(",") | index($suite)) != null)]')
+        echo "filtered=$filtered_json" >> $GITHUB_OUTPUT
+        echo "Active suites:"
+        echo "$filtered_json" | jq . 

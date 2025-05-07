@@ -1,0 +1,87 @@
+name: 'Setup Test Stack'
+description: 'Sets up and verifies the test stack environment'
+
+inputs:
+  docker_compose_f:
+    required: true
+    description: 'docker compose flag to run with one or more docker compose files'
+  image_version:
+    required: true
+    description: 'tag or version to use of triggering repo docker image'
+  test_suite:
+    required: true
+    description: 'Test suite to run (determines which services to check)'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup saksbehandling-stack
+      shell: bash
+      run: |
+        echo "STACK_STARTED=false" >> $GITHUB_ENV
+        echo "Oppretter dummy keystore for testing"
+        cd keystore
+        ./make-dummy-keystore.sh
+        cd ../saksbehandling
+        repo_name_without_owner=$(echo ${{ github.repository }} | cut -d'/' -f2)
+        ./update-versions.sh $repo_name_without_owner ${{ inputs.image_version }}
+        echo "STACK_STARTING=true" >> $GITHUB_ENV
+        
+        docker compose --env-file .env ${{ inputs.docker_compose_f }} up --quiet-pull -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)
+        
+        echo "docker ps -a:"
+        docker ps -a
+        echo "docker stats --no-stream -a"
+        docker stats --no-stream -a
+
+    - name: Verify stack health
+      shell: bash
+      run: |
+        echo "STACK_CREATED=true" >> $GITHUB_ENV
+        
+        # Check VTP health
+        echo "Tester om VTP er oppe"
+        timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+        echo "VTP er oppe!"
+        
+        # Check specific service based on test suite
+        if [[ ${{ inputs.test_suite }} == klage ]]; then
+          echo "Tester om k9-klage er oppe"
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8701/k9/klage/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo "k9-klage er oppe!"
+        elif [[ ${{ inputs.test_suite }} == ung ]]; then
+          echo "Tester om ung-sak er oppe"
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8901/ung/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo "ung-sak er oppe!"
+        elif [[ ${{ inputs.test_suite }} == frontend ]]; then
+          echo "Tester om k9-los-web er oppe"
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/isAlive)" != "200" ]]; do sleep 2; done' || false
+          echo "k9-los-web er oppe!"
+        elif [[ ${{ inputs.test_suite }} == frontend-los ]]; then
+          echo "Tester om k9-los-web er oppe"
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8031/isReady)" != "200" ]]; do sleep 2; done' || false
+          echo "k9-los-web er oppe!"
+        else
+          echo "Tester om k9-sak er oppe"
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/k9/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo "k9-sak er oppe!"
+          
+          if [[ ${{ inputs.test_suite }} != tilbake ]]; then
+            echo "Tester om abakus er oppe"
+            timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8015/k9/abakus/internal/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+            echo "abakus er oppe!"
+          fi
+        fi
+        
+        if [[ ${{ inputs.test_suite }} == tilbake ]]; then
+          echo "Tester om k9-tilbake er oppe"
+          timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8030/k9/tilbake/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
+          echo "k9-tilbake er oppe!"
+        fi
+        
+        echo "STACK_STARTED=true" >> $GITHUB_ENV
+        
+        echo "docker stats --no-stream -a"
+        docker stats --no-stream -a
+        echo "docker ps -a:"
+        docker ps -a 
