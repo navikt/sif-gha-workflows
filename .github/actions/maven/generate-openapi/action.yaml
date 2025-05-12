@@ -11,6 +11,10 @@ inputs:
     description: What filename to use for generated openapi.json file.
     required: true
     default: openapi.json
+  dontCommit:
+    description: If true, do not commit the generated openapi.json file.
+    required: false
+    default: "false"
 outputs:
   openapiVersion:
     description: "generated openapi spec version"
@@ -46,7 +50,7 @@ runs:
           core.setFailed('fant ikkje korrekt openapi version frå ${{ inputs.openapiFileName }}')
     # Commit and push any changes to openapi.json
     - name: Commit api endringer
-      if: ${{ success() }}
+      if: ${{ success() && inputs.dontCommit != 'true' }}
       id: change-commit
       shell: bash
       env:
