@@ -33,7 +33,7 @@ runs:
         skip-tests: true
     - name: Openapi generate
       shell: bash
-      run: mvn exec:java --projects web
+      run: mvn -s settings.xml exec:java --projects web
     - name: Openapi version
       id: openapi-version
       shell: bash
