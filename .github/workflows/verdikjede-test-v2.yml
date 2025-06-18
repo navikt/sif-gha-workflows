@@ -257,6 +257,7 @@ jobs:
               docker load -i $file;
             done
           fi
+          rm -Rf cacheTmp/docker/*.tar
           echo "$(date) Images loaded"
 
       - name: Setup saksbehandling-stack
