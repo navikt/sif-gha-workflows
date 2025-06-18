@@ -196,7 +196,7 @@ jobs:
       - uses: actions/cache/restore@v4
         id: cache-restore
         with:
-          path: /cacheTmp
+          path: cacheTmp
           key: ${{ runner.os }}-cache-tmp
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@docker-cache
         id: verdikjede-action
@@ -212,7 +212,7 @@ jobs:
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}
-          cache_dir: ${{ steps.cache-restore.outputs.cache-hit == 'true' && '/cacheTmp' || 'false' }}
+          cache_dir: ${{ steps.cache-restore.outputs.cache-hit == 'true' && 'cacheTmp' || 'false' }}
       - id: resultat
         if: always() && !cancelled()
         run: |
@@ -243,20 +243,21 @@ jobs:
       - uses: actions/cache/restore@v4
         id: cache-restore
         with:
-          path: /cacheTmp
+          path: cacheTmp
           key: ${{ runner.os }}-cache-tmp
 
       - name: Load cache
         if: steps.cache-restore.outputs.cache-hit == 'true'
         shell: bash
         run: |
-          for file in /cacheTmp/docker/*.tar; do
+          for file in cacheTmp/docker/*.tar; do
             docker load -i $file;
           done
 
       - name: Setup saksbehandling-stack
         shell: bash
         run: |
+          mkdir -p cacheTmp/docker
           cd saksbehandling
           ./update-versions.sh
           cat .env
@@ -265,10 +266,10 @@ jobs:
           docker compose --env-file .env pull --ignore-pull-failures --quiet || (docker ps ; echo "Nedlasting av images feilet." ; exit 1)        
           tid_etter_pull=$(date +"%Y-%m-%dT%H:%M:%S")
           
-          mkdir -p /cacheTmp/docker
+          
           for image in $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep :latest); do
             image_name=$(echo $image | rev | cut -d / -f 1 | rev | cut -d : -f 1);
-            docker image save -o /cacheTmp/docker/$image_name.tar $image;
+            docker image save -o ../cacheTmp/docker/$image_name.tar $image;
           done
           tid_etter_save=$(date +"%Y-%m-%dT%H:%M:%S")
         
@@ -280,7 +281,7 @@ jobs:
       - uses: actions/cache/save@v4
         id: cache-save
         with:
-          path: /cacheTmp
+          path: cacheTmp
           key: ${{ runner.os }}-cache-tmp
 
   
