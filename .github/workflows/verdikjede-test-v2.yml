@@ -271,11 +271,8 @@ jobs:
           docker compose --env-file .env pull --ignore-pull-failures --quiet || (docker ps ; echo "Nedlasting av images feilet." ; exit 1)        
           tid_etter_pull=$(date +"%Y-%m-%dT%H:%M:%S")
           
-          
-          for image in $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep :latest); do
-            image_name=$(echo $image | rev | cut -d / -f 1 | rev | cut -d : -f 1);
-            docker image save -o ../cacheTmp/docker/$image_name.tar $image;
-          done
+          images=($(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep :latest))
+          docker save "${images[@]}" -o ../cacheTmp/docker/k9.tar
           tid_etter_save=$(date +"%Y-%m-%dT%H:%M:%S")
         
           duration_pull=$(( $(date -d "$tid_etter_pull" +%s) - $(date -d "$tid_for" +%s) ))
