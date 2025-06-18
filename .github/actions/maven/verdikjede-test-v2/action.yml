@@ -103,10 +103,18 @@ runs:
       run: |
         docker load --input /tmp/${{ inputs.override_image_artifact_name }}.tar
 
-    - name: Load cached docker images
+    - uses: actions/cache/restore@v4
       if: ${{ inputs.cache_dir != 'false' }}
+      id: cache-restore
+      with:
+        path: ${{ inputs.cache_dir }}
+        key: ${{ runner.os }}-cache-tmp
+    - name: Load cached docker images
+      if: steps.cache-restore.outputs.cache-hit == 'true'
       shell: bash
       run: |
+        ls -la cacheTmp
+        ls -la cacheTmp/docker
         for file in ${{ inputs.cache_dir }}/docker/*.tar; do
           docker load -i $file;
         done

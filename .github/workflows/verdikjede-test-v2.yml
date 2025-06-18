@@ -193,11 +193,6 @@ jobs:
       pleiepenger-soker: ${{ steps.resultat.outputs.pleiepenger-soker }}
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
     steps:
-      - uses: actions/cache/restore@v4
-        id: cache-restore
-        with:
-          path: cacheTmp
-          key: ${{ runner.os }}-cache-tmp
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@docker-cache
         id: verdikjede-action
         with:
@@ -212,7 +207,7 @@ jobs:
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}
-          cache_dir: ${{ steps.cache-restore.outputs.cache-hit == 'true' && 'cacheTmp' || 'false' }}
+          cache_dir: 'cacheTmp'
       - id: resultat
         if: always() && !cancelled()
         run: |
