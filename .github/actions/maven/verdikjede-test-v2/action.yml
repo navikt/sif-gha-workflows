@@ -31,6 +31,9 @@ inputs:
   k9-verdikjede-sha:
     required: true
     description: 'sha of k9-verdikjede to use'
+  cache_dir:
+    required: false
+    description: 'directory to read cached files from'
 
 outputs:
   test_result:
@@ -99,6 +102,14 @@ runs:
       shell: bash
       run: |
         docker load --input /tmp/${{ inputs.override_image_artifact_name }}.tar
+
+    - name: Load cached docker images
+      if: ${{ inputs.cache_dir }}
+      shell: bash
+      run: |
+        for file in ${{ inputs.cache_dir }}/docker/*.tar; do
+          docker load -i $file;
+        done
 
     - name: Setup saksbehandling-stack
       shell: bash

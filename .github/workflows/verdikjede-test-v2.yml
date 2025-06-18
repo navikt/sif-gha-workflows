@@ -193,7 +193,12 @@ jobs:
       pleiepenger-soker: ${{ steps.resultat.outputs.pleiepenger-soker }}
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
     steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: /cacheTmp
+          key: ${{ runner.os }}-cache-tmp
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@docker-cache
         id: verdikjede-action
         with:
           test_suite: ${{ matrix.suites.suite }}
@@ -207,10 +212,76 @@ jobs:
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}
+          cache_dir: ${{ steps.cache.outputs.cache-hit == 'true' && '/cacheTmp' }}
       - id: resultat
         if: always() && !cancelled()
         run: |
           echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_result }}" >> $GITHUB_OUTPUT
+  
+
+  generate_cache:
+    name: Opprett cache
+    #if: ${{ github.ref_name == github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'navikt/k9-verdikjede'
+          ref: ${{ inputs.k9-verdikjede-sha }}
+          token: ${{ secrets.READER_TOKEN }}
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
+        with:
+          team: k9saksbehandling
+
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: /cacheTmp
+          key: ${{ runner.os }}-cache-tmp
+
+      - name: Load cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          for file in /cacheTmp/docker/*.tar; do
+            docker load -i $file;
+          done
+
+      - name: Setup saksbehandling-stack
+        shell: bash
+        run: |
+          cd saksbehandling
+          ./update-versions.sh
+          cat .env
+  
+          tid_for=$(date +"%Y-%m-%dT%H:%M:%S")        
+          docker compose --env-file .env pull --ignore-pull-failures --quiet || (docker ps ; echo "Nedlasting av images feilet." ; exit 1)        
+          tid_etter_pull=$(date +"%Y-%m-%dT%H:%M:%S")
+          
+          mkdir -p /cacheTmp/docker
+          for image in $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep :latest); do
+            image_name=$(echo $image | rev | cut -d / -f 1 | rev | cut -d : -f 1);
+            docker image save -o /cacheTmp/docker/$image_name.tar $image;
+          done
+          tid_etter_save=$(date +"%Y-%m-%dT%H:%M:%S")
+        
+          duration_pull=$(( $(date -d "$tid_etter_pull" +%s) - $(date -d "$tid_for" +%s) ))
+          duration_save=$(( $(date -d "$tid_etter_save" +%s) - $(date -d "$tid_etter_pull" +%s) ))
+          echo "Tid brukt på docker compose pull: $(date -u -d @"$duration_pull" +"%M:%S") min"
+          echo "Tid brukt på docker save: $(date -u -d @"$duration_save" +"%M:%S") min"
+
+      - uses: actions/cache/save@v4
+        id: cache
+        with:
+          path: /cacheTmp
+          key: ${{ runner.os }}-cache-tmp
 
   
   slack:
