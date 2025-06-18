@@ -116,16 +116,16 @@ runs:
         restore-keys: |
           cache-tmp-${{ runner.os }}
     - name: Load cached docker images
-      if: steps.cache-restore.outputs.cache-hit == 'true'
       shell: bash
       run: |
-        echo "$(date)"
-        ls -la cacheTmp
-        ls -la cacheTmp/docker
-        for file in ${{ inputs.cache_dir }}/docker/*.tar; do
-          docker load -i $file;
-        done
-        echo "$(date)"
+        echo "$(date) Load images"
+        if [ -d ${{ inputs.cache_dir }}/docker ]; then
+          ls -la ${{ inputs.cache_dir }} ${{ inputs.cache_dir }}/docker
+          for file in ${{ inputs.cache_dir }}/docker/*.tar; do
+            docker load -i $file;
+          done
+        fi
+        echo "$(date) Images loaded"
 
     - name: Setup saksbehandling-stack
       shell: bash

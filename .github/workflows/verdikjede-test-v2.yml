@@ -249,14 +249,15 @@ jobs:
             cache-tmp-${{ runner.os }}
 
       - name: Load cache
-        if: steps.cache-restore.outputs.cache-hit == 'true'
         shell: bash
         run: |
-          echo "$(date)"
-          for file in cacheTmp/docker/*.tar; do
-            docker load -i $file;
-          done
-          echo "$(date)"
+          echo "$(date) Load images"
+          if [ -d ${{ inputs.cache_dir }}/docker ]; then
+            for file in cacheTmp/docker/*.tar; do
+              docker load -i $file;
+            done
+          fi
+          echo "$(date) Images loaded"
 
       - name: Setup saksbehandling-stack
         shell: bash
