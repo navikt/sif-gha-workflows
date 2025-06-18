@@ -104,7 +104,7 @@ runs:
         docker load --input /tmp/${{ inputs.override_image_artifact_name }}.tar
 
     - name: Load cached docker images
-      if: ${{ inputs.cache_dir }}
+      if: ${{ inputs.cache_dir != 'false' }}
       shell: bash
       run: |
         for file in ${{ inputs.cache_dir }}/docker/*.tar; do
