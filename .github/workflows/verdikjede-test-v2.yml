@@ -252,7 +252,7 @@ jobs:
         shell: bash
         run: |
           echo "$(date) Load images"
-          if [ -d ${{ inputs.cache_dir }}/docker ]; then
+          if [ -d cacheTmp/docker ]; then
             for file in cacheTmp/docker/*.tar; do
               docker load -i $file;
             done
