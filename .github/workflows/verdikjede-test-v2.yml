@@ -235,19 +235,28 @@ jobs:
         with:
           team: k9saksbehandling
 
+      - name: Print time
+        shell: bash
+        run: |
+          echo "$(date)"
+
       - uses: actions/cache/restore@v4
         id: cache-restore
         with:
           path: cacheTmp
-          key: ${{ runner.os }}-cache-tmp
+          key: cache-tmp-${{ runner.os }}
+          restore-keys: |
+            cache-tmp-${{ runner.os }}
 
       - name: Load cache
         if: steps.cache-restore.outputs.cache-hit == 'true'
         shell: bash
         run: |
+          echo "$(date)"
           for file in cacheTmp/docker/*.tar; do
             docker load -i $file;
           done
+          echo "$(date)"
 
       - name: Setup saksbehandling-stack
         shell: bash
@@ -277,7 +286,7 @@ jobs:
         id: cache-save
         with:
           path: cacheTmp
-          key: ${{ runner.os }}-cache-tmp
+          key: cache-tmp-${{ runner.os }}-${{ github.run_id }}
 
   
   slack:

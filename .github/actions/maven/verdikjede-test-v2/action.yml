@@ -103,21 +103,29 @@ runs:
       run: |
         docker load --input /tmp/${{ inputs.override_image_artifact_name }}.tar
 
+    - name: Print time
+      shell: bash
+      run: |
+        echo "$(date)"
     - uses: actions/cache/restore@v4
       if: ${{ inputs.cache_dir != 'false' }}
       id: cache-restore
       with:
         path: ${{ inputs.cache_dir }}
-        key: ${{ runner.os }}-cache-tmp
+        key: cache-tmp-${{ runner.os }}
+        restore-keys: |
+          cache-tmp-${{ runner.os }}
     - name: Load cached docker images
       if: steps.cache-restore.outputs.cache-hit == 'true'
       shell: bash
       run: |
+        echo "$(date)"
         ls -la cacheTmp
         ls -la cacheTmp/docker
         for file in ${{ inputs.cache_dir }}/docker/*.tar; do
           docker load -i $file;
         done
+        echo "$(date)"
 
     - name: Setup saksbehandling-stack
       shell: bash
