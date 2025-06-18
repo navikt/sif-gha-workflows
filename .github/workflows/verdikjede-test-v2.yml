@@ -194,7 +194,7 @@ jobs:
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
     steps:
       - uses: actions/cache/restore@v4
-        id: cache
+        id: cache-restore
         with:
           path: /cacheTmp
           key: ${{ runner.os }}-cache-tmp
@@ -212,7 +212,7 @@ jobs:
           # Composite actions arver ikke secrets så vi må få dem in som input
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}
-          cache_dir: ${{ steps.cache.outputs.cache-hit == 'true' && '/cacheTmp' }}
+          cache_dir: ${{ steps.cache-restore.outputs.cache-hit == 'true' && '/cacheTmp' }}
       - id: resultat
         if: always() && !cancelled()
         run: |
@@ -241,13 +241,13 @@ jobs:
           team: k9saksbehandling
 
       - uses: actions/cache/restore@v4
-        id: cache
+        id: cache-restore
         with:
           path: /cacheTmp
           key: ${{ runner.os }}-cache-tmp
 
       - name: Load cache
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache-restore.outputs.cache-hit != 'true'
         shell: bash
         run: |
           for file in /cacheTmp/docker/*.tar; do
@@ -278,7 +278,7 @@ jobs:
           echo "Tid brukt på docker save: $(date -u -d @"$duration_save" +"%M:%S") min"
 
       - uses: actions/cache/save@v4
-        id: cache
+        id: cache-save
         with:
           path: /cacheTmp
           key: ${{ runner.os }}-cache-tmp
