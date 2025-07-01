@@ -191,6 +191,13 @@ runs:
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8031/isReady)" != "200" ]]; do sleep 2; done' || false
           echo Oppe!
         fi
+
+        if [[ ${{ inputs.test_suite }} == frontend-ung ]]; then
+          echo
+          echo "Tester om ung-sak-web er oppe "
+          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9005/isReady)" != "200" ]]; do sleep 2; done' || false
+          echo Oppe!
+        fi
         
         echo "STACK_STARTED=true" >> $GITHUB_ENV
         
