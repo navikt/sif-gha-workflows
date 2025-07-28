@@ -39,6 +39,5 @@ jobs:
       - name: Submit Dependency Snapshot to Github Security
         uses: advanced-security/maven-dependency-submission-action@4f64ddab9d742a4806eeb588d238e4c311a8397d # ratchet:advanced-security/maven-dependency-submission-action@v4.1.1
         with:
-          settings-file: ./settings.xml
           maven-args: -DskipTests
           directory: '${{ inputs.directory }}'
