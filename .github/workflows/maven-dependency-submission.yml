@@ -7,7 +7,7 @@ on:
         type: string
         description: Java SDK versjon som skal brukes.
         default: '21'
-    directory:
+      directory:
         required: false
         type: string
         description: mappe for pom fila som skal brukes
