@@ -33,10 +33,9 @@ jobs:
         run: echo "Generated build-version is ${{ steps.generate-build-version.outputs.build-version }}"
       - name: Build artifacts
         shell: bash
-        working-directory: ${{ inputs.directory }}
         run: |
           echo "Building artifacts ${{ steps.generate-build-version.outputs.build-version }}"
-          mvn versions:set -DnewVersion="${{ steps.generate-build-version.outputs.build-version }}" -s settings.xml -q -e -B
+          mvn versions:set -DnewVersion="${{ steps.generate-build-version.outputs.build-version }}" -s settings.xml -q -e -B -f "${{ inputs.directory }}/pom.xml"
       - name: Submit Dependency Snapshot to Github Security
         uses: advanced-security/maven-dependency-submission-action@4f64ddab9d742a4806eeb588d238e4c311a8397d # ratchet:advanced-security/maven-dependency-submission-action@v4.1.1
         with:
