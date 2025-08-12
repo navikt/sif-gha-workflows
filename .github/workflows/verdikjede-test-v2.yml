@@ -8,9 +8,9 @@ on:
         required: true
       suites:
         type: string
-        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, annet, klage, tilbake, frontend, frontend-los, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger.'
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger.'
         required: false
-        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger"
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,ung,ung-tilbake,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger"
       override_image_artifact_name:
         type: string
         required: false
@@ -59,10 +59,10 @@ on:
         description: "Utfall fra frontend-test"
         value: ${{ jobs.run_tests.outputs.frontend-los }}
       ung:
-        description: "Utfall fra ungdomsytelse-test"
+        description: "Utfall fra ungdomsprogramytelse-test"
         value: ${{ jobs.run_tests.outputs.ung }}
-      ung-tilbke:
-        description: "Utfall fra ungdomsytelse-tilbakekreving-test"
+      ung-tilbake:
+        description: "Utfall fra ungdomsprogramytelse-tilbakekreving-test"
         value: ${{ jobs.run_tests.outputs.ung-tilbake }}
       opplaeringspenger:
         description: "Utfall fra opplaeringspenger-test"
@@ -250,7 +250,7 @@ jobs:
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$fordel" "$opplaeringspenger")
+          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
@@ -289,7 +289,7 @@ jobs:
           echoStatus "Tilbakekreving" $tilbake >> $GITHUB_ENV
           echoStatus "Frontend Los" $frontendlos >> $GITHUB_ENV
           echoStatus "Ungdomsprogramytelsen" $ung >> $GITHUB_ENV
-          echoStatus "Ungdomsprogramytelsen - tilbakekreving" $ung >> $GITHUB_ENV
+          echoStatus "Ungdomsprogramytelsen - tilbakekreving" $ungtilbake >> $GITHUB_ENV
           echoStatus "Fordel" $fordel >> $GITHUB_ENV
           echoStatus "Opplæringspenger" $opplaeringspenger >> $GITHUB_ENV
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
