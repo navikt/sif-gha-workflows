@@ -8,9 +8,9 @@ on:
         required: true
       suites:
         type: string
-        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger.'
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, frontend-ung, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger.'
         required: false
-        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,ung,ung-tilbake,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger"
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,frontend-ung,ung,ung-tilbake,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger"
       override_image_artifact_name:
         type: string
         required: false
@@ -58,6 +58,9 @@ on:
       frontend-los:
         description: "Utfall fra frontend-test"
         value: ${{ jobs.run_tests.outputs.frontend-los }}
+      frontend-ung:
+        description: "Utfall fra frontend-test"
+        value: ${{ jobs.run_tests.outputs.frontend-ung }}
       ung:
         description: "Utfall fra ungdomsprogramytelse-test"
         value: ${{ jobs.run_tests.outputs.ung }}
@@ -119,7 +122,7 @@ jobs:
           {
             "suite": "annet",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-omsorgspenger.yml -f docker-compose-testsuites/gha/docker-compose-omsorgspenger-gha.yml",
-            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,ung-tilbake,opplaeringspenger,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator",
+            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,frontendtest-ung,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,ung-tilbake,opplaeringspenger,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator",
             "log_groups": "-Dgroups=etter"
           },
           {
@@ -138,6 +141,12 @@ jobs:
             "suite": "frontend-los",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-frontend-los.yml -f docker-compose-testsuites/gha/docker-compose-frontend-los-gha.yml",
             "test_groups": "-Dgroups=frontendtest-los ",
+            "log_groups": "-Dgroups=etter-frontendtest "
+          },
+          {
+            "suite": "frontend-ung",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-frontend-ung.yml -f docker-compose-testsuites/gha/docker-compose-frontend-ung-gha.yml",
+            "test_groups": "-Dgroups=frontendtest-ung ",
             "log_groups": "-Dgroups=etter-frontendtest "
           },
           {
@@ -194,6 +203,7 @@ jobs:
       tilbake: ${{ steps.resultat.outputs.tilbake }}
       frontend: ${{ steps.resultat.outputs.frontend }}
       frontend-los: ${{ steps.resultat.outputs.frontend-los }}
+      frontend-ung: ${{ steps.resultat.outputs.frontend-ung }}
       ung: ${{ steps.resultat.outputs.ung }}
       ung-tilbake: ${{ steps.resultat.outputs.ung-tilbake }}
       fordel: ${{ steps.resultat.outputs.fordel }}
@@ -242,6 +252,7 @@ jobs:
           tilbake="${{ needs.run_tests.outputs.tilbake || 'skipped' }}"
           frontend="${{ needs.run_tests.outputs.frontend || 'skipped' }}"
           frontendlos="${{ needs.run_tests.outputs.frontend-los || 'skipped' }}"
+          frontendung="${{ needs.run_tests.outputs.frontend-ung || 'skipped' }}"
           ung="${{ needs.run_tests.outputs.ung || 'skipped' }}"
           ungtilbake="${{ needs.run_tests.outputs.ung-tilbake || 'skipped' }}"
           fordel="${{ needs.run_tests.outputs.fordel || 'skipped' }}"
@@ -288,6 +299,7 @@ jobs:
           echoStatus "Klage" $klage >> $GITHUB_ENV
           echoStatus "Tilbakekreving" $tilbake >> $GITHUB_ENV
           echoStatus "Frontend Los" $frontendlos >> $GITHUB_ENV
+          echoStatus "Frontend Ung" $frontendung >> $GITHUB_ENV
           echoStatus "Ungdomsprogramytelsen" $ung >> $GITHUB_ENV
           echoStatus "Ungdomsprogramytelsen - tilbakekreving" $ungtilbake >> $GITHUB_ENV
           echoStatus "Fordel" $fordel >> $GITHUB_ENV
