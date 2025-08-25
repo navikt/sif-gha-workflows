@@ -1,9 +1,6 @@
 name: 'Setup verdikjede & run tests - v2'
 description: Setup verdikjede & run tests
 inputs:
-  github-token:
-    description: 'Token for accessing GitHub packages'
-    required: true
   reader-token:
     description: 'Token for setting up settings.xml for internal packages'
     required: true
@@ -82,7 +79,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.github-token }}
+        password: ${{ inputs.reader-token }}
 
     - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
       with:

@@ -225,7 +225,6 @@ jobs:
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
           k9-verdikjede-sha: ${{ inputs.k9-verdikjede-sha }}
           # Composite actions arver ikke secrets så vi må få dem in som input
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           reader-token: ${{ secrets.READER_TOKEN }}
       - id: resultat
         if: always() && !cancelled()
