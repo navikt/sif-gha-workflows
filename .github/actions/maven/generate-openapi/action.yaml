@@ -37,6 +37,9 @@ runs:
       uses: navikt/sif-gha-workflows/.github/actions/maven/test-and-build@main
       with:
         skip-tests: true
+    - name: Echo versions
+      shell: bash
+      run: mvn -version
     - name: Openapi generate
       shell: bash
       run: mvn -s settings.xml exec:java --projects web
