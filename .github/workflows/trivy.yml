@@ -21,14 +21,14 @@ jobs:
       id-token: write # for nais/login
       actions: read # for private repositories
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # ratchet:actions/checkout@v4.1.7
-      - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c # ratchet:nais/login@v0
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # ratchet:actions/checkout@v5.0.0
+      - uses: nais/login@e7cf2c159677dc7c7d599feff5f808f2bf59c7cf # ratchet:nais/login@v0
         with:
           team: ${{ inputs.team }}
       - name: Pull docker image
         run: docker pull ${{ inputs.image }}
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # ratchet:aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # ratchet:aquasecurity/trivy-action@master
         with:
           image-ref: '${{ inputs.image }}'
           format: 'sarif'
@@ -37,6 +37,6 @@ jobs:
           limit-severities-for-sarif: true
       - name: Upload results to GitHub Security
         if: inputs.upload-sarif
-        uses: github/codeql-action/upload-sarif@429e1977040da7a23b6822b13c129cd1ba93dbb2 # ratchet:github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # ratchet:github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy.sarif'
