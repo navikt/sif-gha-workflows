@@ -15,10 +15,6 @@ inputs:
     description: If true, do not commit the generated openapi.json file.
     required: false
     default: "false"
-  java-version:
-    required: false
-    description: Java SDK versjon som skal brukes.
-    default: '21'
 outputs:
   openapiVersion:
     description: "generated openapi spec version"
@@ -30,15 +26,11 @@ runs:
     - name: Setup java and maven
       uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main
       with:
-        java-version: ${{ inputs.java-version }}
         github-token: ${{ inputs.readerToken }}
     - name: Maven install
       uses: navikt/sif-gha-workflows/.github/actions/maven/test-and-build@main
       with:
         skip-tests: true
-    - name: Echo versions
-      shell: bash
-      run: mvn -version
     - name: Openapi generate
       shell: bash
       run: mvn -s settings.xml exec:java --projects web
