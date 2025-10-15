@@ -19,6 +19,9 @@ outputs:
   openapiVersion:
     description: "generated openapi spec version"
     value: ${{ steps.openapi-version.outputs.openapiVersion }}
+  patchVersion:
+    description: "The <TIMESTAMP><SHA> value used as a tag of the version for deployment"
+    value: ${{ steps.java-build.outputs.build-version }}
 
 runs:
   using: 'composite'
@@ -30,6 +33,7 @@ runs:
         # Ved ny jdk versjon kan denne økes uten å vente på noe annet. (Kompileringsresultat fra denne action blir ikke brukt noe annet sted.)
         java-version: '25'
     - name: Maven install
+      id: java-build
       uses: navikt/sif-gha-workflows/.github/actions/maven/test-and-build@main
       with:
         skip-tests: true
