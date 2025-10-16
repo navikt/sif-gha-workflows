@@ -79,7 +79,7 @@ runs:
         export MESSAGE="$FILE_NAME updated by build pipeline 
         
         
-        ${SKIP_CHECKS}"
+        ${SKIP_CHECKS}
         export SHA=$( git rev-parse $DESTINATION_BRANCH:$FILE_DIRECTORY/$FILE_NAME )
         gh api --method PUT /repos/:owner/:repo/contents/$FILE_DIRECTORY/$FILE_NAME \
           --field message="$MESSAGE" \
