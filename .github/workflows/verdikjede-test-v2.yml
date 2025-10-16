@@ -180,7 +180,7 @@ jobs:
             "suite": "punsj",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-punsj.yml -f docker-compose-testsuites/gha/docker-compose-punsj-gha.yml ",
             "test_groups": "-Dgroups=punsj",
-            "log_groups": "-Dgroups=etter-punsj"
+            "log_groups": "-Dgroups=etter-pleiepenger"
           }
         ]
     name: Avgjør testsuiter som skal kjøres
@@ -271,7 +271,7 @@ jobs:
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger" "punsj")
+          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger" "$punsj")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
