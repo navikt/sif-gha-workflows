@@ -22,6 +22,9 @@ outputs:
   patchVersion:
     description: "The <TIMESTAMP><SHA> value used as a tag of the version for deployment"
     value: ${{ steps.java-build.outputs.build-version }}
+  openapiCommitted:
+    description: "true if a new openapi file was commited"
+    value: ${{ steps.change-commit.outputs.openapiCommitted }}
 
 runs:
   using: 'composite'
@@ -78,7 +81,8 @@ runs:
           --field message="$MESSAGE" \
           --field content=@<( base64 -i "${FILE_DIRECTORY}/${FILE_NAME}" ) \
           --field branch="$DESTINATION_BRANCH" \
-          --field sha="$SHA"
+          --field sha="$SHA" &&
+        echo "openapiCommitted=true" >> $GITHUB_OUTPUT
         )
       # ^-Use the REST API to commit changes, so we get automatic commit signing
       # Use skip-checks:true to prevent github complaining about missing checks and thereby preventing PR merge.
