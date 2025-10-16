@@ -15,9 +15,6 @@ inputs:
     description: If true, do not commit the generated openapi.json file.
     required: false
     default: "false"
-  skipChecksMsg:
-    description: If true, add skip-checks:true to commit message
-    default: "true"
 outputs:
   openapiVersion:
     description: "generated openapi spec version"
@@ -70,7 +67,6 @@ runs:
         FILE_NAME: ${{ inputs.openapiFileName }}
         FILE_DIRECTORY: web/src/main/resources/openapi-ts-client
         DESTINATION_BRANCH: ${{ github.head_ref || github.ref_name }}
-        SKIP_CHECKS: "${{ inputs.skipChecksMsg == 'true' && 'true' || 'false' }}"
       run: |
         # Use git to detect changes, only commit and push if there are changes
         git add --force ${FILE_DIRECTORY}/${FILE_NAME}
@@ -79,7 +75,7 @@ runs:
         export MESSAGE="$FILE_NAME updated by build pipeline 
         
         
-        skip-checks:${SKIP_CHECKS}"
+        skip-checks:true"
         export SHA=$( git rev-parse $DESTINATION_BRANCH:$FILE_DIRECTORY/$FILE_NAME )
         gh api --method PUT /repos/:owner/:repo/contents/$FILE_DIRECTORY/$FILE_NAME \
           --field message="$MESSAGE" \
