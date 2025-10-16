@@ -70,7 +70,7 @@ runs:
         FILE_NAME: ${{ inputs.openapiFileName }}
         FILE_DIRECTORY: web/src/main/resources/openapi-ts-client
         DESTINATION_BRANCH: ${{ github.head_ref || github.ref_name }}
-        SKIP_CHECKS: "${{ inputs.skipChecksMsg == 'true' && 'skip-checks:true' || '' }}"
+        SKIP_CHECKS: "${{ inputs.skipChecksMsg == 'true' && 'true' || 'false' }}"
       run: |
         # Use git to detect changes, only commit and push if there are changes
         git add --force ${FILE_DIRECTORY}/${FILE_NAME}
@@ -79,7 +79,7 @@ runs:
         export MESSAGE="$FILE_NAME updated by build pipeline 
         
         
-        ${SKIP_CHECKS}
+        skip-checks:${SKIP_CHECKS}"
         export SHA=$( git rev-parse $DESTINATION_BRANCH:$FILE_DIRECTORY/$FILE_NAME )
         gh api --method PUT /repos/:owner/:repo/contents/$FILE_DIRECTORY/$FILE_NAME \
           --field message="$MESSAGE" \
