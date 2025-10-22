@@ -8,9 +8,9 @@ on:
         required: true
       suites:
         type: string
-        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, frontend-ung, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger.'
+        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, frontend-ung, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger, punsj'
         required: false
-        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,frontend-ung,ung,ung-tilbake,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger"
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,frontend-ung,ung,ung-tilbake,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger,punsj"
       override_image_artifact_name:
         type: string
         required: false
@@ -70,6 +70,9 @@ on:
       opplaeringspenger:
         description: "Utfall fra opplaeringspenger-test"
         value: ${{ jobs.run_tests.outputs.opplaeringspenger }}
+      punsj:
+        description: "Utfall fra punsj-test"
+        value: ${{ jobs.run_tests.outputs.punsj }}
 
 jobs:
   # Filtrerer ut suite som skal velges i matrix kjøringen. Vanlig måte er å bruke if i matrix jobben, men det spinner opp cluster så bruker denne workarouden.
@@ -122,7 +125,7 @@ jobs:
           {
             "suite": "annet",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-omsorgspenger.yml -f docker-compose-testsuites/gha/docker-compose-omsorgspenger-gha.yml",
-            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,frontendtest-ung,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,ung-tilbake,opplaeringspenger,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator",
+            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,frontendtest-ung,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,ung-tilbake,opplaeringspenger,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator,punsj",
             "log_groups": "-Dgroups=etter"
           },
           {
@@ -172,6 +175,12 @@ jobs:
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
             "test_groups": "-Dgroups=opplaeringspenger",
             "log_groups": "-Dgroups=etter-pleiepenger"
+          },
+          {
+            "suite": "punsj",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-punsj.yml -f docker-compose-testsuites/gha/docker-compose-punsj-gha.yml ",
+            "test_groups": "-Dgroups=punsj",
+            "log_groups": "-Dgroups=etter-pleiepenger"
           }
         ]
     name: Avgjør testsuiter som skal kjøres
@@ -212,6 +221,7 @@ jobs:
       pleiepenger-pleietrengende: ${{ steps.resultat.outputs.pleiepenger-pleietrengende }}
       pleiepenger-soker: ${{ steps.resultat.outputs.pleiepenger-soker }}
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
+      punsj: ${{ steps.resultat.outputs.punsj }}
     steps:
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
@@ -256,11 +266,12 @@ jobs:
           ungtilbake="${{ needs.run_tests.outputs.ung-tilbake || 'skipped' }}"
           fordel="${{ needs.run_tests.outputs.fordel || 'skipped' }}"
           opplaeringspenger="${{ needs.run_tests.outputs.opplaeringspenger || 'skipped' }}"
+          punsj="${{ needs.run_tests.outputs.punsj || 'skipped' }}"
 
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger")
+          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger" "$punsj")
           for result in "${test_results[@]}"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               all_success=false
@@ -303,6 +314,7 @@ jobs:
           echoStatus "Ungdomsprogramytelsen - tilbakekreving" $ungtilbake >> $GITHUB_ENV
           echoStatus "Fordel" $fordel >> $GITHUB_ENV
           echoStatus "Opplæringspenger" $opplaeringspenger >> $GITHUB_ENV
+          echoStatus "Punsj" $punsj >> $GITHUB_ENV
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
           echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
