@@ -151,7 +151,7 @@ runs:
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8701/k9/klage/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
           echo Oppe!
           echo
-        elif [[ ${{ inputs.test_suite }} == ung || ${{ inputs.test_suite }} == "ung-tilbake" ]]; then
+        elif [[ ${{ inputs.test_suite }} == ung || ${{ inputs.test_suite }} == "ung-tilbake" || ${{ inputs.test_suite }} == frontend-ung ]]; then
           echo "Tester om ung-sak er oppe"
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8901/ung/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
           echo Oppe!
@@ -184,7 +184,7 @@ runs:
         
         if [[ ${{ inputs.test_suite }} == frontend ]]; then
           echo
-          echo "Tester om k9-los-web er oppe "
+          echo "Tester om k9-sak-web er oppe "
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/isAlive)" != "200" ]]; do sleep 2; done' || false
           echo Oppe!
         fi
