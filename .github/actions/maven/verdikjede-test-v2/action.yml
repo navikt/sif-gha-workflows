@@ -58,19 +58,7 @@ runs:
       shell: bash
       working-directory: ./frontend/k9-sak-web-e2e
       run: yarn install
-    
-    - name: Install playwright dependencies
-      if: contains(inputs.test_suite, 'frontend')
-      working-directory: ./frontend/k9-sak-web-e2e
-      shell: bash
-      run: |
-        tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
-        npx playwright install-deps chromium || true
-        google-chrome --version || chromium --version || echo "Chrome/Chromium not found"
-        tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
-        duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
-        echo "Tid brukt på npx: $(date -u -d @"$duration" +"%M:%S") min"
-  
+
     - name: Hosts for frontend testing
       shell: bash
       run: |
@@ -283,5 +271,5 @@ runs:
       with:
         name: frontend-test-output
         # definert i frontend java-testene!
-        path: frontend/playwright-output
+        path: frontend/${{ inputs.test_suite }}-playwright-output
 
