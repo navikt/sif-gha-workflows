@@ -65,7 +65,8 @@ runs:
       shell: bash
       run: |
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
-        npx playwright install --with-deps chromium
+        npx playwright install-deps chromium || true
+        google-chrome --version || chromium --version || echo "Chrome/Chromium not found"
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
         echo "Tid brukt på npx: $(date -u -d @"$duration" +"%M:%S") min"
