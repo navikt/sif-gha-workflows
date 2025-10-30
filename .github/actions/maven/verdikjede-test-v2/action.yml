@@ -59,6 +59,18 @@ runs:
       working-directory: ./frontend/k9-sak-web-e2e
       run: yarn install
 
+    #Deprecated - endrer til å bruke playwright container
+    - name: Install playwright dependencies
+      if: contains(inputs.test_suite, 'frontend') && !contains(inputs.test_suite, 'frontend-ung')
+      working-directory: ./frontend/k9-sak-web-e2e
+      shell: bash
+      run: |
+        tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
+        npx playwright install --with-deps chromium
+        tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
+        duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
+        echo "Ti
+
     - name: Hosts for frontend testing
       shell: bash
       run: |
@@ -269,7 +281,7 @@ runs:
       if: contains(inputs.test_suite, 'frontend') && failure() && env.STACK_CREATED == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: frontend-test-output
+        name:  ${{ inputs.test_suite }}-test-output
         # definert i frontend java-testene!
-        path: frontend/${{ inputs.test_suite }}-playwright-output
+        path: frontend/playwright-output
 
