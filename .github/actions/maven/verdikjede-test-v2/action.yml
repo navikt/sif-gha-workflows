@@ -69,7 +69,7 @@ runs:
         npx playwright install --with-deps chromium
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
-        echo "Ti
+        echo "Tid brukt på npx: $(date -u -d @"$duration" +"%M:%S") min"
 
     - name: Hosts for frontend testing
       shell: bash
