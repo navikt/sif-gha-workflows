@@ -133,66 +133,6 @@ runs:
         echo "Tester om VTP er oppe"
         timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
         echo Oppe!
-        echo
-        
-#        if [[ ${{ inputs.test_suite }} == klage ]]; then
-#          echo "Tester om k9-klage er oppe"
-#          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8701/k9/klage/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-#          echo Oppe!
-#          echo
-#        elif [[ ${{ inputs.test_suite }} == ung || ${{ inputs.test_suite }} == "ung-tilbake" || ${{ inputs.test_suite }} == frontend-ung ]]; then
-#          echo "Tester om ung-sak er oppe"
-#          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8901/ung/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-#          echo Oppe!
-#          echo
-#        else
-#          echo "Tester om k9-sak er oppe"
-#          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/k9/sak/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-#          echo Oppe!
-#          echo
-#          echo "Tester om abakus er oppe"
-#          timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8015/k9/abakus/internal/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-#          echo Oppe!
-#          echo
-#        fi
-#
-#        if [[ ${{ inputs.test_suite }} == tilbake ]]; then
-#          echo
-#          echo "Tester om k9-tilbake er oppe"
-#          timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8030/k9/tilbake/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-#          echo Oppe!
-#          echo
-#        fi
-#        if [[ ${{ inputs.test_suite }} == "ung-tilbake" ]]; then
-#          echo
-#          echo "Tester om ung-tilbake er oppe"
-#          timeout 180 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8903/ung/tilbake/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
-#          echo Oppe!
-#          echo
-#        fi
-#
-#        if [[ ${{ inputs.test_suite }} == frontend ]]; then
-#          echo
-#          echo "Tester om k9-sak-web er oppe "
-#          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/isAlive)" != "200" ]]; do sleep 2; done' || false
-#          echo Oppe!
-#        fi
-#
-#        if [[ ${{ inputs.test_suite }} == frontend-los ]]; then
-#          echo
-#          echo "Tester om k9-los-web er oppe "
-#          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8031/isReady)" != "200" ]]; do sleep 2; done' || false
-#          echo Oppe!
-#        fi
-#
-#        if [[ ${{ inputs.test_suite }} == frontend-ung ]]; then
-#          echo
-#          echo "Tester om ung-sak-web er oppe "
-#          timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9005/isReady)" != "200" ]]; do sleep 2; done' || false
-#          echo Oppe!
-#        fi
-
-        
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
         echo "Tid brukt på å vente på at alt er oppe: $(date -u -d @"$duration" +"%M:%S") min"
