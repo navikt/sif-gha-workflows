@@ -273,7 +273,8 @@ jobs:
 
           test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger" "$punsj")
           for result in "${test_results[@]}"; do
-            if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
+            status="${result%%|*}"
+            if [[ "$status" != success && "$status" != 'skipped' ]]; then
               all_success=false
               break
             fi
@@ -288,12 +289,18 @@ jobs:
           echo "SLACK_TITLE=$title" >> $GITHUB_ENV
   
           function echoStatus() {
-            if [[ "$2" == 'success' ]]; then
-              echo ":heavy_check_mark:  $1"
-            elif [[ "$2" == 'skipped' ]]; then
+            local resultat="$2"
+            local status="${resultat%%|*}"
+            local varighet=""
+            if [[ "$resultat" == *"|"* ]]; then
+              varighet=" (${resultat#*|})"
+            fi
+            if [[ "$status" == 'success' ]]; then
+              echo ":heavy_check_mark:  $1 $varighet"
+            elif [[ "$status" == 'skipped' ]]; then
               return
             else
-              echo ":x:  $1"
+              echo ":x:  $1 $varighet"
             fi
           }
   
