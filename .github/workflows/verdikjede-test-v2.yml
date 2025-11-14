@@ -223,7 +223,7 @@ jobs:
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
       punsj: ${{ steps.resultat.outputs.punsj }}
     steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@totaltid
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
         with:
           test_suite: ${{ matrix.suites.suite }}
@@ -244,7 +244,7 @@ jobs:
 
   slack:
     name: Sender slack melding
-    #if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
+    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
     needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
@@ -332,7 +332,6 @@ jobs:
           echo "${{ env.SLACK_TITLE }}"
           echo "${{ env.SLACK_MESSAGE }}"
       - name: Slack Notification
-        if: false
         run: >
           curl -X POST
           -H 'Content-type: application/json'
