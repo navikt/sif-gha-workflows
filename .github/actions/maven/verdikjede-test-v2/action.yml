@@ -36,6 +36,10 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Start total timer
+      id: t0
+      shell: bash
+      run: echo "start_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v4
       with:
         repository: 'navikt/k9-verdikjede'
@@ -235,13 +239,18 @@ runs:
       if: always() && !cancelled()
       shell: bash
       run: |
+        start_epoch=${{ steps.t0.outputs.start_epoch }}
+        end_epoch=$(date +%s)
+        elapsed=$(( end_epoch - start_epoch ))
+        duration_str=$(printf "%dm%02ds" $((elapsed/60)) $((elapsed%60)))
+
         if [ ! ${{ env.STACK_STARTED }} ]; then
            docker ps -a
-           echo "test_result=stack_not_started" >> $GITHUB_OUTPUT
+           echo "test_result=stack_not_started|${duration_str}" >> $GITHUB_OUTPUT
         elif [[ ${{ steps.tester.outcome }} == success && ${{ steps.loggsjekker.outcome }} == success ]]; then
-           echo "test_result=success" >> $GITHUB_OUTPUT
+           echo "test_result=success|${duration_str}" >> $GITHUB_OUTPUT
         else
-           echo "test_result=failed" >> $GITHUB_OUTPUT
+           echo "test_result=failed|${duration_str}" >> $GITHUB_OUTPUT
         fi
         echo "####################################"
         echo "docker ps -a:"
