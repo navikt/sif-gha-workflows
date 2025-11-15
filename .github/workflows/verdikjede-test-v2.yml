@@ -187,6 +187,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       active_suites: ${{ steps.filterstep.outputs.filtered }}
+      start_epoch: ${{ steps.filterstep.outputs.start_epoch }}
     steps:
       - id: filterstep
         run: |
@@ -194,6 +195,8 @@ jobs:
           echo "active suites:"
           echo $filtered_json
           echo "filtered=$filtered_json" >> $GITHUB_OUTPUT
+          echo "start_epoch=$(date +%s)" >> $GITHUB_OUTPUT
+
 
   run_tests:
     name: Tests
@@ -245,11 +248,16 @@ jobs:
   slack:
     name: Sender slack melding
     if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
-    needs: [run_tests]
+    needs: [run_tests, filter_suites]
     runs-on: ubuntu-latest
     steps:
       - name: Bygger opp slack melding
         run: |
+          start_epoch="${{ needs.filter_suites.outputs.start_epoch }}"
+          end_epoch=$(date +%s)
+          elapsed=$(( end_epoch - start_epoch ))
+          total_duration=$(printf "%dm%02ds" $((elapsed/60)) $((elapsed%60)))
+
           beregning="${{ needs.run_tests.outputs.beregning || 'skipped' }}"
           pleiepengersamtidiguttak="${{ needs.run_tests.outputs.pleiepenger-samtidiguttak || 'skipped' }}"
           pleiepengerpleietrengende="${{ needs.run_tests.outputs.pleiepenger-pleietrengende || 'skipped' }}"
@@ -325,6 +333,7 @@ jobs:
           echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
           echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
           echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
+          echo "*Total test duration*: $total_duration" >> $GITHUB_ENV
           echo '\n' >> $GITHUB_ENV
         # https://api.slack.com/block-kit
       - name: Slack message
