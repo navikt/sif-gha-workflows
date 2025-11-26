@@ -2,36 +2,39 @@ name: "Setup verdikjede & run tests - v2"
 description: Setup verdikjede & run tests
 inputs:
   cloning_token:
-    description: 'Token for checking out private repos in navikt org. Necessary due to READER_TOKEN not being able to access private repos anymore.'
+    description: "Token for checking out private repos in navikt org. Necessary due to READER_TOKEN not being able to access private repos anymore."
+    required: true
+  token:
+    description: "Token for setting up settings.xml for internal packages"
     required: true
   test_suite:
-    description: 'Test suite to run'
+    description: "Test suite to run"
     required: true
   test_groups:
-    description: 'Maven test groups to run'
+    description: "Maven test groups to run"
     required: true
   log_groups:
-    description: 'Maven log groups to check'
+    description: "Maven log groups to check"
     required: true
   docker_compose_f:
     required: true
-    description: 'docker compose flag to run with one or more docker compose files'
+    description: "docker compose flag to run with one or more docker compose files"
   override_image_artifact_name:
     required: false
-    description: 'Artifact name of docker image to download and load.'
+    description: "Artifact name of docker image to download and load."
   image_version:
     required: false
-    description: 'tag or version to use of triggering repo docker image  '
+    description: "tag or version to use of triggering repo docker image  "
   timeout_test_increase:
     required: false
-    description: 'custom timeout increase for tests - typically used on slow github action runners'
+    description: "custom timeout increase for tests - typically used on slow github action runners"
   k9-verdikjede-sha:
     required: true
-    description: 'sha of k9-verdikjede to use'
+    description: "sha of k9-verdikjede to use"
 
 outputs:
   test_result:
-    description: 'Test result'
+    description: "Test result"
     value: ${{ steps.outcome.outputs.test_result }}
 runs:
   using: "composite"
@@ -42,15 +45,15 @@ runs:
       run: echo "start_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v4
       with:
-        repository: 'navikt/k9-verdikjede'
+        repository: "navikt/k9-verdikjede"
         ref: ${{ inputs.k9-verdikjede-sha }}
         token: ${{ inputs.cloning_token }}
 
     - uses: actions/setup-java@v4
       with:
-        java-version: '25'
-        distribution: 'temurin'
-        cache: 'maven'
+        java-version: "25"
+        distribution: "temurin"
+        cache: "maven"
 
     - uses: actions/setup-node@v4
       if: contains(inputs.test_suite, 'frontend')
@@ -72,7 +75,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ inputs.token }}
 
     - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
       with:
@@ -103,23 +106,23 @@ runs:
         ./update-versions.sh $repo_name_without_owner ${{ inputs.image_version }}
         echo "STACK_STARTING=true" >> $GITHUB_ENV
         cat .env
-        
+
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")        
         docker compose --env-file .env ${{ inputs.docker_compose_f }} pull --ignore-pull-failures --quiet || (docker ps ; echo "Nedlasting av images feilet." ; exit 1)        
         tid_etter_pull=$(date +"%Y-%m-%dT%H:%M:%S")        
         docker compose --env-file .env ${{ inputs.docker_compose_f }} up -d || (docker ps ; echo "Oppstart feilet. Se etter tjenester som er \"unhealthy\" eller \"restarting\" i listen over." ; exit 1)        
         tid_etter_up=$(date +"%Y-%m-%dT%H:%M:%S")
-        
+
         duration_pull=$(( $(date -d "$tid_etter_pull" +%s) - $(date -d "$tid_for" +%s) ))
         duration_up=$(( $(date -d "$tid_etter_up" +%s) - $(date -d "$tid_etter_pull" +%s) ))        
         echo "Tid brukt på docker compose pull: $(date -u -d @"$duration_pull" +"%M:%S") min"
         echo "Tid brukt på docker compose up: $(date -u -d @"$duration_up" +"%M:%S") min"                
-        
+
         echo "docker ps -a:"
         docker ps -a
         echo "docker stats --no-stream -a"
         docker stats --no-stream -a
-        
+
         echo "Printer repo digest for alle imager"
         echo "RepoDigest  image.version"
         set -v
@@ -131,14 +134,14 @@ runs:
       run: |
         echo "STACK_CREATED=true" >> $GITHUB_ENV
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
-        
+
         docker ps -a
         echo
         echo "Tester om VTP er oppe"
         timeout 360 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8060/rest/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
         echo Oppe!
         echo
-        
+
         if [[ ${{ inputs.test_suite }} == klage ]]; then
           echo "Tester om k9-klage er oppe"
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:8701/k9/klage/internal/health/isReady)" != "200" ]]; do sleep 2; done || echo "Ikke oppe! :( "' || false
@@ -159,7 +162,7 @@ runs:
           echo Oppe!
           echo
         fi
-        
+
         if [[ ${{ inputs.test_suite }} == tilbake ]]; then
           echo
           echo "Tester om k9-tilbake er oppe"
@@ -174,14 +177,14 @@ runs:
           echo Oppe!
           echo
         fi
-        
+
         if [[ ${{ inputs.test_suite }} == frontend ]]; then
           echo
           echo "Tester om k9-sak-web er oppe "
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9000/isAlive)" != "200" ]]; do sleep 2; done' || false
           echo Oppe!
         fi
-        
+
         if [[ ${{ inputs.test_suite }} == frontend-los ]]; then
           echo
           echo "Tester om k9-los-web er oppe "
@@ -195,13 +198,13 @@ runs:
           timeout 60 bash -c 'while [[ "$(curl --insecure -s -o /dev/null -w ''%{http_code}'' http://localhost:9005/isReady)" != "200" ]]; do sleep 2; done' || false
           echo Oppe!
         fi
-        
+
         echo "STACK_STARTED=true" >> $GITHUB_ENV
-        
+
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
         echo "Tid brukt på å vente på at alt er oppe: $(date -u -d @"$duration" +"%M:%S") min"
-        
+
         echo "docker stats --no-stream -a"
         docker stats --no-stream -a
         echo "docker ps -a:"
@@ -212,16 +215,16 @@ runs:
       shell: bash
       run: |
         tid_for=$(date +"%Y-%m-%dT%H:%M:%S")
-        
+
         cd verdikjede
         mvn clean verify -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.test_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
-        
+
         tid_etter=$(date +"%Y-%m-%dT%H:%M:%S")
         duration=$(( $(date -d "$tid_etter" +%s) - $(date -d "$tid_for" +%s) ))
         echo "Tid brukt på testene: $(date -u -d @"$duration" +"%M:%S") min"
       env:
         GITHUB_USERNAME: ${{ github.actor }}
-        GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_PASSWORD: ${{ inputs.token }}
         VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
 
     - name: Utfører loggsjekker
@@ -232,7 +235,7 @@ runs:
         mvn test -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.log_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
       env:
         GITHUB_USERNAME: ${{ github.actor }}
-        GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_PASSWORD: ${{ inputs.token }}
 
     - name: Henter testresultat og setter outcome
       id: outcome
@@ -278,7 +281,6 @@ runs:
       if: contains(inputs.test_suite, 'frontend') && failure() && env.STACK_CREATED == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name:  ${{ inputs.test_suite }}-test-output
+        name: ${{ inputs.test_suite }}-test-output
         # definert i frontend java-testene!
         path: frontend/playwright-output
-
