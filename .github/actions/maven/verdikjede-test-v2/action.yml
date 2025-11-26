@@ -5,7 +5,7 @@ inputs:
     description: "Token for checking out private repos in navikt org. Necessary due to READER_TOKEN not being able to access private repos anymore."
     required: true
   token:
-    description: "Token for setting up settings.xml for internal packages"
+    description: "Token for everything else. Needs read:packages, contents:read, id-token:write"
     required: true
   test_suite:
     description: "Test suite to run"
