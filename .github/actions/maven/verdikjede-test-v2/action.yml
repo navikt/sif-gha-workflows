@@ -78,6 +78,8 @@ runs:
         password: ${{ inputs.github_token }}
 
     - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       with:
         team: k9saksbehandling
 
