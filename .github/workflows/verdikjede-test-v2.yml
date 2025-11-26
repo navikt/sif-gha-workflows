@@ -202,6 +202,7 @@ jobs:
     permissions:
       contents: read
       packages: read
+      id-token: write
     runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
     needs: filter_suites
     timeout-minutes: 30
