@@ -1,7 +1,10 @@
-name: 'Setup verdikjede & run tests - v2'
+name: "Setup verdikjede & run tests - v2"
 description: Setup verdikjede & run tests
 inputs:
-  reader-token:
+  cloning_token:
+    description: 'Token for cloning k9-verdikjede'
+    required: true
+  github_token:
     description: 'Token for setting up settings.xml for internal packages'
     required: true
   test_suite:
@@ -44,7 +47,7 @@ runs:
       with:
         repository: 'navikt/k9-verdikjede'
         ref: ${{ inputs.k9-verdikjede-sha }}
-        token: ${{ inputs.reader-token }}
+        token: ${{ inputs.cloning_token }}
 
     - uses: actions/setup-java@v4
       with:
@@ -72,7 +75,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.reader-token }}
+        password: ${{ inputs.github_token }}
 
     - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
       with:
@@ -221,7 +224,7 @@ runs:
         echo "Tid brukt på testene: $(date -u -d @"$duration" +"%M:%S") min"
       env:
         GITHUB_USERNAME: ${{ github.actor }}
-        GITHUB_PASSWORD: ${{ inputs.reader-token }}
+        GITHUB_PASSWORD: ${{ inputs.github_token }}
         VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
 
     - name: Utfører loggsjekker
@@ -232,7 +235,7 @@ runs:
         mvn test -e --batch-mode --settings ./../.github/.m2/settings.xml --file pom.xml ${{ inputs.log_groups }} -DtrimStackTrace=false -Dchangelist= -Dsha1=-$(git log -1 --pretty='%ad' --date=format:'%Y%m%d%H%M%S')-$(echo $GITHUB_SHA | cut -c1-7) -Dfile.encoding=UTF-8
       env:
         GITHUB_USERNAME: ${{ github.actor }}
-        GITHUB_PASSWORD: ${{ inputs.reader-token }}
+        GITHUB_PASSWORD: ${{ inputs.github_token }}
 
     - name: Henter testresultat og setter outcome
       id: outcome
