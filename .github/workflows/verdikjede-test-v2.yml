@@ -1,4 +1,8 @@
 name: Tester saksbehandling - v2 (reusable)
+permissions:
+  contents: read
+  packages: read
+  id-token: write
 on:
   workflow_call:
     inputs:
@@ -197,7 +201,6 @@ jobs:
           echo "filtered=$filtered_json" >> $GITHUB_OUTPUT
           echo "start_epoch=$(date +%s)" >> $GITHUB_OUTPUT
 
-
   run_tests:
     name: Tests
     runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
@@ -226,7 +229,12 @@ jobs:
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
       punsj: ${{ steps.resultat.outputs.punsj }}
     steps:
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
+      - uses: navikt/github-app-token-generator@v1
+        id: get-token
+        with:
+          app-id: ${{ secrets.SIF_TOKEN_GENERATOR_APP_ID }}
+          private-key: ${{ secrets.SIF_TOKEN_GENERATOR_PRIVATE_KEY }}
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@token-generator
         id: verdikjede-action
         with:
           test_suite: ${{ matrix.suites.suite }}
@@ -238,12 +246,12 @@ jobs:
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
           k9-verdikjede-sha: ${{ inputs.k9-verdikjede-sha }}
           # Composite actions arver ikke secrets så vi må få dem in som input
-          reader-token: ${{ secrets.READER_TOKEN }}
+          cloning_token: ${{ steps.get-token.outputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - id: resultat
         if: always() && !cancelled()
         run: |
           echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_result }}" >> $GITHUB_OUTPUT
-
 
   slack:
     name: Sender slack melding
