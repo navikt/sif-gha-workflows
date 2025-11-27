@@ -248,6 +248,7 @@ jobs:
           # Composite actions arver ikke secrets så vi må få dem in som input
           cloning_token: ${{ steps.get-token.outputs.token }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          reader_token: ${{ secrets.READER_TOKEN }}
       - id: resultat
         if: always() && !cancelled()
         run: |
