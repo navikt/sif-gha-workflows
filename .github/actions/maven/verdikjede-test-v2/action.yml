@@ -4,9 +4,6 @@ inputs:
   token:
     description: "Token for checking out private repos in navikt org. Necessary due to READER_TOKEN not being able to access private repos anymore."
     required: true
-  reader_token:
-    description: "Token for reading private repos"
-    required: true
   test_suite:
     description: "Test suite to run"
     required: true
@@ -75,7 +72,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.reader_token }}
+        password: ${{ inputs.token }}
 
     - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
       with:
