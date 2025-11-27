@@ -229,12 +229,13 @@ jobs:
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
       punsj: ${{ steps.resultat.outputs.punsj }}
     steps:
-      - uses: navikt/github-app-token-generator@v1
+      - uses: actions/create-github-app-token@v2
         id: get-token
         with:
           app-id: ${{ secrets.SIF_TOKEN_GENERATOR_APP_ID }}
           private-key: ${{ secrets.SIF_TOKEN_GENERATOR_PRIVATE_KEY }}
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
+          owner: ${{ github.repository_owner }}
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@app-token-permissions
         id: verdikjede-action
         with:
           test_suite: ${{ matrix.suites.suite }}
@@ -246,8 +247,7 @@ jobs:
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
           k9-verdikjede-sha: ${{ inputs.k9-verdikjede-sha }}
           # Composite actions arver ikke secrets så vi må få dem in som input
-          cloning_token: ${{ steps.get-token.outputs.token }}
-          reader_token: ${{ secrets.READER_TOKEN }}
+          token: ${{ steps.get-token.outputs.token }}
       - id: resultat
         if: always() && !cancelled()
         run: |
