@@ -245,9 +245,7 @@ jobs:
           image_version: ${{ inputs.image_version }}
           timeout_test_increase: ${{ github.ref_name != github.event.repository.default_branch && '60' || '0' }}
           k9-verdikjede-sha: ${{ inputs.k9-verdikjede-sha }}
-          # Composite actions arver ikke secrets så vi må få dem in som input
-          cloning_token: ${{ steps.get-token.outputs.token }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.get-token.outputs.token }}
       - id: resultat
         if: always() && !cancelled()
         run: |

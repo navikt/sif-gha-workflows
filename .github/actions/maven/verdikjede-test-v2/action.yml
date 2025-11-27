@@ -1,11 +1,8 @@
 name: "Setup verdikjede & run tests - v2"
 description: Setup verdikjede & run tests
 inputs:
-  cloning_token:
-    description: "Token for checking out private repos in navikt org. Necessary due to READER_TOKEN not being able to access private repos anymore."
-    required: true
   token:
-    description: "Token for everything else. Needs read:packages, contents:read, id-token:write"
+    description: "Token for reading packages and checking out private repos in the organization"
     required: true
   test_suite:
     description: "Test suite to run"
@@ -47,7 +44,7 @@ runs:
       with:
         repository: "navikt/k9-verdikjede"
         ref: ${{ inputs.k9-verdikjede-sha }}
-        token: ${{ inputs.cloning_token }}
+        token: ${{ inputs.token }}
 
     - uses: actions/setup-java@v4
       with:
