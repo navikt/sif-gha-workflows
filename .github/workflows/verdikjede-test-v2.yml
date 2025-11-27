@@ -248,6 +248,7 @@ jobs:
           k9-verdikjede-sha: ${{ inputs.k9-verdikjede-sha }}
           # Composite actions arver ikke secrets så vi må få dem in som input
           token: ${{ steps.get-token.outputs.token }}
+          reader_token: ${{ secrets.READER_TOKEN }}
       - id: resultat
         if: always() && !cancelled()
         run: |
