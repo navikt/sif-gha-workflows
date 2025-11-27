@@ -4,6 +4,9 @@ inputs:
   token:
     description: "Token for reading packages and checking out private repos in the organization"
     required: true
+  docker_login_token:
+    description: "Token for logging in to docker registry"
+    required: true
   test_suite:
     description: "Test suite to run"
     required: true
@@ -72,7 +75,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.token }}
+        password: ${{ inputs.docker_login_token }}
 
     - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
       with:
