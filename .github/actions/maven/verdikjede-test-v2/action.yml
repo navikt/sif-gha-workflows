@@ -1,11 +1,11 @@
 name: "Setup verdikjede & run tests - v2"
 description: Setup verdikjede & run tests
 inputs:
-  token:
-    description: "Token for reading packages and checking out private repos in the organization"
+  cloning_token:
+    description: "Token for checking out private repos in navikt org. Necessary due to READER_TOKEN not being able to access private repos anymore."
     required: true
-  docker_login_token:
-    description: "Token for logging in to docker registry"
+  token:
+    description: "Token for everything else. Needs read:packages, contents:read, id-token:write"
     required: true
   test_suite:
     description: "Test suite to run"
@@ -47,7 +47,7 @@ runs:
       with:
         repository: "navikt/k9-verdikjede"
         ref: ${{ inputs.k9-verdikjede-sha }}
-        token: ${{ inputs.token }}
+        token: ${{ inputs.cloning_token }}
 
     - uses: actions/setup-java@v4
       with:
@@ -75,7 +75,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.docker_login_token }}
+        password: ${{ inputs.token }}
 
     - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
       with:
