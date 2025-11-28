@@ -17,6 +17,14 @@ inputs:
     required: false
     description: 'Comma-delimited list of reactor projects'
     default: ''
+  maven-server-id-build:
+    required: false
+    description: "Server id to use in the build settings.xml"
+    default: 'github'
+  maven-server-id-release:
+    required: false
+    description: "Server id to use in the release settings.xml"
+    default: 'github'
   release-branch:
     required: false
     description: 'Branch to release from'
@@ -54,8 +62,8 @@ runs:
     - name: Create maven .m2 settings for build
       uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
       with:
-        repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
-        servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ inputs.build-token }}" }]'
+        repositories: '[{"id": "${{ inputs.maven-server-id-build }}", "name": "github-build", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
+        servers: '[{ "id": "${{ inputs.maven-server-id-build }}", "username": "${{ github.actor }}", "password": "${{ inputs.build-token }}" }]'
         output_file: 'settings-build.xml'
 
     - name: Set version and build
@@ -68,8 +76,8 @@ runs:
     - name: Create maven .m2 settings for release
       uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
       with:
-        repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
-        servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ inputs.release-token }}" }]'
+        repositories: '[{"id": "${{ inputs.maven-server-id-release }}", "name": "github-release", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
+        servers: '[{ "id": "${{ inputs.maven-server-id-release }}", "username": "${{ github.actor }}", "password": "${{ inputs.release-token }}" }]'
         output_file: 'settings-release.xml'
     - name: Release
       shell: bash
