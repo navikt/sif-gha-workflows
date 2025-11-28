@@ -16,11 +16,6 @@ on:
         type: string
         description: 'Comma-delimited list of specified reactor projects to build instead of all projects.'
         default: ''
-      release-profiles:
-        required: false
-        type: string
-        description: 'Profiles which should be used when releasing an artifact.'
-        default: '-Pdeploy'
       release-branch:
         required: false
         type: string
@@ -29,8 +24,15 @@ on:
       release-file:
         required: false
         type: string
-        description: 'Hvilken pom.xml fil skal releases. Default empty.'
-        default: ''
+        description: "Hvilket pomfil som skal brukes"
+      build-token:
+        required: true
+        description: 'Tokenet som brukes for build. '
+        type: string
+      release-token:
+        required: true
+        description: 'Tokenet som brukes for å release til maven registry. '
+        type: string
 jobs:
   build:
     name: Release
@@ -44,12 +46,21 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.release-branch }}
-      - name: Setup java and maven
+      - name: Setup java and maven for build
         uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ inputs.build-token }}
           java-version: ${{ inputs.java-version }}
-      - name: Publish artifacts
+      - name: Set version and build
         run: |
           mvn -B -s settings.xml versions:set -DnewVersion=${{ inputs.release-version }} ${{ inputs.release-file }}
-          mvn -B -s settings.xml -DskipTests clean deploy ${{ inputs.mvn-projects }} ${{ inputs.release-profiles }} ${{ inputs.release-file }}
+          mvn -B -s settings.xml package  ${{ inputs.mvn-projects }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
+      - name: Setup java and maven for build
+        uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
+        with:
+          github-token: ${{ inputs.release-token }}
+          java-version: ${{ inputs.java-version }}
+      - name: Build
+        run: |
+          mvn -B -s settings.xml -Dmaven.wagon.http.pool=false -DskipTests deploy ${{ inputs.mvn-projects }} ${{ inputs.release-file }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
+
