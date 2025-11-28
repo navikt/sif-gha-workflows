@@ -54,7 +54,7 @@ runs:
     - name: Create maven .m2 settings for build
       uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
       with:
-        repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "false" }, "snapshots": { "enabled": "false" }}]'
+        repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
         servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ inputs.build-token }}" }]'
         output_file: 'settings-build.xml'
 
