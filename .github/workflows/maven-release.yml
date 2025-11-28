@@ -55,12 +55,12 @@ jobs:
         run: |
           mvn -B -s settings.xml versions:set -DnewVersion=${{ inputs.release-version }} ${{ inputs.release-file }}
           mvn -B -s settings.xml package  ${{ inputs.mvn-projects }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
-      - name: Setup java and maven for build
+      - name: Setup java and maven for release
         uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
         with:
           github-token: ${{ secrets.release-token }}
           java-version: ${{ inputs.java-version }}
-      - name: Build
+      - name: Release
         run: |
           mvn -B -s settings.xml -Dmaven.wagon.http.pool=false -DskipTests deploy ${{ inputs.mvn-projects }} ${{ inputs.release-file }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
 
