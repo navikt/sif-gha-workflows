@@ -1,0 +1,77 @@
+name: Maven Release
+description: 'Release Maven project to GitHub Packages'
+
+inputs:
+  release-version:
+    required: true
+    description: 'The release version.'
+  java-version:
+    required: false
+    description: 'Java SDK version'
+    default: '21'
+  maven-version:
+    description: 'Maven version to use'
+    required: false
+    default: '3.9.5'
+  mvn-projects:
+    required: false
+    description: 'Comma-delimited list of reactor projects'
+    default: ''
+  release-branch:
+    required: false
+    description: 'Branch to release from'
+    default: 'master'
+  release-file:
+    required: false
+    description: 'POM file to use'
+    default: ''
+  build-token:
+    required: true
+    description: 'Token for build'
+  release-token:
+    required: true
+    description: 'Token for Maven registry release'
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.release-branch }}
+    - name: Set up JDK-${{ inputs.java-version }} with cache
+      uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # ratchet:actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: 'temurin'
+        cache: 'maven'
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # ratchet:stCarolas/setup-maven@v5
+      with:
+        maven-version: ${{ inputs.maven-version }}
+
+    - name: Create maven .m2 settings for build
+      uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
+      with:
+        repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "false" }, "snapshots": { "enabled": "false" }}]'
+        servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ inputs.build-token }}" }]'
+        output_file: 'settings-build.xml'
+
+    - name: Set version and build
+      shell: bash
+      run: |
+        mvn -B -s settings-build.xml versions:set -DnewVersion=${{ inputs.release-version }} ${{ inputs.release-file }}
+        mvn -B -s settings-build.xml package ${{ inputs.mvn-projects }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
+        
+
+    - name: Create maven .m2 settings for release
+      uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
+      with:
+        repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
+        servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ inputs.release-token }}" }]'
+        output_file: 'settings-release.xml'
+    - name: Release
+      shell: bash
+      run: |
+        mvn -B -s settings-release.xml -Dmaven.wagon.http.pool=false -DskipTests deploy ${{ inputs.mvn-projects }} ${{ inputs.release-file }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
