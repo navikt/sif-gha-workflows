@@ -1,0 +1,61 @@
+name: Maven Release
+description: 'Release Maven project to GitHub Packages'
+
+inputs:
+  release-version:
+    required: true
+    description: 'The release version.'
+  java-version:
+    required: false
+    description: 'Java SDK version'
+    default: '21'
+  mvn-projects:
+    required: false
+    description: 'Comma-delimited list of reactor projects'
+    default: ''
+  release-branch:
+    required: false
+    description: 'Branch to release from'
+    default: 'master'
+  release-file:
+    required: false
+    description: 'POM file to use'
+    default: ''
+  build-token:
+    required: true
+    description: 'Token for build'
+  release-token:
+    required: true
+    description: 'Token for Maven registry release'
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.release-branch }}
+
+    - name: Setup java and maven for build
+      uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main
+      with:
+        github-token: ${{ inputs.build-token }}
+        java-version: ${{ inputs.java-version }}
+
+    - name: Set version and build
+      shell: bash
+      run: |
+        mvn -B -s settings.xml versions:set -DnewVersion=${{ inputs.release-version }} ${{ inputs.release-file }}
+        mvn -B -s settings.xml package ${{ inputs.mvn-projects }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
+
+    - name: Setup java and maven for release
+      uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main
+      with:
+        github-token: ${{ inputs.release-token }}
+        java-version: ${{ inputs.java-version }}
+
+    - name: Release
+      shell: bash
+      run: |
+        mvn -B -s settings.xml -Dmaven.wagon.http.pool=false -DskipTests deploy ${{ inputs.mvn-projects }} ${{ inputs.release-file }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
