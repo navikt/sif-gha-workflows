@@ -49,7 +49,7 @@ jobs:
       - name: Setup java and maven for build
         uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
         with:
-          github-token: ${{ inputs.build-token }}
+          github-token: ${{ secrets.build-token }}
           java-version: ${{ inputs.java-version }}
       - name: Set version and build
         run: |
@@ -58,7 +58,7 @@ jobs:
       - name: Setup java and maven for build
         uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
         with:
-          github-token: ${{ inputs.release-token }}
+          github-token: ${{ secrets.release-token }}
           java-version: ${{ inputs.java-version }}
       - name: Build
         run: |
