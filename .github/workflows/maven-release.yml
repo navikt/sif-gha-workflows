@@ -25,14 +25,14 @@ on:
         required: false
         type: string
         description: "Hvilket pomfil som skal brukes"
+    secrets:
       build-token:
         required: true
         description: 'Tokenet som brukes for build. '
-        type: string
       release-token:
         required: true
         description: 'Tokenet som brukes for å release til maven registry. '
-        type: string
+
 jobs:
   build:
     name: Release
