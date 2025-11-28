@@ -38,7 +38,7 @@ runs:
         ref: ${{ inputs.release-branch }}
 
     - name: Setup java and maven for build
-      uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main
+      uses: ./.github/actions/maven/setup-java-and-maven
       with:
         github-token: ${{ inputs.build-token }}
         java-version: ${{ inputs.java-version }}
@@ -50,7 +50,7 @@ runs:
         mvn -B -s settings.xml package ${{ inputs.mvn-projects }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
 
     - name: Setup java and maven for release
-      uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main
+      uses: ./.github/actions/maven/setup-java-and-maven
       with:
         github-token: ${{ inputs.release-token }}
         java-version: ${{ inputs.java-version }}
