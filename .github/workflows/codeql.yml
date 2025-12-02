@@ -21,9 +21,9 @@ jobs:
       security-events: write
       contents: read
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # ratchet:actions/checkout@v3
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # ratchet:actions/checkout@v3
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # ratchet:github/codeql-action/init@v2
+        uses: github/codeql-action/init@fe4161a26a8629af62121b670040955b330f9af2 # ratchet:github/codeql-action/init@v2
         with:
           languages: ${{ inputs.language }}
           config-file: ${{ inputs.config-file }}
@@ -49,6 +49,6 @@ jobs:
           mvn versions:set -DnewVersion="${{ steps.generate-build-version.outputs.build-version }}" -DprocessAllModules -s settings.xml -q -e -B
           mvn install -s settings.xml -q -e -B -DskipTests
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # ratchet:github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@fe4161a26a8629af62121b670040955b330f9af2 # ratchet:github/codeql-action/analyze@v2
         with:
           category: "/language:${{ inputs.language }}"
