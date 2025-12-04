@@ -8,26 +8,26 @@ on:
     inputs:
       tag:
         type: string
-        description: 'Docker tag (from repository) - deprecated, use image_version'
+        description: "Docker tag (from repository) - deprecated, use image_version"
         required: true
       suites:
         type: string
-        description: 'komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, frontend-ung, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger, punsj'
+        description: "komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, frontend-ung, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger, punsj"
         required: false
         default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,frontend-ung,ung,ung-tilbake,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger,punsj"
       override_image_artifact_name:
         type: string
         required: false
-        description: 'Artifact name of docker image to download and load.'
+        description: "Artifact name of docker image to download and load."
       image_version:
         type: string
         required: true
-        description: 'Version/tag of image. '
+        description: "Version/tag of image. "
       k9-verdikjede-sha:
         type: string
         required: false
-        default: 'master'
-        description: 'branch, tag or sha of k9-verdikjede to checkout'
+        default: "master"
+        description: "branch, tag or sha of k9-verdikjede to checkout"
     outputs:
       pleiepenger-pleietrengende:
         description: "Utfall fra pleiepenger-pleietrengende-test"
@@ -229,11 +229,12 @@ jobs:
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
       punsj: ${{ steps.resultat.outputs.punsj }}
     steps:
-      - uses: navikt/github-app-token-generator@v1
+      - uses: actions/create-github-app-token@v2
         id: get-token
         with:
           app-id: ${{ secrets.SIF_TOKEN_GENERATOR_APP_ID }}
           private-key: ${{ secrets.SIF_TOKEN_GENERATOR_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@main
         id: verdikjede-action
         with:
@@ -295,15 +296,15 @@ jobs:
               break
             fi
           done
-  
+
           if [[ "$all_success" == true ]]; then
             title+="kjørt UTEN feil :rocket:"
           else
             title+="brukket :boom:"
           fi
-  
+
           echo "SLACK_TITLE=$title" >> $GITHUB_ENV
-  
+
           function echoStatus() {
             local resultat="$2"
             local status="${resultat%%|*}"
@@ -319,7 +320,7 @@ jobs:
               echo ":x:  $1 $varighet"
             fi
           }
-  
+
           echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
           echoStatus "Pleiepenger samtidig uttak" $pleiepengersamtidiguttak >> $GITHUB_ENV
           echoStatus "Pleiepenger pleietrengende" $pleiepengerpleietrengende >> $GITHUB_ENV
