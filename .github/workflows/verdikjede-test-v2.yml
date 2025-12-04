@@ -234,6 +234,7 @@ jobs:
         with:
           app-id: ${{ secrets.SIF_TOKEN_GENERATOR_APP_ID }}
           private-key: ${{ secrets.SIF_TOKEN_GENERATOR_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
       - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@test-bruk-av-app-token
         id: verdikjede-action
         with:
