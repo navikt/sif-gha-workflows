@@ -74,7 +74,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.reader_token }}
+        password: ${{ inputs.app_token }}
 
     - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
       with:
