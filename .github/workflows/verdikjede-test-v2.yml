@@ -229,7 +229,7 @@ jobs:
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
       punsj: ${{ steps.resultat.outputs.punsj }}
     steps:
-      - uses: navikt/github-app-token-generator@v1
+      - uses: actions/create-github-app-token@v2
         id: get-token
         with:
           app-id: ${{ secrets.SIF_TOKEN_GENERATOR_APP_ID }}
