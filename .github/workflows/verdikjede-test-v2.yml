@@ -12,9 +12,9 @@ on:
         required: true
       suites:
         type: string
-        description: "komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, frontend-ung, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger, punsj"
+        description: "komma-separert liste med test-suiter som skal kjøres (default alle): pleiepenger, livetssluttfase, annet, klage, tilbake, frontend, frontend-los, frontend-ung, ung, ung-tilbake, beregning, pleiepenger-samtidiguttak, pleiepenger-gamle-regler-uttak, pleiepenger-pleietrengende, pleiepenger-soker, opplaeringspenger, punsj"
         required: false
-        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,frontend-ung,ung,ung-tilbake,beregning,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger,punsj"
+        default: "pleiepenger,livetssluttfase,annet,klage,tilbake,frontend,frontend-los,frontend-ung,ung,ung-tilbake,beregning,pleiepenger-samtidiguttak,pleiepenger-gamle-regler-uttak,pleiepenger-pleietrengende,pleiepenger-soker,opplaeringspenger,punsj"
       override_image_artifact_name:
         type: string
         required: false
@@ -38,6 +38,9 @@ on:
       pleiepenger-samtidiguttak:
         description: "Utfall fra pleiepenger-samtidiguttak-test"
         value: ${{ jobs.run_tests.outputs.pleiepenger-samtidiguttak }}
+      pleiepenger-gamle-regler-uttak:
+        description: "Utfall fra pleiepenger-gamle-regler-uttak-test"
+        value: ${{ jobs.run_tests.outputs.pleiepenger-gamle-regler-uttak }}
       beregning:
         description: "Utfall fra beregning-test"
         value: ${{ jobs.run_tests.outputs.beregning }}
@@ -103,6 +106,12 @@ jobs:
             "log_groups": "-Dgroups=etter-pleiepenger"
           },
           {
+            "suite": "pleiepenger-gamle-regler-uttak",
+            "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger-overgang-nye-regler.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
+            "test_groups": "-Dgroups=pleiepenger-gamle-regler-uttak '-Dtest=!PleiepengerLoggTest'",
+            "log_groups": "-Dgroups=etter-pleiepenger"
+          },
+          {
             "suite": "beregning",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-pleiepenger.yml -f docker-compose-testsuites/gha/docker-compose-pleiepenger-gha.yml ",
             "test_groups": "-Dgroups=beregning '-Dtest=!PleiepengerLoggTest'",
@@ -129,7 +138,7 @@ jobs:
           {
             "suite": "annet",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-omsorgspenger.yml -f docker-compose-testsuites/gha/docker-compose-omsorgspenger-gha.yml",
-            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,frontendtest-ung,pleiepenger,beregning,pleiepenger-soker,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,ung-tilbake,opplaeringspenger,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator,punsj",
+            "test_groups": "-DexcludedGroups=frontendtest,frontendtest-los,frontendtest-ung,pleiepenger,beregning,pleiepenger-soker,pleiepenger-gamle-regler-uttak,pleiepenger-samtidiguttak,pleiepenger-pleietrengende,livetssluttfase,klage,tilbakekreving,ung,ung-tilbake,opplaeringspenger,etter-frontendtest,etter-pleiepenger,etter-livetssluttfase,etter-tilbakekreving,etter,frontend-data-generator,punsj",
             "log_groups": "-Dgroups=etter"
           },
           {
@@ -224,6 +233,7 @@ jobs:
       fordel: ${{ steps.resultat.outputs.fordel }}
       beregning: ${{ steps.resultat.outputs.beregning }}
       pleiepenger-samtidiguttak: ${{ steps.resultat.outputs.pleiepenger-samtidiguttak }}
+      pleiepenger-gamle-regler-uttak: ${{ steps.resultat.outputs.pleiepenger-gamle-regler-uttak }}
       pleiepenger-pleietrengende: ${{ steps.resultat.outputs.pleiepenger-pleietrengende }}
       pleiepenger-soker: ${{ steps.resultat.outputs.pleiepenger-soker }}
       opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
@@ -269,6 +279,7 @@ jobs:
 
           beregning="${{ needs.run_tests.outputs.beregning || 'skipped' }}"
           pleiepengersamtidiguttak="${{ needs.run_tests.outputs.pleiepenger-samtidiguttak || 'skipped' }}"
+          pleiepengergamleregleruttak="${{ needs.run_tests.outputs.pleiepenger-gamle-regler-uttak || 'skipped' }}"
           pleiepengerpleietrengende="${{ needs.run_tests.outputs.pleiepenger-pleietrengende || 'skipped' }}"
           pleiepengersoker="${{ needs.run_tests.outputs.pleiepenger-soker || 'skipped' }}"
           pleiepenger="${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}"
