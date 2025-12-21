@@ -299,7 +299,7 @@ jobs:
           title="Verdikjede er "
           all_success=true
 
-          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger" "$punsj")
+          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengergamleregleruttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger" "$punsj")
           for result in "${test_results[@]}"; do
             status="${result%%|*}"
             if [[ "$status" != success && "$status" != 'skipped' ]]; then
@@ -334,6 +334,7 @@ jobs:
 
           echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
           echoStatus "Pleiepenger samtidig uttak" $pleiepengersamtidiguttak >> $GITHUB_ENV
+          echoStatus "Pleiepenger gamle regler uttak" $pleiepengergamleregleruttak >> $GITHUB_ENV
           echoStatus "Pleiepenger pleietrengende" $pleiepengerpleietrengende >> $GITHUB_ENV
           echoStatus "Pleiepenger søker" $pleiepengersoker >> $GITHUB_ENV
           echoStatus "Beregning" $beregning >> $GITHUB_ENV
