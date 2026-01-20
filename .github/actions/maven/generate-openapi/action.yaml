@@ -72,10 +72,7 @@ runs:
         git add --force ${FILE_DIRECTORY}/${FILE_NAME}
         git diff --quiet --staged || 
         (
-        export MESSAGE="$FILE_NAME updated by build pipeline 
-        
-        
-        skip-checks:true"
+        export MESSAGE="$FILE_NAME updated by build pipeline"
         export SHA=$( git rev-parse $DESTINATION_BRANCH:$FILE_DIRECTORY/$FILE_NAME )
         gh api --method PUT /repos/:owner/:repo/contents/$FILE_DIRECTORY/$FILE_NAME \
           --field message="$MESSAGE" \
@@ -85,6 +82,4 @@ runs:
         echo "openapiCommitted=true" >> $GITHUB_OUTPUT
         )
       # ^-Use the REST API to commit changes, so we get automatic commit signing
-      # Use skip-checks:true to prevent github complaining about missing checks and thereby preventing PR merge.
-      # The committed changes has been checked during the current workflow run anyways.
 
