@@ -30,7 +30,7 @@ runs:
   using: 'composite'
   steps:
     - name: Setup java and maven
-      uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main
+      uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@test-fjern-setup-maven
       with:
         github-token: ${{ inputs.readerToken }}
         # Ved ny jdk versjon kan denne økes uten å vente på noe annet. (Kompileringsresultat fra denne action blir ikke brukt noe annet sted.)
