@@ -118,7 +118,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.READER_TOKEN }}
       - name: Setup java and maven
-        uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@test-fjern-setup-maven # ratchet:exclude
+        uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main # ratchet:exclude
         with:
           github-token: ${{ secrets.READER_TOKEN }} # bruker READER_TOKEN pga private repos
           java-version: ${{ inputs.java-version }}
