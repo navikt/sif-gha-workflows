@@ -9,10 +9,6 @@ inputs:
     required: false
     description: 'Java SDK version'
     default: '21'
-  maven-version:
-    description: 'Maven version to use'
-    required: false
-    default: '3.9.5'
   mvn-projects:
     required: false
     description: 'Comma-delimited list of reactor projects'
@@ -54,10 +50,6 @@ runs:
         java-version: ${{ inputs.java-version }}
         distribution: 'temurin'
         cache: 'maven'
-    - name: Set up Maven
-      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # ratchet:stCarolas/setup-maven@v5
-      with:
-        maven-version: ${{ inputs.maven-version }}
 
     - name: Create maven .m2 settings for build
       uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
