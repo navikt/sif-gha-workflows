@@ -51,6 +51,11 @@ on:
         type: string
         description: "NAV team"
         default: "k9saksbehandling"
+      quiet:
+        required: false
+        type: boolean
+        description: 'Maven quiet mode'
+        default: true
     outputs:
       build-version:
         description: "Build version"
@@ -94,6 +99,7 @@ jobs:
         with:
           t-2c: ${{ inputs.t-2c }}
           skip-tests: ${{ inputs.skip-tests }}
+          quiet: ${{ inputs.quiet }}
       - name: Bygg og push docker image
         id: docker-build
         if: inputs.build-image
