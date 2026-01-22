@@ -8,6 +8,10 @@ inputs:
     description: 'Java SDK version to use'
     required: false
     default: '21'
+  cache:
+    description: 'Name of the build platform to cache dependencies. It can be "maven", "gradle" or "sbt".'
+    required: false
+    default: 'maven'
 runs:
   using: "composite"
   steps:
@@ -22,4 +26,4 @@ runs:
       with:
         java-version: ${{ inputs.java-version }}
         distribution: 'temurin'
-        cache: 'maven'
+        cache: ${{ inputs.cache || null }}

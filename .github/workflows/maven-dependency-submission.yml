@@ -24,6 +24,7 @@ jobs:
         with:
           github-token: ${{ (github.actor != 'dependabot[bot]' && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
           java-version: ${{ inputs.java-version }}
+          cache: null # Kan ikke ha cache på denne da den ødelegger for cache i maven-build-app.yml
       - name: Generate build version
         id: generate-build-version
         shell: bash
