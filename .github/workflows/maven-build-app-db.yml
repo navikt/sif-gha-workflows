@@ -139,6 +139,3 @@ jobs:
           upload-image: ${{ inputs.upload-image }}
           docker_platforms: ${{ (inputs.upload-image && 'linux/amd64') || null }} # docker image tarball støtter bare én platform av gangen
           namespace: ${{ inputs.namespace }}
-      - name: Clean up generated stuff before caching
-        run: |
-          rm ~/.m2/repository/no/nav -r
