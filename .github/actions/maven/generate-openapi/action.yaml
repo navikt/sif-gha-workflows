@@ -42,7 +42,7 @@ runs:
       run: mvn -s settings.xml exec:java --projects web
     - name: Openapi version
       id: openapi-version
-      uses: ./.github/actions/openapi-version
+      uses: navikt/sif-gha-workflows/.github/actions/openapi-version@generate-openapi-dont-skip-checks
       with:
         openapiFileName: ${{ inputs.openapiFileName }}
     # Commit and push any changes to openapi.json
