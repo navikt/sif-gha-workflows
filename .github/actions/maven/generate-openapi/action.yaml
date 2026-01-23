@@ -44,7 +44,7 @@ runs:
       id: openapi-version
       uses: navikt/sif-gha-workflows/.github/actions/openapi-version@generate-openapi-dont-skip-checks
       with:
-        openapiFileName: ${{ inputs.openapiFileName }}
+        openapiFilePath: web/src/main/resources/openapi-ts-client/${{ inputs.openapiFileName }}
     # Commit and push any changes to openapi.json
     - name: Commit api endringer
       if: ${{ success() && inputs.dontCommit != 'true' }}

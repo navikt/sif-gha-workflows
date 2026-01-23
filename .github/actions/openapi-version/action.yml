@@ -1,8 +1,8 @@
 name: openapi-version
 description: "Parse openapi version string from generated openapi.json file"
 inputs:
-  openapiFileName:
-    description: What filename to parse (in hardcoded resources dir).
+  openapiFilePath:
+    description: What file to parse.
     required: true
     default: openapi.json
 outputs:
@@ -17,7 +17,7 @@ runs:
     shell: bash
     # extract version number from generated openapi.json
     run: |
-      echo "openapiVersion=$(jq --exit-status --raw-output '.info.version | capture("^(?<major>\\d+)\\.(?<minor>\\d+)$") | .major + "." + .minor' ./web/src/main/resources/openapi-ts-client/${{ inputs.openapiFileName }} || echo 'FEIL')" >> $GITHUB_OUTPUT
+      echo "openapiVersion=$(jq --exit-status --raw-output '.info.version | capture("^(?<major>\\d+)\\.(?<minor>\\d+)$") | .major + "." + .minor' ${{ inputs.openapiFilePath }} || echo 'FEIL')" >> $GITHUB_OUTPUT
   - name: Feilsjekk OPENAPI_VERSION
     if: "${{ env.OPENAPI_VERSION == 'FEIL'}}"
     env:
