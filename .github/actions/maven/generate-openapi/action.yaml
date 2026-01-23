@@ -7,8 +7,8 @@ inputs:
   githubToken:
     description: The secrets.GITHUB_TOKEN allowing commit on the repo.
     required: true
-  openapiFileName:
-    description: What filename to use for generated openapi.json file.
+  openapiFilePath:
+    description: What path to use for generated openapi.json file.
     required: true
     default: openapi.json
   dontCommit:
@@ -44,7 +44,7 @@ runs:
       id: openapi-version
       uses: navikt/sif-gha-workflows/.github/actions/openapi-version@generate-openapi-dont-skip-checks
       with:
-        openapiFilePath: web/src/main/resources/openapi-ts-client/${{ inputs.openapiFileName }}
+        openapiFilePath: ${{ inputs.openapiFilePath }}
     # Commit and push any changes to openapi.json
     - name: Commit api endringer
       if: ${{ success() && inputs.dontCommit != 'true' }}
@@ -52,19 +52,18 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.githubToken }}
-        FILE_NAME: ${{ inputs.openapiFileName }}
-        FILE_DIRECTORY: web/src/main/resources/openapi-ts-client
+        FILE_PATH: ${{ inputs.openapiFilePath }}
         DESTINATION_BRANCH: ${{ github.head_ref || github.ref_name }}
       run: |
         # Use git to detect changes, only commit and push if there are changes
-        git add --force ${FILE_DIRECTORY}/${FILE_NAME}
+        git add --force ${FILE_PATH}
         git diff --quiet --staged || 
         (
         export MESSAGE="$FILE_NAME updated by build pipeline"
-        export SHA=$( git rev-parse $DESTINATION_BRANCH:$FILE_DIRECTORY/$FILE_NAME )
-        gh api --method PUT /repos/:owner/:repo/contents/$FILE_DIRECTORY/$FILE_NAME \
+        export SHA=$( git rev-parse $DESTINATION_BRANCH:$FILE_PATH )
+        gh api --method PUT /repos/:owner/:repo/contents/$FILE_PATH \
           --field message="$MESSAGE" \
-          --field content=@<( base64 -i "${FILE_DIRECTORY}/${FILE_NAME}" ) \
+          --field content=@<( base64 -i "${FILE_PATH}" ) \
           --field branch="$DESTINATION_BRANCH" \
           --field sha="$SHA" &&
         echo "openapiCommitted=true" >> $GITHUB_OUTPUT
