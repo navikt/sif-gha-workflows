@@ -24,9 +24,9 @@ runs:
         DIR_PATH=$(dirname "$FILE_PATH")
         echo "openapiDirPath=$DIR_PATH" >> $GITHUB_OUTPUT
       id: openapi-dir-path
-    - uses: ./.github/actions/build-version
+    - uses: ./.github/actions/build-version/action.yml
       id: build-version
-    - uses: ./.github/actions/openapi-version
+    - uses: ./.github/actions/openapi-version/action.yml
       id: openapi-version
       with:
         openapiFilePath: ${{ inputs.openapiFilePath }}
