@@ -22,11 +22,7 @@ runs:
   steps:
     - name: Generate build version
       id: generate-build-version
-      shell: bash
-      run: echo "build-version=$(date +%Y.%m.%d.%H%M%S)-$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
-    - name: Print build version
-      shell: bash
-      run: echo "Generated build-version is ${{ steps.generate-build-version.outputs.build-version }}"
+      uses: ./.github/actions/build-version
     - name: Build artifacts
       shell: bash
       run: |
