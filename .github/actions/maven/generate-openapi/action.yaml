@@ -4,8 +4,8 @@ inputs:
   readerToken:
     description: The secrets.READER_TOKEN allowing read of internal packages.
     required: true
-  githubToken:
-    description: The secrets.GITHUB_TOKEN allowing commit on the repo.
+  commitToken:
+    description: Github token allowing commit on the repo.
     required: true
   openapiFilePath:
     description: What path to use for generated openapi.json file.
@@ -51,7 +51,7 @@ runs:
       id: change-commit
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.githubToken }}
+        GITHUB_TOKEN: ${{ inputs.commitToken }}
         FILE_PATH: ${{ inputs.openapiFilePath }}
         DESTINATION_BRANCH: ${{ github.head_ref || github.ref_name }}
       run: |
