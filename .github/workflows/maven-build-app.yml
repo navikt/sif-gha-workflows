@@ -56,6 +56,11 @@ on:
         type: boolean
         description: 'Maven quiet mode'
         default: true
+      clean-before-caching:
+        required: false
+        type: boolean
+        description: 'Clean up generated stuff before caching'
+        default: true
     outputs:
       build-version:
         description: "Build version"
@@ -111,3 +116,12 @@ jobs:
           additional-tag: ${{ inputs.additional-tag }}
           docker_platforms: ${{ (inputs.upload-image && 'linux/amd64') || null }} # docker image tarball støtter bare én platform av gangen
           namespace: ${{ inputs.namespace }}
+      - name: Clean up generated stuff before caching
+        if: inputs.clean-before-caching
+        # målet er å ha mest mulig avhengigheter i cachen, uten å få med moduler som uansett bygges av i repositoriet neste gang
+        # sletter alt under i m2-repo under no/nav/k9 bortsett fra felles og prosesstask, samt no/nav/ung
+        # sletter under no/nav/folketrygdloven siden k9-sak og ft-kalkulus bygger moduler her. Unntar bregning-moduler da disse importers
+        run: |
+          find ~/.m2/repository/no/nav/k9/ -mindepth 1 -maxdepth 1 ! -name felles ! -name prosesstask -exec rm -r {} +
+          find ~/.m2/repository/no/nav/folketrygdloven/ -mindepth 1 -maxdepth 1 ! -name beregning* ! -name prosesstask -exec rm -r {} +
+          rm -r ~/.m2/repository/no/nav/ung/sak
