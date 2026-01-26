@@ -20,7 +20,7 @@ jobs:
       GENERATED_TS_PATH: /tmp/generated-typescript-client
     steps:
       - uses: actions/checkout@v6
-      - uses: navikt/sif-gha-workflows/.github/actions/generate-typescript-client@generate-openapi-dont-skip-checks
+      - uses: navikt/sif-gha-workflows/.github/actions/generate-typescript-client@openapi-next
         name: Generer typescript klient
         id: generate-typescript
         with:

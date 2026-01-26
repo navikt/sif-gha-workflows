@@ -25,7 +25,7 @@ jobs:
           # https://github.com/organizations/navikt/settings/apps/sif-openapi-json-writer
           app-id: ${{ vars.SIF_OPENAPI_WRITER_APP_ID }}
           private-key: ${{ secrets.SIF_OPENAPI_WRITER_PRIVATE_KEY }}
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/generate-openapi@generate-openapi-dont-skip-checks
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/generate-openapi@openapi-next
         id: generate-openapi
         with:
           readerToken: ${{ secrets.READER_TOKEN }}

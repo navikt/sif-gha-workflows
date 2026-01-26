@@ -30,9 +30,9 @@ runs:
         DIR_PATH=$(dirname "$FILE_PATH")
         echo "openapiDirPath=$DIR_PATH" >> $GITHUB_OUTPUT
       id: openapi-dir-path
-    - uses: navikt/sif-gha-workflows/.github/actions/build-version@generate-openapi-dont-skip-checks
+    - uses: navikt/sif-gha-workflows/.github/actions/build-version@openapi-next
       id: build-version
-    - uses: navikt/sif-gha-workflows/.github/actions/openapi-version@generate-openapi-dont-skip-checks
+    - uses: navikt/sif-gha-workflows/.github/actions/openapi-version@openapi-next
       id: openapi-version
       with:
         openapiFilePath: ${{ inputs.openapiFilePath }}
