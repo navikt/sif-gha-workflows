@@ -67,8 +67,7 @@ jobs:
         # Ny pakke publiserast
       - id: publish
         name: Publiser ny pakke
-        ## TODO if: "${{ steps.compare-with-published.outputs.hasChanged == 'true'}}"
-        if: "${{ github.ref_name == github.event.repository.default_branch }}"
+        if: github.ref_name == github.event.repository.default_branch && steps.compare-with-published.outputs.hasChanged == 'true'
         uses: navikt/openapi-ts-clientmaker/extra/actions/publish-typescript-client@v2
         with:
           contentPath: "${{ env.GENERATED_TS_PATH }}"
