@@ -1,0 +1,75 @@
+name: Typescript Client Build and Publish
+on:
+  workflow_call:
+    inputs:
+      openapiFilePath:
+        required: true
+        type: string
+        description: Filsti til generert openapi.json fil
+    outputs:
+      hasChanged:
+        description: "true viss generert klient er ulik noverande publisert klient."
+        value: ${{ steps.compare-with-published.outputs.hasChanged }}
+jobs:
+  build-publish-typescript-client:
+    name: Bygg og publiser openapi typescript klient
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GENERATED_TS_PATH: /tmp/generated-typescript-client
+    steps:
+      - uses: actions/checkout@v6
+      - uses: navikt/sif-gha-workflows/.github/actions/generate-typescript-client@generate-openapi-dont-skip-checks
+        name: Generer typescript klient
+        id: generate-typescript
+        with:
+          openapiFilePath: ${{ inputs.openapiFilePath }}
+        # Last opp generert typescript kode så prod-check-typescript-client kan bruke den
+      - uses: actions/upload-artifact@v6
+        name: Last opp generert klient
+        id: upload-typescript
+        with:
+          name: typescript-client-src
+          path: "${{ steps.generate-typescript.outputs.resultDir }}"
+          if-no-files-found: error
+      - uses: navikt/openapi-ts-clientmaker/extra/actions/compare-with-published@v2
+        name: Sammenlign med publisert pakke
+        id: compare-with-published
+        with:
+          localPath: "${{ steps.generate-typescript.outputs.resultDir }}"
+          npmPackageScope: ${{ steps.generate-typescript.outputs.npmPackageScope }}
+          npmPackageName: ${{ steps.generate-typescript.outputs.npmPackageName }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+        # Flytt generert klientkode ut av workspace
+      - name: Flytt generert klient
+        if: steps.compare-with-published.outputs.hasChanged == 'true'
+        run: |
+          mv "${{ steps.generate-typescript.outputs.resultDir }}" "$GENERATED_TS_PATH"
+        # check-compat-typescript sjekke ut k9-sak-web til workspace, så overskriver det som er der frå før.
+      - uses: navikt/k9-sak-web/.github/actions/check-compat-typescript-client@master
+        name: Kompileringssjekk k9-sak-web master
+        id: compat-check-master
+        if: steps.compare-with-published.outputs.hasChanged == 'true'
+        with:
+          readerToken: ${{ secrets.READER_TOKEN }}
+          newClientPath: ${{ env.GENERATED_TS_PATH }}
+        continue-on-error: true # Fortsett og publiser pakke også ved feil, denne sjekk er kun for å gje ein advarsel
+      - if: "${{ steps.compat-check-master.outcome == 'failure' }}"
+        name: Lag advarsel om kompileringsfeil
+        run: |
+          echo "### :warning: k9-sak-web inkompatibel" >> $GITHUB_STEP_SUMMARY
+          echo "Kompilering av generert typescript klient for denne endring med k9-sak-web master feila." >> $GITHUB_STEP_SUMMARY
+          echo "Sjekk logg i github workflow for detaljer." >> $GITHUB_STEP_SUMMARY
+
+        # Ny pakke publiserast
+      - id: publish
+        name: Publiser ny pakke
+        ## TODO if: "${{ steps.compare-with-published.outputs.hasChanged == 'true'}}"
+        if: "${{ github.ref_name == github.event.repository.default_branch }}"
+        uses: navikt/openapi-ts-clientmaker/extra/actions/publish-typescript-client@v2
+        with:
+          contentPath: "${{ env.GENERATED_TS_PATH }}"
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
