@@ -1,0 +1,53 @@
+name: Typescript klient kompileringssjekk
+on:
+  workflow_call:
+    inputs:
+      openapiFilePath:
+        required: true
+        type: string
+        description: Filsti til generert openapi.json fil
+jobs:
+  # Bygger ny typescript klient ut frå ny openapi.json fil.
+  # Viss ny kode er forskjellig frå sist publiserte pakke, sjekk om frontend (master versjon) vil kompilere med den nye koden.
+  # Skriv advarsel til pr kommentar viss kompilering feiler.
+  compile-check-typescript-client:
+    name: Kompileringssjekk
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # For å lage advarsel kommentar på PR
+    env:
+      GENERATED_TS_PATH: /tmp/generated-typescript-client
+    steps:
+      - uses: actions/checkout@v6
+      - uses: navikt/sif-gha-workflows/.github/actions/generate-typescript-client@generate-openapi-dont-skip-checks
+        name: Generer typescript klient
+        id: generate-typescript
+        with:
+          openapiFilePath: ${{ inputs.openapiFilePath }}
+        # Flytt generert klientkode ut av workspace
+      - name: Flytt generert klient
+        run: |
+          mv "${{ steps.generate-typescript.outputs.resultDir }}" "$GENERATED_TS_PATH"
+        # check-compat-typescript sjekke ut k9-sak-web til workspace, så overskriver det som er der frå før.
+      - uses: navikt/k9-sak-web/.github/actions/check-compat-typescript-client@master
+        name: Kompiler k9-sak-web master
+        id: compat-check-master
+        with:
+          readerToken: ${{ secrets.READER_TOKEN }}
+          newClientPath: ${{ env.GENERATED_TS_PATH }}
+        continue-on-error: true # Fortsett, denne sjekk er kun for å gje ein advarsel
+      - if: "${{ steps.compat-check-master.outcome == 'failure' }}"
+        name: Lag advarsel om kompileringsfeil
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: '### :warning: k9-sak-web inkompatibel\n' +
+                    'Kompilering av generert typescript klient for denne endring med k9-sak-web master feila.\n\n' +
+                    'Sjekk feilmelding fra github workflow for detaljer.\n\n' +
+                    'Du kan likevel merge til master og dermed få publisert ny typescript klient.'
+            })
