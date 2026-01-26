@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: read
       pull-requests: write # For å lage advarsel kommentar på PR
     env:
       GENERATED_TS_PATH: /tmp/generated-typescript-client
