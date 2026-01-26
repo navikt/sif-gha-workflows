@@ -11,8 +11,14 @@ inputs:
     default: web/target/ts-client
 outputs:
   resultDir:
-    description: Directory path in which generated typescrip is placed
+    description: Directory path in which generated typescript is placed
     value: ${{ inputs.resultDir }}
+  npmPackageScope:
+    description: package scope of generated typescript
+    value: ${{ steps.typescript-generate.outputs.npmPackageScope }}
+  npmPackageName:
+    description: package name (without scope) of generated typescript
+    value: ${{ steps.typescript-generate.outputs.npmPackageName }}
 
 runs:
   using: 'composite'
@@ -32,7 +38,7 @@ runs:
         openapiFilePath: ${{ inputs.openapiFilePath }}
     - name: Typescript generate
       id: typescript-generate
-      uses: navikt/openapi-ts-clientmaker@v2
+      uses: navikt/openapi-ts-clientmaker@action-output-packageName #TODO v2
       with:
         openapi-spec-file: ${{ inputs.openapiFilePath }}
         package-json-file: ${{ steps.openapi-dir-path.outputs.openapiDirPath}}/package.json
