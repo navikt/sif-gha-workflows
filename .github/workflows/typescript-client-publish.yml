@@ -9,7 +9,7 @@ on:
     outputs:
       hasChanged:
         description: "true viss generert klient er ulik noverande publisert klient."
-        value: ${{ steps.compare-with-published.outputs.hasChanged }}
+        value: ${{ jobs.build-publish-typescript-client.steps.compare-with-published.outputs.hasChanged }}
 jobs:
   build-publish-typescript-client:
     name: Bygg og publiser openapi typescript klient
