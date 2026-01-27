@@ -16,6 +16,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
       # Hent token som har lov til å committe generert openapi.json fil.
       # Ved å bruke dette token trigges evt andre workflows som lytter på endring i fil.
       - uses: actions/create-github-app-token@v2
