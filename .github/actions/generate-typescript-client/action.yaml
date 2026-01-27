@@ -1,0 +1,48 @@
+name: Generate typescript client
+description: Generate typescript client from openapi spec.
+inputs:
+  openapiFilePath:
+    description: Where the openapi.json file to generate from is located.
+    required: true
+    default: web/src/main/resources/openapi-ts-client/openapi.json
+  resultDir:
+    description: Directory path in which generated typescript will be placed
+    required: true
+    default: web/target/ts-client
+outputs:
+  resultDir:
+    description: Directory path in which generated typescript is placed
+    value: ${{ inputs.resultDir }}
+  npmPackageScope:
+    description: package scope of generated typescript
+    value: ${{ steps.typescript-generate.outputs.npmPackageScope }}
+  npmPackageName:
+    description: package name (without scope) of generated typescript
+    value: ${{ steps.typescript-generate.outputs.npmPackageName }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Extract openapi directory path
+      shell: bash
+      run: |
+        FILE_PATH="${{ inputs.openapiFilePath }}"
+        DIR_PATH=$(dirname "$FILE_PATH")
+        echo "openapiDirPath=$DIR_PATH" >> $GITHUB_OUTPUT
+      id: openapi-dir-path
+    - uses: navikt/sif-gha-workflows/.github/actions/build-version@openapi-next
+      id: build-version
+    - uses: navikt/sif-gha-workflows/.github/actions/openapi-version@openapi-next
+      id: openapi-version
+      with:
+        openapiFilePath: ${{ inputs.openapiFilePath }}
+    - name: Typescript generate
+      id: typescript-generate
+      uses: navikt/openapi-ts-clientmaker@v2
+      with:
+        openapi-spec-file: ${{ inputs.openapiFilePath }}
+        package-json-file: ${{ steps.openapi-dir-path.outputs.openapiDirPath}}/package.json
+        package-json-version: "${{ env.PACKAGE_JSON_VERSION }}"
+        out-dir: "${{ inputs.resultDir }}"
+      env:
+        PACKAGE_JSON_VERSION: "${{ steps.openapi-version.outputs.openapiVersion }}.${{ steps.build-version.outputs.build-version }}"

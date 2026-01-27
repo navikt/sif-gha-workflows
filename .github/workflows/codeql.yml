@@ -42,7 +42,7 @@ jobs:
           cache: 'maven'
       - name: Generate build version
         id: generate-build-version
-        run: echo "build-version=codeql-$(date +%Y.%m.%d.%H%M%S)-$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/build-version
       - name: Build artifacts
         run: |
           echo "Building artifacts ${{ steps.generate-build-version.outputs.build-version }}"

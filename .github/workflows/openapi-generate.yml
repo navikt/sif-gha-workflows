@@ -1,0 +1,35 @@
+name: Openapi
+on:
+  workflow_call:
+    inputs:
+      openapiFilePath:
+        required: true
+        type: string
+        description: Filsti til openapi.json fil som skal genererast
+jobs:
+  # Genererer ny openapi.json fil ut frå aktuell branch sin java kode.
+  # Viss generert fil inneholder endringer i forhold til branch versjonen blir ny fil committa til branch.
+  generate-openapi:
+    name: Generer openapi.json
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+      # Hent token som har lov til å committe generert openapi.json fil.
+      # Ved å bruke dette token trigges evt andre workflows som lytter på endring i fil.
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          # NB: Disse må vere satt på repoet workflow køyrast på. Verdiane kjem frå github app settings:
+          # https://github.com/organizations/navikt/settings/apps/sif-openapi-json-writer
+          app-id: ${{ vars.SIF_OPENAPI_WRITER_APP_ID }}
+          private-key: ${{ secrets.SIF_OPENAPI_WRITER_PRIVATE_KEY }}
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/generate-openapi@openapi-next
+        id: generate-openapi
+        with:
+          readerToken: ${{ secrets.READER_TOKEN }}
+          commitToken: ${{ steps.app-token.outputs.token }}
+          openapiFilePath: ${{ inputs.openapiFilePath }}
