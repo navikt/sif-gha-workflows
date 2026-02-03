@@ -51,7 +51,7 @@ jobs:
   commit_url:
     name: comparison_url
     runs-on: 'ubuntu-latest'
-    if: contains(inputs.cluster, 'prod')
+    if: contains(inputs.cluster, 'dev')
     steps:
       - name: Construct comparison url for last deploy
         id: compare_commits
