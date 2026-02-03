@@ -57,8 +57,10 @@ jobs:
         id: compare_commits
         run: |
           IMAGE_SHA=$(echo '${{ inputs.image }}' | awk -F'-' '{print $2}')
-          url="https://github.com/${{ github.repository }}/compare/${{ env.PROD_TAG }}...${IMAGE_SHA}" >> $GITHUB_OUTPUT
-          echo "Diff last deploy to ${{ env.PROD_TAG }} : <${url}>" >> $GITHUB_STEP_SUMMARY
+          # PROD_TAG er feil når jobben blir køyrt ved dev deploy. Dette fikser:
+          TAG="${PROD_TAG//dev/prod}"
+          url="https://github.com/${{ github.repository }}/compare/${TAG}...${IMAGE_SHA}" >> $GITHUB_OUTPUT
+          echo "Diff last deploy to ${TAG} : <${url}>" >> $GITHUB_STEP_SUMMARY
   deploy:
     name: deploy
     #Tillater én aktiv deployment per miljø. Dette fordi deployments som aldri blir kjørt feiler etter 30 dager og notifikasjon om feilet bygg
