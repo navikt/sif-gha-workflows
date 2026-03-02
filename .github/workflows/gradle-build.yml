@@ -34,7 +34,7 @@ jobs:
     outputs:
       image: ${{ steps.docker-push.outputs.image }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # ratchet:actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v3
       - uses: gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6 # ratchet:gradle/wrapper-validation-action@v1
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # ratchet:actions/setup-java@v5
         with:
@@ -48,7 +48,7 @@ jobs:
         with:
           dependency-graph: generate-and-submit
           arguments: ${{ inputs.buildcommand }}
-      - uses: nais/docker-build-push@1fae4798c79f4af4c3cdbd3fe65e51f8f3ba2368
+      - uses: nais/docker-build-push@ae613eff6f44f0323476eda1c3994a7c518761c3
         id: docker-push
         with:
           team: ${{ inputs.team }}
