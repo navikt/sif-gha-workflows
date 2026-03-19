@@ -40,14 +40,15 @@ jobs:
         with:
           java-version: ${{ inputs.javaversion }}
           distribution: corretto
-          cache: gradle
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # ratchet:gradle/actions/setup-gradle@v4
         env:
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath # Eksluderer test dependencies
-          GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
         with:
           dependency-graph: generate-and-submit
-          arguments: ${{ inputs.buildcommand }}
+      - name: Build
+        run: ./gradlew ${{ inputs.buildcommand }}
+        env:
+          GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
       - uses: nais/docker-build-push@ae613eff6f44f0323476eda1c3994a7c518761c3
         id: docker-push
         with:
