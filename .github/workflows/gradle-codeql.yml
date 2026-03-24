@@ -34,7 +34,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # ratchet:github/codeql-action/init@v2
+        uses: github/codeql-action/init@38697555549f1db7851b81482ff19f1fa5c4fedc # ratchet:github/codeql-action/init@v2
         with:
           languages: java
       - name: Set up Java
@@ -48,6 +48,6 @@ jobs:
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
           GITHUB_USERNAME: x-access-token
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # ratchet:github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@38697555549f1db7851b81482ff19f1fa5c4fedc # ratchet:github/codeql-action/analyze@v2
         with:
           category: "/language:java"
