@@ -249,7 +249,7 @@ jobs:
       punsj: ${{ steps.resultat.outputs.punsj }}
       aktivitetspenger: ${{ steps.resultat.outputs.aktivitetspenger }}
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         id: get-token
         with:
           app-id: ${{ secrets.SIF_TOKEN_GENERATOR_APP_ID }}
