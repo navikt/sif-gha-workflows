@@ -391,7 +391,7 @@ jobs:
 
   slack-failed-tests:
     name: Sender feilende tester til Slack
-    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() && needs.run_tests.result == 'failure' }}
+    if: ${{ always() && !cancelled() && needs.run_tests.result == 'failure' }}
     needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
