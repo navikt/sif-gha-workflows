@@ -406,14 +406,11 @@ jobs:
           message=""
           for file in all-failed-tests/failed-tests-*/*.txt; do
             [ -f "$file" ] || continue
-            suite=$(basename "$file" .txt)
             tests=$(sed '/^$/d' "$file")
             if [ -n "$tests" ]; then
-              message+="*${suite}:*"$'\n'
               while IFS= read -r test; do
-                message+="  • ${test}"$'\n'
+                message+=":x: ${test}"$'\n'
               done <<< "$tests"
-              message+=$'\n'
             fi
           done
 
