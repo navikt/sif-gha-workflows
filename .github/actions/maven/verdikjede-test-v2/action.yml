@@ -264,16 +264,6 @@ runs:
                 if slow:
                     fh.write('\n'.join(slow) + '\n')
 
-        summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
-        if summary_file:
-            with open(summary_file, 'a') as fh:
-                if failed:
-                    fh.write(f'### :x: Feilende tester ({suite})\n```\n')
-                    fh.write('\n'.join(failed) + '\n```\n')
-                if slow:
-                    fh.write(f'### :turtle: Trege tester ({suite}) - over {slow_threshold}s\n```\n')
-                    fh.write('\n'.join(slow) + '\n```\n')
-
         print(f'Fant {len(failed)} feilende og {len(slow)} trege tester.')
 
     - name: Utfører loggsjekker

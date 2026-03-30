@@ -236,7 +236,7 @@ jobs:
           if-no-files-found: error
 
   slack:
-    name: Sender slack melding
+    name: Lager oppsummering og sender slack melding
     if: ${{ always() && !cancelled() }}
     needs: [run_tests, filter_suites]
     runs-on: ubuntu-latest
@@ -298,8 +298,30 @@ jobs:
           echo "=== Payload ==="
           echo "$payload"
           curl -X POST -H 'Content-type: application/json' --data "$payload" ${{ secrets.SLACKBOT_WEBHOOK }}
-
-  slack-testdetaljer:
+      - name: Skriver testdetaljer til job summary
+        if: always() && !cancelled()
+        run: |
+          for file in all-resultater/*-resultat/*.txt; do
+            [ -f "$file" ] || continue
+            suite=$(head -n 1 "$file")
+            title="${suite%%|*}"
+            details=$(tail -n +2 "$file" | sed '/^$/d')
+            [ -z "$details" ] && continue
+            failed_lines=$(grep -v '([0-9]\+s)$' <<< "$details" || true)
+            slow_lines=$(grep '([0-9]\+s)$' <<< "$details" || true)
+            if [ -n "$failed_lines" ]; then
+              echo "### :x: Feilende tester ($title)" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$failed_lines" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ -n "$slow_lines" ]; then
+              echo "### :turtle: Trege tester ($title)" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$slow_lines" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+          done
     name: Sender testdetaljer til Slack
     if: ${{ always() && !cancelled() && needs.run_tests.result == 'failure' }}
     needs: [run_tests]
@@ -336,7 +358,7 @@ jobs:
 
           message+="<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Se kjøring>"
 
-          echo 'SLACKBOT_WEBHOOK_TEST_DETAILS<<SLACK_EOF' >> $GITHUB_ENV
+          echo 'SLACK_TEST_DETAIL_MESSAGE<<SLACK_EOF' >> $GITHUB_ENV
           echo "$message" >> $GITHUB_ENV
           echo 'SLACK_EOF' >> $GITHUB_ENV
 
@@ -344,7 +366,7 @@ jobs:
         if: env.SKIP_SLACK != 'true'
         run: |
           payload=$(jq -n \
-            --arg msg "$SLACKBOT_WEBHOOK_TEST_DETAILS" \
+            --arg msg "$SLACK_TEST_DETAIL_MESSAGE" \
             '{
               "blocks": [
                 {
@@ -356,6 +378,7 @@ jobs:
                 }
               ]
             }')
+          webhook="${{ secrets.SLACKBOT_WEBHOOK_TEST_DETAILS }}"
           if [ -z "$webhook" ]; then
             echo "SLACKBOT_WEBHOOK_TEST_DETAILS ikke satt, hopper over Slack-melding."
             exit 0
