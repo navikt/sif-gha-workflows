@@ -358,9 +358,9 @@ jobs:
             }')
           echo "=== Payload ==="
           echo "$payload"
-          webhook="${{ secrets.SLACKBOT_WEBHOOK_FAILURES }}"
+          webhook="${{ secrets.SLACKBOT_WEBHOOK_TEST_DETAILS }}"
           if [ -z "$webhook" ]; then
-            echo "SLACKBOT_WEBHOOK_FAILURES ikke satt, hopper over Slack-melding."
+            echo "SLACKBOT_WEBHOOK_TEST_DETAILS ikke satt, hopper over Slack-melding."
             exit 0
           fi
           curl -X POST -H 'Content-type: application/json' --data "$payload" "$webhook"
