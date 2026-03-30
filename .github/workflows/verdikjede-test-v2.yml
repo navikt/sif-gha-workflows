@@ -327,7 +327,7 @@ jobs:
             exit 0
           fi
 
-          message+="<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|:link: Se kjøring>"
+          message+="<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Se kjøring>"
 
           echo 'SLACK_FAILED_TESTS_MESSAGE<<SLACK_EOF' >> $GITHUB_ENV
           echo "$message" >> $GITHUB_ENV
