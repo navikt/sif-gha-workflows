@@ -292,8 +292,8 @@ jobs:
           echo "$payload"
           curl -X POST -H 'Content-type: application/json' --data "$payload" ${{ secrets.SLACKBOT_WEBHOOK }}
 
-  slack-failed-tests:
-    name: Sender feilende tester til Slack
+  slack-testdetaljer:
+    name: Sender testdetaljer til Slack
     if: ${{ always() && !cancelled() && needs.run_tests.result == 'failure' }}
     needs: [run_tests]
     runs-on: ubuntu-latest
