@@ -28,61 +28,6 @@ on:
         required: false
         default: "master"
         description: "branch, tag or sha of k9-verdikjede to checkout"
-    outputs:
-      pleiepenger-pleietrengende:
-        description: "Utfall fra pleiepenger-pleietrengende-test"
-        value: ${{ jobs.run_tests.outputs.pleiepenger-pleietrengende }}
-      pleiepenger-soker:
-        description: "Utfall fra pleiepenger-soker-test"
-        value: ${{ jobs.run_tests.outputs.pleiepenger-soker }}
-      pleiepenger-samtidiguttak:
-        description: "Utfall fra pleiepenger-samtidiguttak-test"
-        value: ${{ jobs.run_tests.outputs.pleiepenger-samtidiguttak }}
-      pleiepenger-gamle-regler-uttak:
-        description: "Utfall fra pleiepenger-gamle-regler-uttak-test"
-        value: ${{ jobs.run_tests.outputs.pleiepenger-gamle-regler-uttak }}
-      beregning:
-        description: "Utfall fra beregning-test"
-        value: ${{ jobs.run_tests.outputs.beregning }}
-      pleiepenger:
-        description: "Utfall fra pleiepenger-test"
-        value: ${{ jobs.run_tests.outputs.pleiepenger }}
-      livetssluttfase:
-        description: "Utfall fra livetssluttfase-test"
-        value: ${{ jobs.run_tests.outputs.livetssluttfase }}
-      annet:
-        description: "Utfall fra annet-test"
-        value: ${{ jobs.run_tests.outputs.annet }}
-      frontend:
-        description: "Utfall fra frontend-test"
-        value: ${{ jobs.run_tests.outputs.frontend }}
-      klage:
-        description: "Utfall fra klage-test"
-        value: ${{ jobs.run_tests.outputs.klage }}
-      tilbake:
-        description: "Utfall fra tilbake-test"
-        value: ${{ jobs.run_tests.outputs.tilbake }}
-      frontend-los:
-        description: "Utfall fra frontend-test"
-        value: ${{ jobs.run_tests.outputs.frontend-los }}
-      frontend-ung:
-        description: "Utfall fra frontend-test"
-        value: ${{ jobs.run_tests.outputs.frontend-ung }}
-      ung:
-        description: "Utfall fra ungdomsprogramytelse-test"
-        value: ${{ jobs.run_tests.outputs.ung }}
-      aktivitetspenger:
-        description: "Utfall fra aktivitetspenger-test"
-        value: ${{ jobs.run_tests.outputs.aktivitetspenger }}
-      ung-tilbake:
-        description: "Utfall fra ungdomsprogramytelse-tilbakekreving-test"
-        value: ${{ jobs.run_tests.outputs.ung-tilbake }}
-      opplaeringspenger:
-        description: "Utfall fra opplaeringspenger-test"
-        value: ${{ jobs.run_tests.outputs.opplaeringspenger }}
-      punsj:
-        description: "Utfall fra punsj-test"
-        value: ${{ jobs.run_tests.outputs.punsj }}
 
 jobs:
   # Filtrerer ut suite som skal velges i matrix kjøringen. Vanlig måte er å bruke if i matrix jobben, men det spinner opp cluster så bruker denne workarouden.
@@ -228,26 +173,6 @@ jobs:
       fail-fast: false
       matrix:
         suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
-    outputs:
-      pleiepenger: ${{ steps.resultat.outputs.pleiepenger }}
-      klage: ${{ steps.resultat.outputs.klage }}
-      livetssluttfase: ${{ steps.resultat.outputs.livetssluttfase }}
-      annet: ${{ steps.resultat.outputs.annet}}
-      tilbake: ${{ steps.resultat.outputs.tilbake }}
-      frontend: ${{ steps.resultat.outputs.frontend }}
-      frontend-los: ${{ steps.resultat.outputs.frontend-los }}
-      frontend-ung: ${{ steps.resultat.outputs.frontend-ung }}
-      ung: ${{ steps.resultat.outputs.ung }}
-      ung-tilbake: ${{ steps.resultat.outputs.ung-tilbake }}
-      fordel: ${{ steps.resultat.outputs.fordel }}
-      beregning: ${{ steps.resultat.outputs.beregning }}
-      pleiepenger-samtidiguttak: ${{ steps.resultat.outputs.pleiepenger-samtidiguttak }}
-      pleiepenger-gamle-regler-uttak: ${{ steps.resultat.outputs.pleiepenger-gamle-regler-uttak }}
-      pleiepenger-pleietrengende: ${{ steps.resultat.outputs.pleiepenger-pleietrengende }}
-      pleiepenger-soker: ${{ steps.resultat.outputs.pleiepenger-soker }}
-      opplaeringspenger: ${{ steps.resultat.outputs.opplaeringspenger }}
-      punsj: ${{ steps.resultat.outputs.punsj }}
-      aktivitetspenger: ${{ steps.resultat.outputs.aktivitetspenger }}
     steps:
       - uses: actions/create-github-app-token@v3
         id: get-token
@@ -269,10 +194,18 @@ jobs:
           # Composite actions arver ikke secrets så vi må få dem in som input
           cloning_token: ${{ steps.get-token.outputs.token }}
           reader_token: ${{ secrets.READER_TOKEN }}
-      - id: resultat
+      - name: Laster opp suite-resultat
         if: always() && !cancelled()
         run: |
-          echo "${{ matrix.suites.suite }}=${{ steps.verdikjede-action.outputs.test_result }}" >> $GITHUB_OUTPUT
+          mkdir -p suite-result
+          echo "${{ steps.verdikjede-action.outputs.test_result }}" > suite-result/${{ matrix.suites.suite }}.txt
+      - uses: actions/upload-artifact@v4
+        if: always() && !cancelled()
+        with:
+          name: suite-result-${{ matrix.suites.suite }}
+          path: suite-result/
+          retention-days: 1
+          if-no-files-found: error
 
   slack:
     name: Sender slack melding
@@ -280,114 +213,60 @@ jobs:
     needs: [run_tests, filter_suites]
     runs-on: ubuntu-latest
     steps:
-      - name: Bygger opp slack melding
+      - name: Laster ned suite-resultater
+        uses: actions/download-artifact@v4
+        with:
+          pattern: suite-result-*
+          path: all-suite-results/
+          merge-multiple: false
+      - name: Bygger opp og sender slack melding
         run: |
           start_epoch="${{ needs.filter_suites.outputs.start_epoch }}"
           end_epoch=$(date +%s)
           elapsed=$(( end_epoch - start_epoch ))
           total_duration=$(printf "%dm%02ds" $((elapsed/60)) $((elapsed%60)))
 
-          beregning="${{ needs.run_tests.outputs.beregning || 'skipped' }}"
-          pleiepengersamtidiguttak="${{ needs.run_tests.outputs.pleiepenger-samtidiguttak || 'skipped' }}"
-          pleiepengergamleregleruttak="${{ needs.run_tests.outputs.pleiepenger-gamle-regler-uttak || 'skipped' }}"
-          pleiepengerpleietrengende="${{ needs.run_tests.outputs.pleiepenger-pleietrengende || 'skipped' }}"
-          pleiepengersoker="${{ needs.run_tests.outputs.pleiepenger-soker || 'skipped' }}"
-          pleiepenger="${{ needs.run_tests.outputs.pleiepenger || 'skipped' }}"
-          livetssluttfase="${{ needs.run_tests.outputs.livetssluttfase || 'skipped' }}"
-          annet="${{ needs.run_tests.outputs.annet || 'skipped' }}"
-          klage="${{ needs.run_tests.outputs.klage || 'skipped' }}"
-          tilbake="${{ needs.run_tests.outputs.tilbake || 'skipped' }}"
-          frontend="${{ needs.run_tests.outputs.frontend || 'skipped' }}"
-          frontendlos="${{ needs.run_tests.outputs.frontend-los || 'skipped' }}"
-          frontendung="${{ needs.run_tests.outputs.frontend-ung || 'skipped' }}"
-          ung="${{ needs.run_tests.outputs.ung || 'skipped' }}"
-          ungtilbake="${{ needs.run_tests.outputs.ung-tilbake || 'skipped' }}"
-          fordel="${{ needs.run_tests.outputs.fordel || 'skipped' }}"
-          opplaeringspenger="${{ needs.run_tests.outputs.opplaeringspenger || 'skipped' }}"
-          punsj="${{ needs.run_tests.outputs.punsj || 'skipped' }}"
-          aktivitetspenger="${{ needs.run_tests.outputs.aktivitetspenger || 'skipped' }}"
-
-          title="Verdikjede er "
           all_success=true
+          slack_lines=""
 
-          test_results=("$beregning" "$pleiepengersamtidiguttak" "$pleiepengergamleregleruttak" "$pleiepengerpleietrengende" "$pleiepengersoker" "$pleiepenger" "$livetssluttfase" "$annet" "$frontend" "$klage" "$tilbake" "$frontendlos" "$ung" "$ungtilbake" "$fordel" "$opplaeringspenger" "$punsj" "$aktivitetspenger")
-          for result in "${test_results[@]}"; do
+          for file in all-suite-results/suite-result-*/*.txt; do
+            [ -f "$file" ] || continue
+            suite=$(basename "$file" .txt)
+            result=$(cat "$file")
             status="${result%%|*}"
-            if [[ "$status" != success && "$status" != 'skipped' ]]; then
+            varighet=""
+            [[ "$result" == *"|"* ]] && varighet=" (${result#*|})"
+            if [[ "$status" != success ]]; then
               all_success=false
-              break
+            fi
+            if [[ "$status" == success ]]; then
+              slack_lines+=":heavy_check_mark:  ${suite}${varighet}"$'\n'
+            else
+              slack_lines+=":x:  ${suite}${varighet}"$'\n'
             fi
           done
 
           if [[ "$all_success" == true ]]; then
-            title+="kjørt UTEN feil :rocket:"
+            title="Verdikjede er kjørt UTEN feil :rocket:"
           else
-            title+="brukket :boom:"
+            title="Verdikjede er brukket :boom:"
           fi
 
-          echo "SLACK_TITLE=$title" >> $GITHUB_ENV
+          slack_lines+="*Actor*: ${{ github.actor }}"$'\n'
+          slack_lines+="*Trigger*: ${{ github.repository }}:${{ inputs.tag }}"$'\n'
+          slack_lines+="*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>"$'\n'
+          slack_lines+="*Total test duration*: ${total_duration}"
 
-          function echoStatus() {
-            local resultat="$2"
-            local status="${resultat%%|*}"
-            local varighet=""
-            if [[ "$resultat" == *"|"* ]]; then
-              varighet=" (${resultat#*|})"
-            fi
-            if [[ "$status" == 'success' ]]; then
-              echo ":heavy_check_mark:  $1 $varighet"
-            elif [[ "$status" == 'skipped' ]]; then
-              return
-            else
-              echo ":x:  $1 $varighet"
-            fi
-          }
-
-          echo 'SLACK_MESSAGE<<\n' >> $GITHUB_ENV
-          echoStatus "Pleiepenger samtidig uttak" $pleiepengersamtidiguttak >> $GITHUB_ENV
-          echoStatus "Pleiepenger gamle regler uttak" $pleiepengergamleregleruttak >> $GITHUB_ENV
-          echoStatus "Pleiepenger pleietrengende" $pleiepengerpleietrengende >> $GITHUB_ENV
-          echoStatus "Pleiepenger søker" $pleiepengersoker >> $GITHUB_ENV
-          echoStatus "Beregning" $beregning >> $GITHUB_ENV
-          echoStatus "Pleiepenger" $pleiepenger >> $GITHUB_ENV
-          echoStatus "Livets sluttfase" $livetssluttfase >> $GITHUB_ENV
-          echoStatus "Frontend" $frontend >> $GITHUB_ENV
-          echoStatus "Omsorgspenger og annet" $annet >> $GITHUB_ENV
-          echoStatus "Klage" $klage >> $GITHUB_ENV
-          echoStatus "Tilbakekreving" $tilbake >> $GITHUB_ENV
-          echoStatus "Frontend Los" $frontendlos >> $GITHUB_ENV
-          echoStatus "Frontend Ung" $frontendung >> $GITHUB_ENV
-          echoStatus "Ungdomsprogramytelsen" $ung >> $GITHUB_ENV
-          echoStatus "Ungdomsprogramytelsen - tilbakekreving" $ungtilbake >> $GITHUB_ENV
-          echoStatus "Fordel" $fordel >> $GITHUB_ENV
-          echoStatus "Opplæringspenger" $opplaeringspenger >> $GITHUB_ENV
-          echoStatus "Punsj" $punsj >> $GITHUB_ENV
-          echoStatus "Aktivitetspenger" $aktivitetspenger >> $GITHUB_ENV
-          echo '*Actor*: ${{ github.actor }}' >> $GITHUB_ENV
-          echo '*Trigger*: ${{ github.repository }}:${{ inputs.tag }}' >> $GITHUB_ENV
-          echo '*Trigger action*: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Trigger action ${{ github.run_id }}>' >> $GITHUB_ENV
-          echo "*Total test duration*: $total_duration" >> $GITHUB_ENV
-          echo '\n' >> $GITHUB_ENV
-        # https://api.slack.com/block-kit
-      - name: Slack message
-        run: |
-          echo "${{ env.SLACK_TITLE }}"
-          echo "${{ env.SLACK_MESSAGE }}"
-      - name: Slack Notification
-        run: >
-          curl -X POST
-          -H 'Content-type: application/json'
-          --data '{"blocks": [
-            {
-              "type": "header",
-              "text": {"type": "plain_text", "text": "${{ env.SLACK_TITLE }}"}
-            },
-            {
-              "type": "section",
-              "text": {"type": "mrkdwn", "text": "${{ env.SLACK_MESSAGE }}"}
-            }
-          ]}'
-          ${{ secrets.SLACKBOT_WEBHOOK }}
+          payload=$(jq -n \
+            --arg title "$title" \
+            --arg msg "$slack_lines" \
+            '{
+              "blocks": [
+                {"type": "header", "text": {"type": "plain_text", "text": $title}},
+                {"type": "section", "text": {"type": "mrkdwn", "text": $msg}}
+              ]
+            }')
+          curl -X POST -H 'Content-type: application/json' --data "$payload" ${{ secrets.SLACKBOT_WEBHOOK }}
 
   slack-failed-tests:
     name: Sender feilende tester til Slack
