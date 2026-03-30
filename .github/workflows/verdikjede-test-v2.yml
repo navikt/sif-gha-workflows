@@ -395,21 +395,25 @@ jobs:
     needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
-      - name: Laster ned feilende tester
+      - name: Laster ned testdetaljer
         uses: actions/download-artifact@v4
         with:
-          pattern: failed-tests-*
-          path: all-failed-tests/
+          pattern: test-details-*
+          path: all-test-details/
           merge-multiple: false
       - name: Bygger opp slack melding
         run: |
           message=""
-          for file in all-failed-tests/failed-tests-*/*.txt; do
+          for file in all-test-details/test-details-*/*.txt; do
             [ -f "$file" ] || continue
             tests=$(sed '/^$/d' "$file")
             if [ -n "$tests" ]; then
               while IFS= read -r test; do
-                message+=":x: ${test}"$'\n'
+                if [[ "$test" =~ \([0-9]+s\)$ ]]; then
+                  message+=":turtle: ${test}"$'\n'
+                else
+                  message+=":x: ${test}"$'\n'
+                fi
               done <<< "$tests"
             fi
           done

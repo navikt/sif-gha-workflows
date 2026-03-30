@@ -227,39 +227,64 @@ runs:
         GITHUB_PASSWORD: ${{ inputs.reader_token }}
         VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
 
-    - name: Finner feilende tester
+    - name: Finner feilende og trege tester
       id: parse-test-results
       if: always() && !cancelled() && env.STACK_STARTED == 'true'
       shell: bash
       run: |
-        # Søker i surefire/failsafe .txt-filer etter linjer med FAILURE eller ERROR
-        # Format: testMetode(com.example.TestKlasse)  Time elapsed: 0.123 s  <<< FAILURE!
+        slow_threshold=30
+
+        # Feilende tester: linjer med FAILURE eller ERROR
         failed_tests=$(grep -rh '<<< FAILURE!\|<<< ERROR!' verdikjede --include='*.txt' 2>/dev/null \
           | grep -v '^Tests run:' \
           | sed 's/\s*Time elapsed.*//; s/\(.*\)(\(.*\))/\2#\1/' \
           | sort -u || true)
 
-        if [ -n "$failed_tests" ]; then
-          echo "Feilende tester funnet:"
-          echo "$failed_tests"
+        # Trege tester: vellykkede tester over terskelen
+        slow_tests=$(grep -rh 'Time elapsed:' verdikjede --include='*.txt' 2>/dev/null \
+          | grep -v '^Tests run:' \
+          | grep -v '<<< FAILURE!\|<<< ERROR!' \
+          | while IFS= read -r line; do
+              elapsed=$(echo "$line" | sed -n 's/.*Time elapsed: \([0-9]*\(\.[0-9]*\)\?\) s.*/\1/p')
+              [ -z "$elapsed" ] && continue
+              if awk "BEGIN{exit !($elapsed >= $slow_threshold)}"; then
+                test_name=$(echo "$line" | sed 's/\s*Time elapsed.*//; s/\(.*\)(\(.*\))/\2#\1/')
+                elapsed_int=$(awk "BEGIN{printf \"%d\", $elapsed}")
+                echo "${test_name} (${elapsed_int}s)"
+              fi
+            done \
+          | sort -u || true)
 
-          mkdir -p failed-tests
-          echo "$failed_tests" > failed-tests/${{ inputs.test_suite }}.txt
+        output=""
+        [ -n "$failed_tests" ] && output+="$failed_tests"$'\n'
+        [ -n "$slow_tests" ] && output+="$slow_tests"
 
-          echo "### :x: Feilende tester (${{ inputs.test_suite }})" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "$failed_tests" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+        if [ -n "$output" ]; then
+          mkdir -p test-details
+          echo "$output" > test-details/${{ inputs.test_suite }}.txt
+
+          if [ -n "$failed_tests" ]; then
+            echo "### :x: Feilende tester (${{ inputs.test_suite }})" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$failed_tests" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "$slow_tests" ]; then
+            echo "### :turtle: Trege tester (${{ inputs.test_suite }}) - over ${slow_threshold}s" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$slow_tests" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
         else
-          echo "Ingen feilende tester funnet."
+          echo "Ingen feilende eller trege tester funnet."
         fi
 
-    - name: Laster opp feilende tester
+    - name: Laster opp testdetaljer
       if: always() && !cancelled() && env.STACK_STARTED == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: failed-tests-${{ inputs.test_suite }}
-        path: failed-tests/
+        name: test-details-${{ inputs.test_suite }}
+        path: test-details/
         retention-days: 5
         if-no-files-found: ignore
 
