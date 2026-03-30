@@ -285,6 +285,15 @@ runs:
         retention-days: 5
         if-no-files-found: ignore
 
+    - name: Laster opp surefire-rapporter
+      if: always() && !cancelled() && env.STACK_STARTED == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: surefire-reports-${{ inputs.test_suite }}
+        path: verdikjede/**/target/surefire-reports/TEST-*.xml
+        retention-days: 5
+        if-no-files-found: ignore
+
     - name: Utfører loggsjekker
       id: loggsjekker
       shell: bash
