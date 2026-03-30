@@ -388,3 +388,68 @@ jobs:
             }
           ]}'
           ${{ secrets.SLACKBOT_WEBHOOK }}
+
+  slack-failed-tests:
+    name: Sender feilende tester til Slack
+    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() && needs.run_tests.result == 'failure' }}
+    needs: [run_tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Laster ned feilende tester
+        uses: actions/download-artifact@v4
+        with:
+          pattern: failed-tests-*
+          path: all-failed-tests/
+          merge-multiple: false
+      - name: Bygger opp slack melding
+        run: |
+          message=""
+          for file in all-failed-tests/failed-tests-*/*.txt; do
+            [ -f "$file" ] || continue
+            suite=$(basename "$file" .txt)
+            tests=$(sed '/^$/d' "$file")
+            if [ -n "$tests" ]; then
+              message+="*${suite}:*"$'\n'
+              while IFS= read -r test; do
+                message+="  • ${test}"$'\n'
+              done <<< "$tests"
+              message+=$'\n'
+            fi
+          done
+
+          if [ -z "$message" ]; then
+            echo "Ingen feilende tester å rapportere."
+            echo "SKIP_SLACK=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          message+="<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|:link: Se kjøring>"
+
+          echo 'SLACK_FAILED_TESTS_MESSAGE<<SLACK_EOF' >> $GITHUB_ENV
+          echo "$message" >> $GITHUB_ENV
+          echo 'SLACK_EOF' >> $GITHUB_ENV
+
+      - name: Sender Slack-melding med feilende tester
+        if: env.SKIP_SLACK != 'true'
+        run: |
+          payload=$(jq -n \
+            --arg msg "$SLACK_FAILED_TESTS_MESSAGE" \
+            '{
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Feilende verdikjedetester"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": $msg
+                  }
+                }
+              ]
+            }')
+          curl -X POST -H 'Content-type: application/json' --data "$payload" ${{ secrets.SLACKBOT_WEBHOOK_FAILURES }}
