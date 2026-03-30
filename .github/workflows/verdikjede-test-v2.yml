@@ -341,13 +341,6 @@ jobs:
             '{
               "blocks": [
                 {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "Feilende verdikjedetester"
-                  }
-                },
-                {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
