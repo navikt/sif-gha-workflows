@@ -216,15 +216,22 @@ jobs:
       - name: Laster opp suite-resultat
         if: always() && !cancelled()
         run: |
-          mkdir -p suite-result
-          content="${{ matrix.suites.title }}|${{ steps.verdikjede-action.outputs.test_result }}"
-          echo "$content" > suite-result/${{ matrix.suites.suite }}.txt
-          echo "suite-result/${{ matrix.suites.suite }}.txt: $content"
+          mkdir -p ${{ matrix.suites.suite }}-resultat
+          metadata="${{ matrix.suites.title }}|${{ steps.verdikjede-action.outputs.test_result }}"
+          file="${{ matrix.suites.suite }}-resultat/${{ matrix.suites.suite }}.txt"
+          if [ -f "$file" ]; then
+            existing=$(cat "$file")
+            printf '%s\n%s\n' "$metadata" "$existing" > "$file"
+          else
+            echo "$metadata" > "$file"
+          fi
+          echo "=== $file ==="
+          cat "$file"
       - uses: actions/upload-artifact@v4
         if: always() && !cancelled()
         with:
-          name: suite-result-${{ matrix.suites.suite }}
-          path: suite-result/
+          name: ${{ matrix.suites.suite }}-resultat
+          path: ${{ matrix.suites.suite }}-resultat/
           retention-days: 1
           if-no-files-found: error
 
@@ -237,8 +244,8 @@ jobs:
       - name: Laster ned suite-resultater
         uses: actions/download-artifact@v4
         with:
-          pattern: suite-result-*
-          path: all-suite-results/
+          pattern: '*-resultat'
+          path: all-resultater/
           merge-multiple: false
       - name: Bygger opp og sender slack melding
         run: |
@@ -250,9 +257,9 @@ jobs:
           all_success=true
           slack_lines=""
 
-          for file in all-suite-results/suite-result-*/*.txt; do
+          for file in all-resultater/*-resultat/*.txt; do
             [ -f "$file" ] || continue
-            result=$(cat "$file")
+            result=$(head -n 1 "$file")
             title="${result%%|*}"
             rest="${result#*|}"
             status="${rest%%|*}"
@@ -301,15 +308,15 @@ jobs:
       - name: Laster ned testdetaljer
         uses: actions/download-artifact@v4
         with:
-          pattern: test-details-*
-          path: all-test-details/
+          pattern: '*-resultat'
+          path: all-resultater/
           merge-multiple: false
       - name: Bygger opp slack melding
         run: |
           message=""
-          for file in all-test-details/test-details-*/*.txt; do
+          for file in all-resultater/*-resultat/*.txt; do
             [ -f "$file" ] || continue
-            tests=$(sed '/^$/d' "$file")
+            tests=$(tail -n +2 "$file" | sed '/^$/d')
             if [ -n "$tests" ]; then
               while IFS= read -r test; do
                 if [[ "$test" =~ \([0-9]+s\)$ ]]; then
@@ -322,14 +329,14 @@ jobs:
           done
 
           if [ -z "$message" ]; then
-            echo "Ingen feilende tester å rapportere."
+            echo "Ingen feilende eller trege tester å rapportere."
             echo "SKIP_SLACK=true" >> $GITHUB_ENV
             exit 0
           fi
 
           message+="<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Se kjøring>"
 
-          echo 'SLACK_FAILED_TESTS_MESSAGE<<SLACK_EOF' >> $GITHUB_ENV
+          echo 'SLACKBOT_WEBHOOK_TEST_DETAILS<<SLACK_EOF' >> $GITHUB_ENV
           echo "$message" >> $GITHUB_ENV
           echo 'SLACK_EOF' >> $GITHUB_ENV
 
@@ -337,7 +344,7 @@ jobs:
         if: env.SKIP_SLACK != 'true'
         run: |
           payload=$(jq -n \
-            --arg msg "$SLACK_FAILED_TESTS_MESSAGE" \
+            --arg msg "$SLACKBOT_WEBHOOK_TEST_DETAILS" \
             '{
               "blocks": [
                 {
@@ -349,9 +356,6 @@ jobs:
                 }
               ]
             }')
-          echo "=== Payload ==="
-          echo "$payload"
-          webhook="${{ secrets.SLACKBOT_WEBHOOK_TEST_DETAILS }}"
           if [ -z "$webhook" ]; then
             echo "SLACKBOT_WEBHOOK_TEST_DETAILS ikke satt, hopper over Slack-melding."
             exit 0

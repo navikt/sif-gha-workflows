@@ -257,8 +257,8 @@ runs:
         slow = sorted(set(slow))
 
         if failed or slow:
-            pathlib.Path('test-details').mkdir(exist_ok=True)
-            with open(f'test-details/{suite}.txt', 'a') as fh:
+            pathlib.Path(f'{suite}-resultat').mkdir(exist_ok=True)
+            with open(f'{suite}-resultat/{suite}.txt', 'a') as fh:
                 if failed:
                     fh.write('\n'.join(failed) + '\n')
                 if slow:
@@ -275,24 +275,6 @@ runs:
                     fh.write('\n'.join(slow) + '\n```\n')
 
         print(f'Fant {len(failed)} feilende og {len(slow)} trege tester.')
-
-    - name: Laster opp testdetaljer
-      if: always() && !cancelled() && env.STACK_STARTED == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-details-${{ inputs.test_suite }}
-        path: test-details/
-        retention-days: 5
-        if-no-files-found: ignore
-
-    - name: Laster opp surefire-rapporter
-      if: always() && !cancelled() && env.STACK_STARTED == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: surefire-reports-${{ inputs.test_suite }}
-        path: verdikjede/**/target/surefire-reports/TEST-*.xml
-        retention-days: 5
-        if-no-files-found: ignore
 
     - name: Utfører loggsjekker
       id: loggsjekker
