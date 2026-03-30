@@ -227,66 +227,54 @@ runs:
         GITHUB_PASSWORD: ${{ inputs.reader_token }}
         VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
 
-    - name: Finner feilende tester
-      id: parse-failed-tests
-      if: always() && !cancelled() && env.STACK_STARTED == 'true'
-      shell: bash
-      run: |
-        failed_tests=$(grep -rh '<<< FAILURE!\|<<< ERROR!' verdikjede --include='*.txt' 2>/dev/null \
-          | grep -v '^Tests run:' \
-          | sed 's/\s*Time elapsed.*//; s/\(.*\)(\(.*\))/\2#\1/' \
-          | sort -u || true)
-
-        if [ -n "$failed_tests" ]; then
-          mkdir -p test-details
-          echo "$failed_tests" >> test-details/${{ inputs.test_suite }}.txt
-          echo "### :x: Feilende tester (${{ inputs.test_suite }})" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "$failed_tests" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-        else
-          echo "Ingen feilende tester funnet."
-        fi
-
-    - name: Finner trege tester
-      id: parse-slow-tests
+    - name: Finner feilende og trege tester
+      id: parse-test-results
       if: always() && !cancelled() && env.STACK_STARTED == 'true'
       shell: python3 {0}
       run: |
         import xml.etree.ElementTree as ET, glob, os, pathlib
-
-        slow_threshold = 30
+        
+        slow_threshold = 30 #sekunder
         suite = "${{ inputs.test_suite }}"
-        results = []
+        failed, slow = [], []
 
         for f in glob.glob('verdikjede/**/TEST-*.xml', recursive=True):
             try:
                 tree = ET.parse(f)
                 for tc in tree.findall('.//testcase'):
-                    t = float(tc.get('time', 0) or 0)
-                    if t >= slow_threshold and tc.find('failure') is None and tc.find('error') is None:
-                        cls = tc.get('classname', '')
-                        name = tc.get('name', '')
-                        results.append(f'{cls}#{name} ({int(t)}s)')
+                    cls = tc.get('classname', '')
+                    name = tc.get('name', '')
+                    if tc.find('failure') is not None or tc.find('error') is not None:
+                        failed.append(f'{cls}#{name}')
+                    else:
+                        t = float(tc.get('time', 0) or 0)
+                        if t >= slow_threshold:
+                            slow.append(f'{cls}#{name} ({int(t)}s)')
             except Exception:
                 pass
 
-        slow_tests = sorted(set(results))
+        failed = sorted(set(failed))
+        slow = sorted(set(slow))
 
-        if slow_tests:
+        if failed or slow:
             pathlib.Path('test-details').mkdir(exist_ok=True)
             with open(f'test-details/{suite}.txt', 'a') as fh:
-                fh.write('\n'.join(slow_tests) + '\n')
-            summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
-            if summary_file:
-                with open(summary_file, 'a') as fh:
-                    fh.write(f'### :turtle: Trege tester ({suite}) - over {slow_threshold}s\n')
-                    fh.write('```\n')
-                    fh.write('\n'.join(slow_tests) + '\n')
-                    fh.write('```\n')
-            print(f'Fant {len(slow_tests)} trege tester.')
-        else:
-            print('Ingen trege tester funnet.')
+                if failed:
+                    fh.write('\n'.join(failed) + '\n')
+                if slow:
+                    fh.write('\n'.join(slow) + '\n')
+
+        summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+        if summary_file:
+            with open(summary_file, 'a') as fh:
+                if failed:
+                    fh.write(f'### :x: Feilende tester ({suite})\n```\n')
+                    fh.write('\n'.join(failed) + '\n```\n')
+                if slow:
+                    fh.write(f'### :turtle: Trege tester ({suite}) - over {slow_threshold}s\n```\n')
+                    fh.write('\n'.join(slow) + '\n```\n')
+
+        print(f'Fant {len(failed)} feilende og {len(slow)} trege tester.')
 
     - name: Laster opp testdetaljer
       if: always() && !cancelled() && env.STACK_STARTED == 'true'

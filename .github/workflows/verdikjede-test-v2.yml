@@ -453,4 +453,9 @@ jobs:
                 }
               ]
             }')
-          curl -X POST -H 'Content-type: application/json' --data "$payload" ${{ secrets.SLACKBOT_WEBHOOK_FAILURES }}
+          webhook="${{ secrets.SLACKBOT_WEBHOOK_FAILURES }}"
+          if [ -z "$webhook" ]; then
+            echo "SLACKBOT_WEBHOOK_FAILURES ikke satt, hopper over Slack-melding."
+            exit 0
+          fi
+          curl -X POST -H 'Content-type: application/json' --data "$payload" "$webhook"
