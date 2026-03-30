@@ -227,57 +227,66 @@ runs:
         GITHUB_PASSWORD: ${{ inputs.reader_token }}
         VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
 
-    - name: Finner feilende og trege tester
-      id: parse-test-results
+    - name: Finner feilende tester
+      id: parse-failed-tests
       if: always() && !cancelled() && env.STACK_STARTED == 'true'
       shell: bash
       run: |
-        slow_threshold=30
-
-        # Feilende tester: linjer med FAILURE eller ERROR
         failed_tests=$(grep -rh '<<< FAILURE!\|<<< ERROR!' verdikjede --include='*.txt' 2>/dev/null \
           | grep -v '^Tests run:' \
           | sed 's/\s*Time elapsed.*//; s/\(.*\)(\(.*\))/\2#\1/' \
           | sort -u || true)
 
-        # Trege tester: vellykkede tester over terskelen
-        slow_tests=$(grep -rh 'Time elapsed:' verdikjede --include='*.txt' 2>/dev/null \
-          | grep -v '^Tests run:' \
-          | grep -v '<<< FAILURE!\|<<< ERROR!' \
-          | while IFS= read -r line; do
-              elapsed=$(echo "$line" | sed -n 's/.*Time elapsed: \([0-9]*\(\.[0-9]*\)\?\) s.*/\1/p')
-              [ -z "$elapsed" ] && continue
-              if awk "BEGIN{exit !($elapsed >= $slow_threshold)}"; then
-                test_name=$(echo "$line" | sed 's/\s*Time elapsed.*//; s/\(.*\)(\(.*\))/\2#\1/')
-                elapsed_int=$(awk "BEGIN{printf \"%d\", $elapsed}")
-                echo "${test_name} (${elapsed_int}s)"
-              fi
-            done \
-          | sort -u || true)
-
-        output=""
-        [ -n "$failed_tests" ] && output+="$failed_tests"$'\n'
-        [ -n "$slow_tests" ] && output+="$slow_tests"
-
-        if [ -n "$output" ]; then
+        if [ -n "$failed_tests" ]; then
           mkdir -p test-details
-          echo "$output" > test-details/${{ inputs.test_suite }}.txt
-
-          if [ -n "$failed_tests" ]; then
-            echo "### :x: Feilende tester (${{ inputs.test_suite }})" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "$failed_tests" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-          if [ -n "$slow_tests" ]; then
-            echo "### :turtle: Trege tester (${{ inputs.test_suite }}) - over ${slow_threshold}s" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "$slow_tests" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "$failed_tests" >> test-details/${{ inputs.test_suite }}.txt
+          echo "### :x: Feilende tester (${{ inputs.test_suite }})" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "$failed_tests" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
         else
-          echo "Ingen feilende eller trege tester funnet."
+          echo "Ingen feilende tester funnet."
         fi
+
+    - name: Finner trege tester
+      id: parse-slow-tests
+      if: always() && !cancelled() && env.STACK_STARTED == 'true'
+      shell: python3 {0}
+      run: |
+        import xml.etree.ElementTree as ET, glob, os, pathlib
+
+        slow_threshold = 30
+        suite = "${{ inputs.test_suite }}"
+        results = []
+
+        for f in glob.glob('verdikjede/**/TEST-*.xml', recursive=True):
+            try:
+                tree = ET.parse(f)
+                for tc in tree.findall('.//testcase'):
+                    t = float(tc.get('time', 0) or 0)
+                    if t >= slow_threshold and tc.find('failure') is None and tc.find('error') is None:
+                        cls = tc.get('classname', '')
+                        name = tc.get('name', '')
+                        results.append(f'{cls}#{name} ({int(t)}s)')
+            except Exception:
+                pass
+
+        slow_tests = sorted(set(results))
+
+        if slow_tests:
+            pathlib.Path('test-details').mkdir(exist_ok=True)
+            with open(f'test-details/{suite}.txt', 'a') as fh:
+                fh.write('\n'.join(slow_tests) + '\n')
+            summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+            if summary_file:
+                with open(summary_file, 'a') as fh:
+                    fh.write(f'### :turtle: Trege tester ({suite}) - over {slow_threshold}s\n')
+                    fh.write('```\n')
+                    fh.write('\n'.join(slow_tests) + '\n')
+                    fh.write('```\n')
+            print(f'Fant {len(slow_tests)} trege tester.')
+        else:
+            print('Ingen trege tester funnet.')
 
     - name: Laster opp testdetaljer
       if: always() && !cancelled() && env.STACK_STARTED == 'true'
