@@ -234,7 +234,7 @@ runs:
       run: |
         import xml.etree.ElementTree as ET, glob, os, pathlib
         
-        slow_threshold = 30 #sekunder
+        slow_threshold = 200 #sekunder
         suite = "${{ inputs.test_suite }}"
         failed, slow = [], []
 
