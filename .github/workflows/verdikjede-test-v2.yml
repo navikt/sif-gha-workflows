@@ -209,7 +209,7 @@ jobs:
 
   slack:
     name: Sender slack melding
-    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
+    if: ${{ always() && !cancelled() }}
     needs: [run_tests, filter_suites]
     runs-on: ubuntu-latest
     steps:
