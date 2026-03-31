@@ -233,10 +233,10 @@ runs:
       shell: python3 {0}
       run: |
         import xml.etree.ElementTree as ET, glob, os, pathlib
-        
+
         slow_threshold = 200 #sekunder
         suite = "${{ inputs.test_suite }}"
-        failed, slow = [], []
+        failed, slow_above, all_times = [], [], []
 
         for f in glob.glob('verdikjede/**/TEST-*.xml', recursive=True):
             try:
@@ -244,27 +244,32 @@ runs:
                 for tc in tree.findall('.//testcase'):
                     cls = tc.get('classname', '')
                     name = tc.get('name', '')
+                    t = float(tc.get('time', 0) or 0)
                     if tc.find('failure') is not None or tc.find('error') is not None:
                         failed.append(f'{cls}#{name}')
                     else:
-                        t = float(tc.get('time', 0) or 0)
+                        all_times.append(f'{cls}#{name} ({int(t)}s)')
                         if t >= slow_threshold:
-                            slow.append(f'{cls}#{name} ({int(t)}s)')
+                            slow_above.append(f'{cls}#{name} ({int(t)}s)')
             except Exception:
                 pass
 
         failed = sorted(set(failed))
-        slow = sorted(set(slow))
+        slow_above = sorted(set(slow_above))
+        all_times = sorted(set(all_times))
 
-        if failed or slow:
+        if failed or slow_above or all_times:
             pathlib.Path(f'{suite}-resultat').mkdir(exist_ok=True)
             with open(f'{suite}-resultat/{suite}.txt', 'a') as fh:
                 if failed:
                     fh.write('\n'.join(failed) + '\n')
-                if slow:
-                    fh.write('\n'.join(slow) + '\n')
+                if slow_above:
+                    fh.write('\n'.join(slow_above) + '\n')
+                if all_times:
+                    fh.write('## alle_tider\n')
+                    fh.write('\n'.join(all_times) + '\n')
 
-        print(f'Fant {len(failed)} feilende og {len(slow)} trege tester.')
+        print(f'Fant {len(failed)} feilende og {len(slow_above)} trege tester (over {slow_threshold}s). {len(all_times)} tester totalt.')
 
     - name: Utfører loggsjekker
       id: loggsjekker

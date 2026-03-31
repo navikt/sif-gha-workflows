@@ -305,7 +305,7 @@ jobs:
             [ -f "$file" ] || continue
             suite=$(head -n 1 "$file")
             title="${suite%%|*}"
-            details=$(tail -n +2 "$file" | sed '/^$/d')
+            details=$(tail -n +2 "$file" | sed '/^## alle_tider/,$d' | sed '/^$/d')
             [ -z "$details" ] && continue
             failed_lines=$(grep -v '([0-9]\+s)$' <<< "$details" || true)
             slow_lines=$(grep '([0-9]\+s)$' <<< "$details" || true)
@@ -315,13 +315,9 @@ jobs:
               echo "$failed_lines" >> $GITHUB_STEP_SUMMARY
               echo '```' >> $GITHUB_STEP_SUMMARY
             fi
-            if [ -n "$slow_lines" ]; then
-              echo "### :turtle: Trege tester ($title)" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "$slow_lines" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            fi
           done
+
+  slack-testdetaljer:
     name: Sender testdetaljer til Slack
     if: ${{ always() && !cancelled() && needs.run_tests.result == 'failure' }}
     needs: [run_tests]
@@ -338,7 +334,7 @@ jobs:
           message=""
           for file in all-resultater/*-resultat/*.txt; do
             [ -f "$file" ] || continue
-            tests=$(tail -n +2 "$file" | sed '/^$/d')
+            tests=$(tail -n +2 "$file" | sed '/^## alle_tider/,$d' | sed '/^$/d')
             if [ -n "$tests" ]; then
               while IFS= read -r test; do
                 if [[ "$test" =~ \([0-9]+s\)$ ]]; then
