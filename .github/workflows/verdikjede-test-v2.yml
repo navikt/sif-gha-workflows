@@ -331,7 +331,7 @@ jobs:
       - name: Bygger opp slack melding
         run: |
           failed_lines=""
-          slow_lines=""
+          slow_raw=""
           for file in all-resultater/*-resultat/*.txt; do
             [ -f "$file" ] || continue
             tests=$(tail -n +2 "$file" | sed '/^## alle_tider/,$d' | sed '/^$/d')
@@ -339,7 +339,7 @@ jobs:
               while IFS= read -r test; do
                 short=$(echo "$test" | sed 's/^[a-z].*\.\([A-Z].*\)$/\1/')
                 if [[ "$test" =~ \([0-9]+s\)$ ]]; then
-                  slow_lines+=":turtle: ${short}"$'\n'
+                  slow_raw+="${short}"$'\n'
                 else
                   failed_lines+=":x: ${short}"$'\n'
                 fi
@@ -347,7 +347,13 @@ jobs:
             fi
           done
 
-          message="${failed_lines}${slow_lines}"
+          top10_slow=$(echo "$slow_raw" | grep -v '^$' | \
+            sed 's/.*(\([0-9]*\)s)$/\1 &/' | \
+            sort -rn | head -10 | \
+            sed 's/^[0-9]* //' | \
+            sed 's/^/:turtle: /')
+
+          message="${failed_lines}${top10_slow}"$'\n'
 
           if [ -z "$message" ]; then
             echo "Ingen feilende eller trege tester å rapportere."
