@@ -43,19 +43,19 @@ runs:
       id: t0
       shell: bash
       run: echo "start_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6.0.2
       with:
         repository: "navikt/k9-verdikjede"
         ref: ${{ inputs.k9-verdikjede-sha }}
         token: ${{ inputs.cloning_token }}
 
-    - uses: actions/setup-java@v5
+    - uses: actions/setup-java@v5.2.0
       with:
         java-version: "25"
         distribution: "temurin"
         cache: "maven"
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6.3.0
       if: contains(inputs.test_suite, 'frontend')
       with:
         node-version: "22"
@@ -71,19 +71,19 @@ runs:
       run: |
         echo "127.0.0.1 vtp localhost" | sudo tee -a /etc/hosts
 
-    - uses: docker/login-action@v3
+    - uses: docker/login-action@v4.0.0
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ inputs.reader_token }}
 
-    - uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c
+    - uses: nais/login@v0
       with:
         team: k9saksbehandling
 
     - name: Download artifact
       if: ${{ inputs.override_image_artifact_name }}
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8.0.1
       with:
         name: ${{ inputs.override_image_artifact_name }}
         path: /tmp/
@@ -316,14 +316,14 @@ runs:
 
     - name: Laste opp logger
       if: always() && !cancelled() && env.STACK_STARTING == 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7.0.0
       with:
         name: ${{ inputs.test_suite }}-logs
         path: container-logs/
 
     - name: Laste opp skjermbilder
       if: contains(inputs.test_suite, 'frontend') && failure() && env.STACK_CREATED == 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7.0.0
       with:
         name: ${{ inputs.test_suite }}-test-output
         # definert i frontend java-testene!

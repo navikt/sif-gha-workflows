@@ -193,7 +193,7 @@ jobs:
       matrix:
         suites: ${{ fromJson(needs.filter_suites.outputs.active_suites) }}
     steps:
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@v3.0.0
         id: get-token
         with:
           app-id: ${{ secrets.SIF_TOKEN_GENERATOR_APP_ID }}
@@ -227,7 +227,7 @@ jobs:
           fi
           echo "=== $file ==="
           cat "$file"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.0
         if: always() && !cancelled()
         with:
           name: ${{ matrix.suites.suite }}-resultat
@@ -242,7 +242,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Laster ned suite-resultater
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.1
         with:
           pattern: '*-resultat'
           path: all-resultater/
@@ -327,7 +327,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Laster ned testdetaljer
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.1
         with:
           pattern: '*-resultat'
           path: all-resultater/

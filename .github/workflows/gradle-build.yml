@@ -34,13 +34,13 @@ jobs:
     outputs:
       image: ${{ steps.docker-push.outputs.image }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v4
-      - uses: gradle/actions/wrapper-validation@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # ratchet:gradle/actions/wrapper-validation@v4
-      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # ratchet:actions/setup-java@v5
+      - uses: actions/checkout@v6.0.2
+      - uses: gradle/actions/wrapper-validation@v6.0.1
+      - uses: actions/setup-java@v5.2.0
         with:
           java-version: ${{ inputs.javaversion }}
           distribution: corretto
-      - uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # ratchet:gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6.0.1
         env:
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath # Eksluderer test dependencies
         with:
@@ -49,7 +49,7 @@ jobs:
         run: ./gradlew ${{ inputs.buildcommand }}
         env:
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
-      - uses: nais/docker-build-push@078e460885ed0424b60d45ce9220b4be1748be9d
+      - uses: nais/docker-build-push@v0
         id: docker-push
         with:
           team: ${{ inputs.team }}
