@@ -244,9 +244,11 @@ runs:
                     cls = tc.get('classname', '')
                     name = tc.get('name', '')
                     t = float(tc.get('time', 0) or 0)
-                    failure = tc.find('failure') or tc.find('error')
-                    if failure is not None:
-                        exc = failure.get('type', '').split('.')[-1]
+                    failure = tc.find('failure')
+                    error = tc.find('error')
+                    fault = failure if failure is not None else (error if error is not None else None)
+                    if fault is not None:
+                        exc = fault.get('type', '').split('.')[-1]
                         exc_str = f' [{exc}]' if exc else ''
                         failed.append(f'{cls}#{name}{exc_str}')
                     else:

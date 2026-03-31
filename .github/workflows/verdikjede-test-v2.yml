@@ -255,10 +255,12 @@ jobs:
           total_duration=$(printf "%dm%02ds" $((elapsed/60)) $((elapsed%60)))
 
           all_success=true
+          suite_count=0
           slack_lines=""
 
           for file in all-resultater/*-resultat/*.txt; do
             [ -f "$file" ] || continue
+            suite_count=$(( suite_count + 1 ))
             result=$(head -n 1 "$file")
             title="${result%%|*}"
             rest="${result#*|}"
@@ -275,7 +277,9 @@ jobs:
             fi
           done
 
-          if [[ "$all_success" == true ]]; then
+          if [[ "$suite_count" -eq 0 ]]; then
+            title="Ingen testresultater funnet :warning:"
+          elif [[ "$all_success" == true ]]; then
             title="Verdikjede er kjørt UTEN feil :rocket:"
           else
             title="Verdikjede er brukket :boom:"
