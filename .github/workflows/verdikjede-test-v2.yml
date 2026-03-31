@@ -309,9 +309,9 @@ jobs:
             [ -z "$details" ] && continue
             failed_lines=$(grep -v '([0-9]\+s)$' <<< "$details" || true)
             slow_lines=$(grep '([0-9]\+s)$' <<< "$details" || true)
+            echo "### :x: Feilende tester" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             if [ -n "$failed_lines" ]; then
-              echo "### :x: Feilende tester ($title)" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
               echo "$failed_lines" >> $GITHUB_STEP_SUMMARY
               echo '```' >> $GITHUB_STEP_SUMMARY
             fi
