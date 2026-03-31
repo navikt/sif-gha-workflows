@@ -328,44 +328,46 @@ jobs:
           pattern: '*-resultat'
           path: all-resultater/
           merge-multiple: false
-      - name: Bygger opp slack melding
+      - name: Bygger opp Slack-melding
+        shell: python3 {0}
         run: |
-          failed_lines=""
-          slow_raw=""
-          for file in all-resultater/*-resultat/*.txt; do
-            [ -f "$file" ] || continue
-            tests=$(tail -n +2 "$file" | sed '/^## alle_tider/,$d' | sed '/^$/d')
-            if [ -n "$tests" ]; then
-              while IFS= read -r test; do
-                short=$(echo "$test" | sed 's/^[a-z].*\.\([A-Z].*\)$/\1/')
-                if [[ "$test" =~ \([0-9]+s\)$ ]]; then
-                  slow_raw+="${short}"$'\n'
-                else
-                  failed_lines+=":x: ${short}"$'\n'
-                fi
-              done <<< "$tests"
-            fi
-          done
+          import glob, os, re
 
-          top10_slow=$(echo "$slow_raw" | grep -v '^$' | \
-            sed 's/.*(\([0-9]*\)s)$/\1 &/' | \
-            sort -rn | head -10 | \
-            sed 's/^[0-9]* //' | \
-            sed 's/^/:turtle: /')
+          def shorten(test):
+              return re.sub(r'^[a-z].*\.([A-Z])', r'\1', test)
 
-          message="${failed_lines}${top10_slow}"$'\n'
+          failed_lines = []
+          slow_all = []
 
-          if [ -z "$message" ]; then
-            echo "Ingen feilende eller trege tester å rapportere."
-            echo "SKIP_SLACK=true" >> $GITHUB_ENV
-            exit 0
-          fi
+          for path in glob.glob('all-resultater/*-resultat/*.txt'):
+              lines = open(path).read().splitlines()
+              in_alle_tider = False
+              for line in lines[1:]:  # hopp over metadata-linje
+                  if line == '## alle_tider':
+                      in_alle_tider = True
+                      continue
+                  if not line:
+                      continue
+                  if in_alle_tider:
+                      m = re.search(r'\((\d+)s\)$', line)
+                      if m:
+                          slow_all.append((int(m.group(1)), shorten(line)))
+                  else:
+                      failed_lines.append(f':x: {shorten(line)}')
 
-          message+="<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Se kjøring>"
+          top10 = [f':turtle: {line}' for _, line in sorted(slow_all, reverse=True)[:10]]
+          run_url = 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          parts = failed_lines + top10
 
-          echo 'SLACK_TEST_DETAIL_MESSAGE<<SLACK_EOF' >> $GITHUB_ENV
-          echo "$message" >> $GITHUB_ENV
-          echo 'SLACK_EOF' >> $GITHUB_ENV
+          if not parts:
+              print('Ingen feilende eller trege tester å rapportere.')
+              with open(os.environ['GITHUB_ENV'], 'a') as f:
+                  f.write('SKIP_SLACK=true\n')
+              raise SystemExit(0)
+
+          msg = '\n'.join(parts) + f'\n<{run_url}|Se kjøring>'
+          with open(os.environ['GITHUB_ENV'], 'a') as f:
+              f.write(f'SLACK_TEST_DETAIL_MESSAGE<<SLACK_EOF\n{msg}\nSLACK_EOF\n')
 
       - name: Sender Slack-melding med feilende tester
         if: env.SKIP_SLACK != 'true'
@@ -373,13 +375,12 @@ jobs:
         run: |
           import os, json, urllib.request
 
-          msg = os.environ.get("SLACK_TEST_DETAIL_MESSAGE", "")
-          webhook = os.environ.get("SLACKBOT_WEBHOOK_TEST_DETAILS", "")
+          msg = os.environ.get('SLACK_TEST_DETAIL_MESSAGE', '')
+          webhook = os.environ.get('SLACKBOT_WEBHOOK_TEST_DETAILS', '')
           if not webhook:
-              print("SLACKBOT_WEBHOOK_TEST_DETAILS ikke satt, hopper over Slack-melding.")
+              print('SLACKBOT_WEBHOOK_TEST_DETAILS ikke satt, hopper over Slack-melding.')
               raise SystemExit(0)
 
-          # Må chunke slik at slack takler store meldinger. 
           chunks, remaining = [], msg
           while len(remaining) > 2900:
               split_at = remaining.rfind('\n', 0, 2900)
@@ -390,10 +391,10 @@ jobs:
           if remaining:
               chunks.append(remaining)
 
-          blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": c}} for c in chunks]
-          payload = json.dumps({"blocks": blocks}).encode()
-          print(f"Sending {len(blocks)} block(s), total {len(msg)} chars")
-          req = urllib.request.Request(webhook, data=payload, headers={"Content-Type": "application/json"})
+          blocks = [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': c}} for c in chunks]
+          payload = json.dumps({'blocks': blocks}).encode()
+          print(f'Sender {len(blocks)} block(s), {len(msg)} tegn totalt')
+          req = urllib.request.Request(webhook, data=payload, headers={'Content-Type': 'application/json'})
           with urllib.request.urlopen(req) as resp:
               print(resp.read().decode())
         env:

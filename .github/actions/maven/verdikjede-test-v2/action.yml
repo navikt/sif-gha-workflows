@@ -227,7 +227,7 @@ runs:
         GITHUB_PASSWORD: ${{ inputs.reader_token }}
         VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
 
-    - name: Finner feilende og trege tester
+    - name: Finner feilende og test tider
       id: parse-test-results
       if: always() && !cancelled() && env.STACK_STARTED == 'true'
       shell: python3 {0}
@@ -256,7 +256,6 @@ runs:
 
         failed = sorted(set(failed))
         all_times_sorted = sorted(set(all_times), key=lambda x: -x[0])
-        top10_slow = [line for _, line in all_times_sorted[:10]]
         all_times_lines = [line for _, line in all_times_sorted]
 
         if failed or all_times_lines:
@@ -264,13 +263,11 @@ runs:
             with open(f'{suite}-resultat/{suite}.txt', 'a') as fh:
                 if failed:
                     fh.write('\n'.join(failed) + '\n')
-                if top10_slow:
-                    fh.write('\n'.join(top10_slow) + '\n')
                 if all_times_lines:
                     fh.write('## alle_tider\n')
                     fh.write('\n'.join(all_times_lines) + '\n')
 
-        print(f'Fant {len(failed)} feilende tester av {len(all_times_lines)} tester.')
+        print(f'Fant {len(failed)} feilende tester og {len(all_times_lines)} tester totalt.')
 
     - name: Utfører loggsjekker
       id: loggsjekker
