@@ -301,21 +301,20 @@ jobs:
       - name: Skriver testdetaljer til job summary
         if: always() && !cancelled()
         run: |
+          all_failed=""
           for file in all-resultater/*-resultat/*.txt; do
             [ -f "$file" ] || continue
-            suite=$(head -n 1 "$file")
-            title="${suite%%|*}"
             details=$(tail -n +2 "$file" | sed '/^## alle_tider/,$d' | sed '/^$/d')
             [ -z "$details" ] && continue
             failed_lines=$(grep -v '([0-9]\+s)$' <<< "$details" || true)
-            slow_lines=$(grep '([0-9]\+s)$' <<< "$details" || true)
+            [ -n "$failed_lines" ] && all_failed+="${failed_lines}"$'\n'
+          done
+          if [ -n "$all_failed" ]; then
             echo "### :x: Feilende tester" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            if [ -n "$failed_lines" ]; then
-              echo "$failed_lines" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            fi
-          done
+            echo "$all_failed" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
 
   slack-testdetaljer:
     name: Sender testdetaljer til Slack
