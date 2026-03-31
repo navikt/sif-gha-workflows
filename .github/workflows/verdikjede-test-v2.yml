@@ -331,20 +331,24 @@ jobs:
           merge-multiple: false
       - name: Bygger opp slack melding
         run: |
-          message=""
+          failed_lines=""
+          slow_lines=""
           for file in all-resultater/*-resultat/*.txt; do
             [ -f "$file" ] || continue
             tests=$(tail -n +2 "$file" | sed '/^## alle_tider/,$d' | sed '/^$/d')
             if [ -n "$tests" ]; then
               while IFS= read -r test; do
+                short=$(echo "$test" | sed 's/[a-z][a-z0-9_]*\.\([A-Z]\)/\1/g')
                 if [[ "$test" =~ \([0-9]+s\)$ ]]; then
-                  message+=":turtle: ${test}"$'\n'
+                  slow_lines+=":turtle: ${short}"$'\n'
                 else
-                  message+=":x: ${test}"$'\n'
+                  failed_lines+=":x: ${short}"$'\n'
                 fi
               done <<< "$tests"
             fi
           done
+
+          message="${failed_lines}${slow_lines}"
 
           if [ -z "$message" ]; then
             echo "Ingen feilende eller trege tester å rapportere."
