@@ -227,6 +227,50 @@ runs:
         GITHUB_PASSWORD: ${{ inputs.reader_token }}
         VENT_TIMEOUT_UTVIDELSE_SEKUNDER: ${{ inputs.timeout_test_increase }}
 
+    - name: Finner feilende og test tider
+      id: parse-test-results
+      if: always() && !cancelled() && env.STACK_STARTED == 'true'
+      shell: python3 {0}
+      run: |
+        import xml.etree.ElementTree as ET, glob, os, pathlib
+
+        suite = "${{ inputs.test_suite }}"
+        failed, all_times = [], []
+
+        for f in glob.glob('verdikjede/**/TEST-*.xml', recursive=True):
+            try:
+                tree = ET.parse(f)
+                for tc in tree.findall('.//testcase'):
+                    cls = tc.get('classname', '')
+                    name = tc.get('name', '')
+                    t = float(tc.get('time', 0) or 0)
+                    failure = tc.find('failure')
+                    error = tc.find('error')
+                    fault = failure if failure is not None else (error if error is not None else None)
+                    if fault is not None:
+                        exc = fault.get('type', '').split('.')[-1]
+                        exc_str = f' [{exc}]' if exc else ''
+                        failed.append(f'{cls}#{name}{exc_str}')
+                    else:
+                        all_times.append((t, f'{cls}#{name} ({int(t)}s)'))
+            except Exception:
+                pass
+
+        failed = sorted(set(failed))
+        all_times_sorted = sorted(set(all_times), key=lambda x: -x[0])
+        all_times_lines = [line for _, line in all_times_sorted]
+
+        if failed or all_times_lines:
+            pathlib.Path(f'{suite}-resultat').mkdir(exist_ok=True)
+            with open(f'{suite}-resultat/{suite}.txt', 'a') as fh:
+                if failed:
+                    fh.write('\n'.join(failed) + '\n')
+                if all_times_lines:
+                    fh.write('## alle_tider\n')
+                    fh.write('\n'.join(all_times_lines) + '\n')
+
+        print(f'Fant {len(failed)} feilende tester og {len(all_times_lines)} tester totalt.')
+
     - name: Utfører loggsjekker
       id: loggsjekker
       shell: bash
