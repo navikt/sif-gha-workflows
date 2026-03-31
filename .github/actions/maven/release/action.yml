@@ -40,19 +40,19 @@ runs:
   using: composite
   steps:
     - name: Checkout code
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6.0.2
       with:
         fetch-depth: 0
         ref: ${{ inputs.release-branch }}
     - name: Set up JDK-${{ inputs.java-version }} with cache
-      uses: actions/setup-java@v5.2.0
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # ratchet:actions/setup-java@v5.2.0
       with:
         java-version: ${{ inputs.java-version }}
         distribution: 'temurin'
         cache: 'maven'
 
     - name: Create maven .m2 settings for build
-      uses: whelk-io/maven-settings-xml-action@v22
+      uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
       with:
         repositories: '[{"id": "${{ inputs.maven-server-id-build }}", "name": "github-build", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
         servers: '[{ "id": "${{ inputs.maven-server-id-build }}", "username": "${{ github.actor }}", "password": "${{ inputs.build-token }}" }]'
@@ -63,10 +63,10 @@ runs:
       run: |
         mvn -B -s settings-build.xml versions:set -DnewVersion=${{ inputs.release-version }} ${{ inputs.release-file }}
         mvn -B -s settings-build.xml package ${{ inputs.mvn-projects }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
-        
+
 
     - name: Create maven .m2 settings for release
-      uses: whelk-io/maven-settings-xml-action@v22
+      uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
       with:
         repositories: '[{"id": "${{ inputs.maven-server-id-release }}", "name": "github-release", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
         servers: '[{ "id": "${{ inputs.maven-server-id-release }}", "username": "${{ github.actor }}", "password": "${{ inputs.release-token }}" }]'
