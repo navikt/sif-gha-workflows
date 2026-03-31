@@ -199,7 +199,7 @@ jobs:
           app-id: ${{ secrets.SIF_TOKEN_GENERATOR_APP_ID }}
           private-key: ${{ secrets.SIF_TOKEN_GENERATOR_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@feilede-test-oversikt
+      - uses: navikt/sif-gha-workflows/.github/actions/maven/verdikjede-test-v2@master
         id: verdikjede-action
         with:
           test_suite: ${{ matrix.suites.suite }}
@@ -237,7 +237,7 @@ jobs:
 
   slack:
     name: Lager oppsummering og sender slack melding
-    if: ${{ always() && !cancelled() }}
+    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
     needs: [run_tests, filter_suites]
     runs-on: ubuntu-latest
     steps:
@@ -318,7 +318,7 @@ jobs:
 
   slack-testdetaljer:
     name: Sender testdetaljer til Slack
-    if: ${{ always() && !cancelled() && needs.run_tests.result == 'failure' }}
+    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
     needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
@@ -369,7 +369,7 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a') as f:
               f.write(f'SLACK_TEST_DETAIL_MESSAGE<<SLACK_EOF\n{msg}\nSLACK_EOF\n')
 
-      - name: Sender Slack-melding med feilende tester
+      - name: Sender Slack-melding med testdetaljer
         if: env.SKIP_SLACK != 'true'
         shell: python3 {0}
         run: |
@@ -380,7 +380,7 @@ jobs:
           if not webhook:
               print('SLACKBOT_WEBHOOK_TEST_DETAILS ikke satt, hopper over Slack-melding.')
               raise SystemExit(0)
-
+          # må sende chunks siden slack ikke takler lange meldinger
           chunks, remaining = [], msg
           while len(remaining) > 2900:
               split_at = remaining.rfind('\n', 0, 2900)
