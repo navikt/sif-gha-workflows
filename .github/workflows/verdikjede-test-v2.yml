@@ -337,7 +337,7 @@ jobs:
             tests=$(tail -n +2 "$file" | sed '/^## alle_tider/,$d' | sed '/^$/d')
             if [ -n "$tests" ]; then
               while IFS= read -r test; do
-                short=$(echo "$test" | sed 's/[a-z][a-z0-9_]*\.\([A-Z]\)/\1/g')
+                short=$(echo "$test" | sed 's/^[a-z].*\.\([A-Z].*\)$/\1/')
                 if [[ "$test" =~ \([0-9]+s\)$ ]]; then
                   slow_lines+=":turtle: ${short}"$'\n'
                 else
