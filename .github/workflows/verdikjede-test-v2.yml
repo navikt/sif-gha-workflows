@@ -235,6 +235,72 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  testdetaljer:
+    name: Testdetaljer
+    if: always() && !cancelled()
+    needs: [run_tests]
+    runs-on: ubuntu-latest
+    outputs:
+      failed_tests: ${{ steps.parse.outputs.failed_tests }}
+    steps:
+      - name: Laster ned suite-resultater
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c0
+        with:
+          pattern: '*-resultat'
+          path: all-resultater/
+          merge-multiple: false
+      - name: Samler testdetaljer
+        id: parse
+        if: always() && !cancelled()
+        shell: python3 {0}
+        run: |
+          import glob, os, re
+
+          failed_lines = []
+          all_times = []
+
+          for path in glob.glob('all-resultater/*-resultat/*.txt'):
+              lines = open(path).read().splitlines()
+              in_alle_tider = False
+              for line in lines[1:]:
+                  if line == '## alle_tider':
+                      in_alle_tider = True
+                      continue
+                  if not line:
+                      continue
+                  if in_alle_tider:
+                      m = re.search(r'\((\d+)s\)$', line)
+                      if m:
+                          all_times.append((int(m.group(1)), line))
+                  else:
+                      failed_lines.append(line)
+
+          all_times.sort(reverse=True)
+          with open('testtider.txt', 'w') as f:
+              for _, line in all_times:
+                  f.write(line + '\n')
+          print(f'Skrev {len(all_times)} testtider til testtider.txt')
+
+          if failed_lines:
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+                  f.write('### :x: Feilende tester\n```\n')
+                  f.write('\n'.join(failed_lines) + '\n')
+                  f.write('```\n')
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                  f.write('failed_tests<<FAILED_EOF\n')
+                  f.write('\n'.join(failed_lines) + '\n')
+                  f.write('FAILED_EOF\n')
+          else:
+              print('Ingen feilende tester.')
+      - name: Laster opp testtider
+        if: always() && !cancelled()
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # ratchet:actions/upload-artifact@v7.0.0
+        with:
+          name: testtider
+          path: testtider.txt
+          retention-days: 30
+          if-no-files-found: ignore
+
   slack:
     name: Lager oppsummering og sender slack melding
     if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
@@ -302,89 +368,28 @@ jobs:
           echo "=== Payload ==="
           echo "$payload"
           curl -X POST -H 'Content-type: application/json' --data "$payload" "${{ secrets.SLACKBOT_WEBHOOK }}"
-      - name: Skriver testdetaljer til job summary
-        if: always() && !cancelled()
-        run: |
-          all_failed=""
-          for file in all-resultater/*-resultat/*.txt; do
-            [ -f "$file" ] || continue
-            details=$(tail -n +2 "$file" | sed '/^## alle_tider/,$d' | sed '/^$/d')
-            [ -z "$details" ] && continue
-            failed_lines=$(grep -v '([0-9]\+s)$' <<< "$details" || true)
-            [ -n "$failed_lines" ] && all_failed+="${failed_lines}"$'\n'
-          done
-          if [ -n "$all_failed" ]; then
-            echo "### :x: Feilende tester" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "$all_failed" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
 
   slack-testdetaljer:
     name: Sender testdetaljer til Slack
-    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() }}
-    needs: [run_tests]
+    if: ${{ github.ref_name == github.event.repository.default_branch && always() && !cancelled() && needs.testdetaljer.outputs.failed_tests != '' }}
+    needs: [testdetaljer]
     runs-on: ubuntu-latest
     steps:
-      - name: Laster ned testdetaljer
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # ratchet:actions/download-artifact@v8.0.1
-        with:
-          pattern: '*-resultat'
-          path: all-resultater/
-          merge-multiple: false
-      - name: Bygger opp Slack-melding
-        shell: python3 {0}
-        run: |
-          import glob, os, re
-
-          def shorten(test):
-              return re.sub(r'^[a-z].*\.([A-Z])', r'\1', test)
-
-          failed_lines = []
-          slow_all = []
-
-          for path in glob.glob('all-resultater/*-resultat/*.txt'):
-              lines = open(path).read().splitlines()
-              in_alle_tider = False
-              for line in lines[1:]:  # hopp over metadata-linje
-                  if line == '## alle_tider':
-                      in_alle_tider = True
-                      continue
-                  if not line:
-                      continue
-                  if in_alle_tider:
-                      m = re.search(r'\((\d+)s\)$', line)
-                      if m:
-                          slow_all.append((int(m.group(1)), shorten(line)))
-                  else:
-                      failed_lines.append(f':x: {shorten(line)}')
-
-          top10 = [f':turtle: {line}' for _, line in sorted(slow_all, reverse=True)[:10]]
-          run_url = 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          parts = failed_lines + top10
-
-          if not parts:
-              print('Ingen feilende eller trege tester å rapportere.')
-              with open(os.environ['GITHUB_ENV'], 'a') as f:
-                  f.write('SKIP_SLACK=true\n')
-              raise SystemExit(0)
-
-          msg = '\n'.join(parts) + f'\n<{run_url}|Se kjøring>'
-          with open(os.environ['GITHUB_ENV'], 'a') as f:
-              f.write(f'SLACK_TEST_DETAIL_MESSAGE<<SLACK_EOF\n{msg}\nSLACK_EOF\n')
-
       - name: Sender Slack-melding med testdetaljer
-        if: env.SKIP_SLACK != 'true'
         shell: python3 {0}
         run: |
           import os, json, urllib.request
 
-          msg = os.environ.get('SLACK_TEST_DETAIL_MESSAGE', '')
+          failed = os.environ.get('FAILED_TESTS', '')
           webhook = os.environ.get('SLACKBOT_WEBHOOK_TEST_DETAILS', '')
-          if not webhook:
-              print('SLACKBOT_WEBHOOK_TEST_DETAILS ikke satt, hopper over Slack-melding.')
+          if not failed or not webhook:
+              print('Ingen melding eller webhook, hopper over.')
               raise SystemExit(0)
-          # må sende chunks siden slack ikke takler lange meldinger
+
+          run_url = 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          msg_lines = [f':x: {line}' for line in failed.splitlines() if line]
+          msg = '\n'.join(msg_lines) + f'\n<{run_url}|Se kjøring>'
+
           chunks, remaining = [], msg
           while len(remaining) > 2900:
               split_at = remaining.rfind('\n', 0, 2900)
@@ -402,4 +407,5 @@ jobs:
           with urllib.request.urlopen(req) as resp:
               print(resp.read().decode())
         env:
+          FAILED_TESTS: ${{ needs.testdetaljer.outputs.failed_tests }}
           SLACKBOT_WEBHOOK_TEST_DETAILS: ${{ secrets.SLACKBOT_WEBHOOK_TEST_DETAILS }}
