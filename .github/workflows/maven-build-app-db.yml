@@ -59,7 +59,7 @@ on:
         required: false
         type: string
         description: "Database navn for test"
-        default: 15
+        default: '15'
       quiet:
         required: false
         type: boolean
