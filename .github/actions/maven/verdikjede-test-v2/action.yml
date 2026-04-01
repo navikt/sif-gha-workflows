@@ -287,10 +287,13 @@ runs:
       if: always() && !cancelled() && env.STACK_STARTED == 'true'
       shell: python3 {0}
       run: |
-        import xml.etree.ElementTree as ET, glob, os, pathlib
+        import xml.etree.ElementTree as ET, glob, os, pathlib, re
 
         suite = "${{ inputs.test_suite }}"
         failed, all_times = [], []
+
+        def shorten(cls):
+            return re.sub(r'^[a-z].*\.([A-Z])', r'\1', cls)
 
         for f in glob.glob('verdikjede/**/TEST-*.xml', recursive=True):
             try:
@@ -305,23 +308,21 @@ runs:
                     if fault is not None:
                         exc = fault.get('type', '').split('.')[-1]
                         exc_str = f' [{exc}]' if exc else ''
-                        failed.append(f'{cls}#{name}{exc_str}')
+                        failed.append(f'{shorten(cls)}#{name}{exc_str}')
                     else:
-                        all_times.append((t, f'{cls}#{name} ({int(t)}s)'))
+                        all_times.append(f'{shorten(cls)}#{name} ({int(t)}s)')
             except Exception:
                 pass
 
         failed = sorted(set(failed))
-        all_times_sorted = sorted(set(all_times), key=lambda x: -x[0])
-        all_times_lines = [line for _, line in all_times_sorted]
 
-        if failed or all_times_lines:
+        if failed or all_times:
             pathlib.Path(f'{suite}-resultat').mkdir(exist_ok=True)
             with open(f'{suite}-resultat/{suite}.txt', 'a') as fh:
                 if failed:
                     fh.write('\n'.join(failed) + '\n')
-                if all_times_lines:
+                if all_times:
                     fh.write('## alle_tider\n')
-                    fh.write('\n'.join(all_times_lines) + '\n')
+                    fh.write('\n'.join(all_times) + '\n')
 
-        print(f'Fant {len(failed)} feilende tester og {len(all_times_lines)} tester totalt.')
+        print(f'Fant {len(failed)} feilende tester og {len(all_times)} tester totalt.')
