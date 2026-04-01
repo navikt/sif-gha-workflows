@@ -63,11 +63,11 @@ runs:
   using: "composite"
   steps:
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # ratchet:docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # ratchet:docker/setup-qemu-action@v4.0.0
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # ratchet:docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # ratchet:docker/setup-buildx-action@v4.0.0
     - name: NAIS login
-      uses: nais/login@8ebbba35984d713e500e5d6c4ceec1cf3026e30c # ratchet:nais/login@v0
+      uses: nais/login@c88ada9ce583928e1c84d2fd5c45cfacdd18d5de # ratchet:nais/login@v0
       id: login
       with:
         team: ${{ inputs.namespace }}
@@ -95,10 +95,10 @@ runs:
             repo_owner=$(echo ${{ github.repository }} | cut -d'/' -f1)
             image_name="${repo_owner}/${image_base_name}"
         fi
-        
+
         echo "REPO_NAME=${{ steps.login.outputs.registry }}/${image_name}${{ inputs.image_suffix }}" >> $GITHUB_OUTPUT
     - name: Docker meta
-      uses: docker/metadata-action@9dc751fe249ad99385a2583ee0d084c400eee04e # ratchet:docker/metadata-action@v4
+      uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # ratchet:docker/metadata-action@v6.0.0
       id: meta
       with:
         images: ${{ steps.docker_image_name.outputs.REPO_NAME}}
@@ -111,7 +111,7 @@ runs:
           type=raw,value=latest,enable={{is_default_branch}}
         labels: ${{ inputs.labels }}
     - name: Bygg og push docker image
-      uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # ratchet:docker/build-push-action@v4
+      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # ratchet:docker/build-push-action@v7.0.0
       id: build_push
       with:
         context: ${{ inputs.docker_context }}
@@ -127,7 +127,7 @@ runs:
         outputs: ${{ (inputs.upload-image == 'true' && 'type=docker,dest=/tmp/local-docker-image.tar') || null }}
     - name: Generate SBOM, attest and sign image
       if: inputs.push-image == 'true'
-      uses: nais/attest-sign@5e9450cc8a617286ca2d22859011e078ad1ef583 # ratchet:nais/attest-sign@v1
+      uses: nais/attest-sign@544c03da3791fdc0868fe279ed9c32d3e6af4d53 # ratchet:nais/attest-sign@v1.3.4
       with:
         image_ref: "${{ steps.docker_image_name.outputs.REPO_NAME}}@${{ steps.build_push.outputs.digest }}"
     - name: Set outputs
@@ -139,7 +139,7 @@ runs:
         echo "IMAGE=${{ fromJSON(steps.meta.outputs.json).tags[0] }}" >> $GITHUB_OUTPUT
     - name: Upload image
       if: inputs.upload-image == 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # ratchet:actions/upload-artifact@v7.0.0
       with:
         name: local-docker-image
         path: /tmp/local-docker-image.tar

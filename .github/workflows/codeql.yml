@@ -21,21 +21,21 @@ jobs:
       security-events: write
       contents: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6.0.2
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@38697555549f1db7851b81482ff19f1fa5c4fedc # ratchet:github/codeql-action/init@v2
+        uses: github/codeql-action/init@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # ratchet:github/codeql-action/init@v3
         with:
           languages: ${{ inputs.language }}
           config-file: ${{ inputs.config-file }}
           build-mode: "manual"
       - name: Create maven .m2 settings for READER
-        uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d
+        uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
         with:
           repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
           servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.READER_TOKEN}}" }]'
           output_file: settings.xml
       - name: Set up JDK-${{ inputs.java-version }} with cache
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # ratchet:actions/setup-java@v5
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # ratchet:actions/setup-java@v5.2.0
         with:
           java-version: ${{ inputs.java-version }}
           distribution: 'temurin'
@@ -49,6 +49,6 @@ jobs:
           mvn versions:set -DnewVersion="${{ steps.generate-build-version.outputs.build-version }}" -DprocessAllModules -s settings.xml -q -e -B
           mvn install -s settings.xml -q -e -B -DskipTests
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@38697555549f1db7851b81482ff19f1fa5c4fedc # ratchet:github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # ratchet:github/codeql-action/analyze@v3
         with:
           category: "/language:${{ inputs.language }}"
