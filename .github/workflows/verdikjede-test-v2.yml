@@ -227,7 +227,7 @@ jobs:
           fi
           echo "=== $file ==="
           cat "$file"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && !cancelled()
         with:
           name: ${{ matrix.suites.suite }}-resultat
@@ -244,7 +244,7 @@ jobs:
       failed_tests: ${{ steps.parse.outputs.failed_tests }}
     steps:
       - name: Laster ned suite-resultater
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: '*-resultat'
           path: all-resultater/
@@ -294,7 +294,7 @@ jobs:
               print('Ingen feilende tester.')
       - name: Laster opp testtider
         if: always() && !cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: testtider
           path: testtider.txt
@@ -308,7 +308,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Laster ned suite-resultater
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: '*-resultat'
           path: all-resultater/
