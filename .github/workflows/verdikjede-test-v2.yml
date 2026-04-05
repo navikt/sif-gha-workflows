@@ -280,6 +280,8 @@ jobs:
               for _, line in all_times:
                   f.write(line + '\n')
           print(f'Skrev {len(all_times)} testtider til testtider.txt')
+          for _, line in all_times:
+              print(line)
 
           if failed_lines:
               with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
