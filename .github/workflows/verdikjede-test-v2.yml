@@ -248,7 +248,7 @@ jobs:
         with:
           pattern: '*-resultat'
           path: all-resultater/
-          merge-multiple: false
+          merge-multiple: true
       - name: Samler testdetaljer
         id: parse
         if: always() && !cancelled()
@@ -259,7 +259,7 @@ jobs:
           failed_lines = []
           all_times = []
 
-          for path in glob.glob('all-resultater/*-resultat/*.txt'):
+          for path in glob.glob('all-resultater/*.txt'):
               lines = open(path).read().splitlines()
               in_alle_tider = False
               for line in lines[1:]:
@@ -314,7 +314,7 @@ jobs:
         with:
           pattern: '*-resultat'
           path: all-resultater/
-          merge-multiple: false
+          merge-multiple: true
       - name: Bygger opp og sender slack melding
         run: |
           echo "=== Nedlastede filer ==="
@@ -328,7 +328,7 @@ jobs:
           suite_count=0
           slack_lines=""
 
-          for file in all-resultater/*-resultat/*.txt; do
+          for file in all-resultater/*.txt; do
             [ -f "$file" ] || continue
             suite_count=$(( suite_count + 1 ))
             result=$(head -n 1 "$file")
