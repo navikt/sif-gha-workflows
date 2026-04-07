@@ -317,6 +317,8 @@ jobs:
           merge-multiple: false
       - name: Bygger opp og sender slack melding
         run: |
+          echo "=== Nedlastede filer ==="
+          find all-resultater/ -type f 2>/dev/null || echo "all-resultater/ finnes ikke"
           start_epoch="${{ needs.filter_suites.outputs.start_epoch }}"
           end_epoch=$(date +%s)
           elapsed=$(( end_epoch - start_epoch ))
