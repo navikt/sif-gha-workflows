@@ -22,7 +22,7 @@ jobs:
       actions: read # for private repositories
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6.0.2
-      - uses: nais/login@c88ada9ce583928e1c84d2fd5c45cfacdd18d5de # ratchet:nais/login@v0
+      - uses: nais/login@d6ab5d83f735e9f155eb9d7d29cd20ae46820ea9 # ratchet:nais/login@v0
         with:
           team: ${{ inputs.team }}
       - name: Pull docker image
@@ -37,6 +37,6 @@ jobs:
           limit-severities-for-sarif: true
       - name: Upload results to GitHub Security
         if: inputs.upload-sarif
-        uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # ratchet:github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # ratchet:github/codeql-action/upload-sarif@v4.35.1
         with:
           sarif_file: 'trivy.sarif'
