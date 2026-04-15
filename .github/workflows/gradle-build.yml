@@ -22,10 +22,22 @@ on:
         required: false
         type: string
         default: '21'
+      sensitive-data-whitelist:
+        required: false
+        type: string
+        default: ''
+        description: "Comma-separated list of files/directories to exclude from sensitive data scan"
     outputs:
       image:
         value: ${{ jobs.build.outputs.image }}
 jobs:
+  sensitive-data-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6.0.2
+      - uses: navikt/sif-gha-workflows/.github/actions/scan-for-sensitive-data@main
+        with:
+          whitelist: ${{ inputs.sensitive-data-whitelist }}
   build:
     permissions:
       contents: write # for dependency submission

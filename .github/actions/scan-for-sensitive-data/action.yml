@@ -1,0 +1,20 @@
+name: Scan for sensitive data
+description: Scans repository for sensitive data like Norwegian national identity numbers (fødselsnummer), etc.
+
+inputs:
+  whitelist:
+    required: false
+    description: "Comma-separated list of files/directories to exclude from scanning"
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: pip install openpyxl --quiet
+    - name: Scan for sensitive data
+      shell: bash
+      env:
+        WHITELIST: ${{ inputs.whitelist }}
+      run: python3 ${{ github.action_path }}/scan.py
