@@ -4,7 +4,7 @@ description: Scans repository for sensitive data like Norwegian national identit
 inputs:
   whitelist:
     required: false
-    description: "Comma-separated list of files/directories to exclude from scanning"
+    description: "Comma-separated list of fødselsnummer to exclude from scanning (e.g. known test FNRs)"
     default: ''
 
 runs:
