@@ -65,6 +65,10 @@ on:
         type: boolean
         description: 'Maven quiet mode'
         default: true
+      sensitive-data-whitelist:
+        required: false
+        type: string
+        default: ''
     outputs:
       build-version:
         description: "Build version"
@@ -73,6 +77,13 @@ on:
         description: 'local docker image artifact name to be downloaded '
         value: ${{ jobs.build-and-test.outputs.image-artifact-name }}
 jobs:
+  sensitive-data-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6.0.2
+      - uses: navikt/sif-gha-workflows/.github/actions/scan-for-sensitive-data@main
+        with:
+          whitelist: ${{ inputs.sensitive-data-whitelist }}
   build-and-test:
     name: Build and test
     permissions:
