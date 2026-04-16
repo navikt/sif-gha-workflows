@@ -4,11 +4,6 @@ import re
 import sys
 import zipfile
 
-try:
-    import openpyxl
-except ImportError:
-    openpyxl = None
-
 FNR_PATTERN = re.compile(r"\b(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{2}\d{5}\b")
 
 WEIGHTS_K1 = [3, 7, 6, 1, 8, 9, 4, 5, 2]
@@ -88,25 +83,45 @@ def scan_text_file(path):
 def scan_xlsx_file(path):
     findings = []
     non_allowed = []
-    if openpyxl is None:
-        return findings, non_allowed
     try:
-        wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-        for ws in wb:
-            for row_no, row in enumerate(ws.iter_rows(), start=1):
-                for cell in row:
-                    value = str(cell.value) if cell.value is not None else ""
-                    for match in FNR_PATTERN.finditer(value):
-                        fnr = match.group()
-                        digits = [int(c) for c in fnr]
-                        if not is_valid_fnr(digits):
+        with zipfile.ZipFile(path) as z:
+            shared_strings = []
+            if "xl/sharedStrings.xml" in z.namelist():
+                with z.open("xl/sharedStrings.xml") as f:
+                    xml = f.read().decode("utf-8", errors="ignore")
+                shared_strings = re.findall(r"<t[^>]*>([^<]+)</t>", xml)
+
+            for name in sorted(z.namelist()):
+                if not re.match(r"xl/worksheets/sheet\d+\.xml$", name):
+                    continue
+                with z.open(name) as f:
+                    sheet_xml = f.read().decode("utf-8", errors="ignore")
+
+                for row_match in re.finditer(r"<row[^>]*r=\"(\d+)\"[^>]*>(.*?)</row>", sheet_xml, re.DOTALL):
+                    row_no = row_match.group(1)
+                    row_xml = row_match.group(2)
+                    for cell_match in re.finditer(r"<c[^>]*>(.*?)</c>", row_xml, re.DOTALL):
+                        cell_xml = cell_match.group(1)
+                        val_match = re.search(r"<v>([^<]+)</v>", cell_xml)
+                        if not val_match:
                             continue
-                        if fnr in ALLOWED_FNRS:
-                            continue
-                        loc = f"sheet={ws.title} row={row_no} col={cell.column}"
-                        findings.append((loc, "FNR (fødselsnummer)"))
-                        non_allowed.append((loc, fnr))
-                        break
+                        value = val_match.group(1)
+                        cell_tag = cell_match.group(0)
+                        if 't="s"' in cell_tag:
+                            idx = int(value)
+                            if idx < len(shared_strings):
+                                value = shared_strings[idx]
+                        for match in FNR_PATTERN.finditer(value):
+                            fnr = match.group()
+                            digits = [int(c) for c in fnr]
+                            if not is_valid_fnr(digits):
+                                continue
+                            if fnr in ALLOWED_FNRS:
+                                continue
+                            loc = f"sheet={name} row={row_no}"
+                            findings.append((loc, "FNR (fødselsnummer)"))
+                            non_allowed.append((loc, fnr))
+                            break
     except Exception:
         pass
     return findings, non_allowed

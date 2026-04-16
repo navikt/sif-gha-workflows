@@ -4,12 +4,6 @@ description: Scans repository for sensitive data like Norwegian national identit
 runs:
   using: "composite"
   steps:
-    - name: Install openpyxl if Excel files exist
-      shell: bash
-      run: |
-        if find . -type f \( -name '*.xlsx' -o -name '*.xls' \) -print -quit | grep -q .; then
-          pip install openpyxl --quiet
-        fi
     - name: Scan for sensitive data
       shell: bash
       run: python3 ${{ github.action_path }}/scan.py
