@@ -134,19 +134,19 @@ for dirpath, dirnames, filenames in os.walk("."):
         if ext in TEXT_EXTENSIONS:
             findings, non_allowed = scan_text_file(filepath)
             for (location, pattern_name), (_, fnr) in zip(findings, non_allowed):
-                print(f"::error file={filepath},line={location}::Ikke-godkjent {pattern_name} ({fnr}) funnet i {filepath} linje {location}")
+                print(f"::error file={filepath},line={location}::Ikke-godkjent {pattern_name} funnet i {filepath} linje {location}")
                 all_findings.append((filepath, f"linje {location}", pattern_name, fnr))
                 found_any = True
         elif ext in {".xlsx", ".xls"}:
             findings, non_allowed = scan_xlsx_file(filepath)
             for (location, pattern_name), (_, fnr) in zip(findings, non_allowed):
-                print(f"::error file={filepath}::Ikke-godkjent {pattern_name} ({fnr}) funnet i {filepath} ({location})")
+                print(f"::error file={filepath}::Ikke-godkjent {pattern_name} funnet i {filepath} ({location})")
                 all_findings.append((filepath, str(location), pattern_name, fnr))
                 found_any = True
         elif ext == ".docx":
             findings, non_allowed = scan_docx_file(filepath)
             for (location, pattern_name), (_, fnr) in zip(findings, non_allowed):
-                print(f"::error file={filepath},line={location}::Ikke-godkjent {pattern_name} ({fnr}) funnet i {filepath} linje {location}")
+                print(f"::error file={filepath},line={location}::Ikke-godkjent {pattern_name} funnet i {filepath} linje {location}")
                 all_findings.append((filepath, f"linje {location}", pattern_name, fnr))
                 found_any = True
 
@@ -156,7 +156,7 @@ if found_any:
     print(f"⚠️  Fant {len(all_findings)} ikke-godkjente fødselsnummer:")
     print("-" * 60)
     for filepath, location, pattern_name, fnr in all_findings:
-        print(f"  {filepath} ({location}) - {fnr}")
+        print(f"  {filepath} ({location})")
     print("-" * 60)
     print("Kun fiktive fødselsnummer fra godkjent liste er tillatt.")
     print(f"Se godkjente fødselsnummer: {ALLOWED_FNR_URL}")
