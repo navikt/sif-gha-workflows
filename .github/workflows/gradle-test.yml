@@ -19,11 +19,6 @@ on:
         type: boolean
         default: true
         description: "Skal sensitiv data scan kjøres?"
-      sensitive-data-whitelist:
-        required: false
-        type: string
-        default: ''
-        description: "Comma-separated list of fødselsnummer to exclude from sensitive data scan"
 
 jobs:
   sensitive-data-scan:
@@ -31,9 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6.0.2
-      - uses: navikt/sif-gha-workflows/.github/actions/scan-for-sensitive-data@copilot/add-scan-for-sensitive-data-action
-        with:
-          whitelist: ${{ inputs.sensitive-data-whitelist }}
+      - uses: navikt/sif-gha-workflows/.github/actions/sif-code-scan@copilot/add-scan-for-sensitive-data-action
   test:
     permissions:
       contents: read
