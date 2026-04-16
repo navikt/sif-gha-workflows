@@ -78,7 +78,7 @@ on:
         description: 'local docker image artifact name to be downloaded '
         value: ${{ jobs.build-and-test.outputs.image-artifact-name }}
 jobs:
-  sensitive-data-scan:
+  sif-code-scan:
     if: ${{ inputs.scan-sensitive-data }}
     runs-on: ubuntu-latest
     steps:

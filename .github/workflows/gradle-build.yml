@@ -31,7 +31,7 @@ on:
       image:
         value: ${{ jobs.build.outputs.image }}
 jobs:
-  sensitive-data-scan:
+  sif-code-scan:
     if: ${{ inputs.scan-sensitive-data }}
     runs-on: ubuntu-latest
     steps:

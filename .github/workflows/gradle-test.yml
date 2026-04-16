@@ -21,7 +21,7 @@ on:
         description: "Skal sensitiv data scan kjøres?"
 
 jobs:
-  sensitive-data-scan:
+  sif-code-scan:
     if: ${{ inputs.scan-sensitive-data }}
     runs-on: ubuntu-latest
     steps:
