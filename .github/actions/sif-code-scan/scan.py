@@ -4,14 +4,22 @@ import re
 import sys
 import zipfile
 
-# Matches regular FNR, D-numbers (day+40: 41-71) and H-numbers (month+40: 41-52)
-FNR_PATTERN = re.compile(r"\b(0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])(0[1-9]|1[0-2]|4[1-9]|5[0-2])\d{2}\d{5}\b")
+# Pre-filter for 11-digit candidates: day (00-79), month (00-59), then 7 digits.
+FNR_PATTERN = re.compile(r"\b[0-7]\d[0-5]\d\d{7}\b")
 
 WEIGHTS_K1 = [3, 7, 6, 1, 8, 9, 4, 5, 2]
 WEIGHTS_K2 = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
 
 
 def is_valid_fnr(digits):
+    day = digits[0] * 10 + digits[1]
+    month = digits[2] * 10 + digits[3]
+    # Gyldig dag: 01-31 (vanlig) eller 41-71 (D-nummer)
+    if not (1 <= day <= 31 or 41 <= day <= 71):
+        return False
+    # Gyldig måned: 01-12 (vanlig/D-nummer) eller 41-52 (H-nummer)
+    if not (1 <= month <= 12 or 41 <= month <= 52):
+        return False
     k1 = 11 - (sum(d * w for d, w in zip(digits, WEIGHTS_K1)) % 11)
     if k1 == 11:
         k1 = 0
@@ -27,11 +35,10 @@ def is_valid_fnr(digits):
 
 def is_fictive_fnr(digits):
     # Fiktive FNR: H-nummer har måned+40, så første månedsiffer (digits[2]) >= 4
-    # D-nummer (dag+40) er gyldige, skarpe FNR og skal ikke utelates
     return digits[2] >= 4
 
 
-def is_sensitive_fnr(fnr):
+def is_real_fnr(fnr):
     """Sjekker om et 11-sifret tall er et sensitivt (ikke-fiktivt, ikke-godkjent) FNR."""
     digits = [int(c) for c in fnr]
     if not is_valid_fnr(digits):
@@ -72,13 +79,13 @@ def load_allowed_fnrs():
 ALLOWED_FNRS = load_allowed_fnrs()
 
 
-def check_text(content, filename):
+def check_text(content):
     findings = []
     non_allowed = []
     for line_no, line in enumerate(content.splitlines(), start=1):
         for match in FNR_PATTERN.finditer(line):
             fnr = match.group()
-            if not is_sensitive_fnr(fnr):
+            if not is_real_fnr(fnr):
                 continue
             findings.append((line_no, "FNR (fødselsnummer)"))
             non_allowed.append((line_no, fnr))
@@ -90,7 +97,7 @@ def scan_text_file(path):
     try:
         with open(path, encoding="utf-8", errors="ignore") as f:
             content = f.read()
-        findings, non_allowed = check_text(content, path)
+        findings, non_allowed = check_text(content)
         return findings, non_allowed
     except Exception:
         return [], []
@@ -129,7 +136,7 @@ def scan_xlsx_file(path):
                                 value = shared_strings[idx]
                         for match in FNR_PATTERN.finditer(value):
                             fnr = match.group()
-                            if not is_sensitive_fnr(fnr):
+                            if not is_real_fnr(fnr):
                                 continue
                             loc = f"sheet={name} row={row_no}"
                             findings.append((loc, "FNR (fødselsnummer)"))
@@ -146,7 +153,7 @@ def scan_docx_file(path):
             with z.open("word/document.xml") as f:
                 xml = f.read().decode("utf-8", errors="ignore")
         text = re.sub(r"<[^>]+>", "", xml)
-        return check_text(text, path)
+        return check_text(text)
     except Exception:
         return [], []
 
