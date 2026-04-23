@@ -4,7 +4,8 @@ import re
 import sys
 import zipfile
 
-FNR_PATTERN = re.compile(r"\b(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{2}\d{5}\b")
+# Matches regular FNR, D-numbers (day+40: 41-71) and H-numbers (month+40: 41-52)
+FNR_PATTERN = re.compile(r"\b(0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])(0[1-9]|1[0-2]|4[1-9]|5[0-2])\d{2}\d{5}\b")
 
 WEIGHTS_K1 = [3, 7, 6, 1, 8, 9, 4, 5, 2]
 WEIGHTS_K2 = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
@@ -20,6 +21,24 @@ def is_valid_fnr(digits):
     if k2 == 11:
         k2 = 0
     if k2 == 10 or k2 != digits[10]:
+        return False
+    return True
+
+
+def is_fictive_fnr(digits):
+    # Fiktive FNR: H-nummer har måned+40, så første månedsiffer (digits[2]) >= 4
+    # D-nummer (dag+40) er gyldige, skarpe FNR og skal ikke utelates
+    return digits[2] >= 4
+
+
+def is_sensitive_fnr(fnr):
+    """Sjekker om et 11-sifret tall er et sensitivt (ikke-fiktivt, ikke-godkjent) FNR."""
+    digits = [int(c) for c in fnr]
+    if not is_valid_fnr(digits):
+        return False
+    if is_fictive_fnr(digits):
+        return False
+    if fnr in ALLOWED_FNRS:
         return False
     return True
 
@@ -59,10 +78,7 @@ def check_text(content, filename):
     for line_no, line in enumerate(content.splitlines(), start=1):
         for match in FNR_PATTERN.finditer(line):
             fnr = match.group()
-            digits = [int(c) for c in fnr]
-            if not is_valid_fnr(digits):
-                continue
-            if fnr in ALLOWED_FNRS:
+            if not is_sensitive_fnr(fnr):
                 continue
             findings.append((line_no, "FNR (fødselsnummer)"))
             non_allowed.append((line_no, fnr))
@@ -113,10 +129,7 @@ def scan_xlsx_file(path):
                                 value = shared_strings[idx]
                         for match in FNR_PATTERN.finditer(value):
                             fnr = match.group()
-                            digits = [int(c) for c in fnr]
-                            if not is_valid_fnr(digits):
-                                continue
-                            if fnr in ALLOWED_FNRS:
+                            if not is_sensitive_fnr(fnr):
                                 continue
                             loc = f"sheet={name} row={row_no}"
                             findings.append((loc, "FNR (fødselsnummer)"))

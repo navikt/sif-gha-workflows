@@ -15,6 +15,8 @@ SCAN_PY = os.path.join(ACTION_DIR, "scan.py")
 ALLOWED_FNR = "03021700214"
 NON_ALLOWED_FNR = "01017000108"
 INVALID_FNR = "12345678901"
+H_NUMMER = "01417000190"  # Fiktivt H-nummer (maaned+40), skal ikke flagges
+D_NUMMER = "41017000010"  # D-nummer (dag+40), er skarpt FNR og skal flagges
 
 
 class ScanTestBase(unittest.TestCase):
@@ -73,6 +75,14 @@ class TestTextFiles(ScanTestBase):
 
     def test_mixed_allowed_and_non_allowed(self):
         self.write_file("mixed.json", f'{{"allowed": "{ALLOWED_FNR}", "bad": "{NON_ALLOWED_FNR}"}}\n')
+        self.assert_scan_fails()
+
+    def test_h_nummer_passes(self):
+        self.write_file("h_nummer.kt", f'val fnr = "{H_NUMMER}"\n')
+        self.assert_scan_passes()
+
+    def test_d_nummer_fails(self):
+        self.write_file("d_nummer.kt", f'val fnr = "{D_NUMMER}"\n')
         self.assert_scan_fails()
 
 
