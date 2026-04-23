@@ -17,7 +17,7 @@ def is_valid_fnr(digits):
     # Gyldig dag: 01-31 (vanlig) eller 41-71 (D-nummer)
     if not (1 <= day <= 31 or 41 <= day <= 71):
         return False
-    # Gyldig måned: 01-12 (vanlig/D-nummer) eller 41-52 (H-nummer)
+    # Gyldig måned: 01-12 (vanlig/D-nummer) eller 41-52 (syntetisk)
     if not (1 <= month <= 12 or 41 <= month <= 52):
         return False
     k1 = 11 - (sum(d * w for d, w in zip(digits, WEIGHTS_K1)) % 11)
@@ -34,11 +34,11 @@ def is_valid_fnr(digits):
 
 
 def is_fictive_fnr(digits):
-    # Fiktive FNR: H-nummer har måned+40, så første månedsiffer (digits[2]) >= 4
+    # Fiktive FNR har måned+40, så første månedsiffer (digits[2]) >= 4
     return digits[2] >= 4
 
 
-def is_real_fnr(fnr):
+def is_sensitive_fnr(fnr):
     """Sjekker om et 11-sifret tall er et sensitivt (ikke-fiktivt, ikke-godkjent) FNR."""
     digits = [int(c) for c in fnr]
     if not is_valid_fnr(digits):
@@ -85,7 +85,7 @@ def check_text(content):
     for line_no, line in enumerate(content.splitlines(), start=1):
         for match in FNR_PATTERN.finditer(line):
             fnr = match.group()
-            if not is_real_fnr(fnr):
+            if not is_sensitive_fnr(fnr):
                 continue
             findings.append((line_no, "FNR (fødselsnummer)"))
             non_allowed.append((line_no, fnr))
@@ -136,7 +136,7 @@ def scan_xlsx_file(path):
                                 value = shared_strings[idx]
                         for match in FNR_PATTERN.finditer(value):
                             fnr = match.group()
-                            if not is_real_fnr(fnr):
+                            if not is_sensitive_fnr(fnr):
                                 continue
                             loc = f"sheet={name} row={row_no}"
                             findings.append((loc, "FNR (fødselsnummer)"))
