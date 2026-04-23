@@ -99,7 +99,8 @@ def scan_text_file(path):
             content = f.read()
         findings, non_allowed = check_text(content)
         return findings, non_allowed
-    except Exception:
+    except Exception as e:
+        print(f"::warning::Feil ved skanning av fil {path}: {e}", file=sys.stderr)
         return [], []
 
 
@@ -142,8 +143,8 @@ def scan_xlsx_file(path):
                             findings.append((loc, "FNR (fødselsnummer)"))
                             non_allowed.append((loc, fnr))
                             break
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"::warning::Feil ved skanning av fil {path}: {e}", file=sys.stderr)
     return findings, non_allowed
 
 
@@ -154,7 +155,8 @@ def scan_docx_file(path):
                 xml = f.read().decode("utf-8", errors="ignore")
         text = re.sub(r"<[^>]+>", "", xml)
         return check_text(text)
-    except Exception:
+    except Exception as e:
+        print(f"::warning::Feil ved skanning av fil {path}: {e}", file=sys.stderr)
         return [], []
 
 

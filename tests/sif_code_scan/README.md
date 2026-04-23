@@ -5,7 +5,7 @@
 Fra repo-roten:
 
 ```sh
-python3 -m unittest discover -s tests/sif-code-scan -v
+python3 -m unittest discover -s tests/sif_code_scan -v
 ```
 
 ## Struktur

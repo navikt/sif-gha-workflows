@@ -12,7 +12,7 @@ FIXTURES_DIR = os.path.join(TEST_DIR, "fixtures")
 ACTION_DIR = os.path.join(os.path.dirname(os.path.dirname(TEST_DIR)), ".github", "actions", "sif-code-scan")
 SCAN_PY = os.path.join(ACTION_DIR, "scan.py")
 
-ALLOWED_FNR = "03021700214"
+ALLOWED_FNR = "01017100552"
 NON_ALLOWED_FNR = "01017000108"
 INVALID_FNR = "12345678901"
 H_NUMMER = "01417000190"  # Fiktivt H-nummer (maaned+40), skal ikke flagges
