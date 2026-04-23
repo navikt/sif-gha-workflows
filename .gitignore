@@ -7,4 +7,4 @@
 *.ipr
 *.iws
 .DS_Store
-*.graphqls
+*.graphqls__pycache__/
