@@ -8,4 +8,4 @@
 *.iws
 .DS_Store
 *.graphqls
-__pycache__/
+**/__pycache__/
