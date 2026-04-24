@@ -103,7 +103,8 @@ function scanXlsxFile(filepath: string): Finding[] {
         encoding: "utf-8",
         maxBuffer: 10 * 1024 * 1024,
       });
-    } catch {
+    } catch (e) {
+      console.error(`::warning::Kan ikke lese ${sheetName} i ${filepath}. Fortsetter med neste sheet: ${e instanceof Error ? e.message : e}`);
       continue;
     }
 
@@ -159,59 +160,51 @@ interface AllFinding {
 let foundAny = false;
 const allFindings: AllFinding[] = [];
 
+function reportFindings(filepath: string, findings: Finding[], locationPrefix: string) {
+  for (const f of findings) {
+    const loc = locationPrefix === "linje" ? `linje ${f.location}` : String(f.location);
+    const annotation = locationPrefix === "linje"
+      ? `::error file=${filepath},line=${f.location}::Ikke-godkjent ${f.patternName} funnet i ${filepath} ${loc}`
+      : `::error file=${filepath}::Ikke-godkjent ${f.patternName} funnet i ${filepath} (${f.location})`;
+    console.log(annotation);
+    allFindings.push({ filepath, location: loc, patternName: f.patternName, fnr: f.fnr });
+    foundAny = true;
+  }
+}
+
 function walkDir(dir: string): void {
   let entries: string[];
   try {
     entries = readdirSync(dir);
-  } catch {
+  } catch (e) {
+    console.error(`::warning::Kan ikke lese mappe ${dir}: ${e instanceof Error ? e.message : e}`);
     return;
   }
   for (const entry of entries.sort()) {
     const fullPath = join(dir, entry);
-    let stat;
     try {
-      stat = statSync(fullPath);
-    } catch {
-      continue;
-    }
-    if (stat.isDirectory()) {
-      if (ALWAYS_EXCLUDED_DIRS.has(entry)) continue;
-      if (excludeDirs && BUILD_DIRS.has(entry)) continue;
-      walkDir(fullPath);
-    } else if (stat.isFile()) {
-      try {
+      const stat = statSync(fullPath);
+      if (stat.isDirectory()) {
+        if (ALWAYS_EXCLUDED_DIRS.has(entry)) continue;
+        if (excludeDirs && BUILD_DIRS.has(entry)) continue;
+        walkDir(fullPath);
+      } else if (stat.isFile()) {
         const ext = extname(entry).toLowerCase();
         let findings: Finding[];
 
         if (ext === ".xlsx" || ext === ".xls") {
           findings = scanXlsxFile(fullPath);
-          for (const f of findings) {
-            console.log(`::error file=${fullPath}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} (${f.location})`);
-            allFindings.push({ filepath: fullPath, location: String(f.location), patternName: f.patternName, fnr: f.fnr });
-            foundAny = true;
-          }
+          reportFindings(fullPath, findings, "celle");
         } else if (ext === ".docx") {
           findings = scanDocxFile(fullPath);
-          for (const f of findings) {
-            console.log(
-              `::error file=${fullPath},line=${f.location}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} linje ${f.location}`
-            );
-            allFindings.push({ filepath: fullPath, location: `linje ${f.location}`, patternName: f.patternName, fnr: f.fnr });
-            foundAny = true;
-          }
+          reportFindings(fullPath, findings, "linje");
         } else if (isTextFile(fullPath)) {
           findings = scanTextFile(fullPath);
-          for (const f of findings) {
-            console.log(
-              `::error file=${fullPath},line=${f.location}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} linje ${f.location}`
-            );
-            allFindings.push({ filepath: fullPath, location: `linje ${f.location}`, patternName: f.patternName, fnr: f.fnr });
-            foundAny = true;
-          }
+          reportFindings(fullPath, findings, "linje");
         }
-      } catch (e) {
-        console.error(`::warning::Feil ved lesing av ${fullPath}: ${e instanceof Error ? e.message : e}`);
       }
+    } catch (e) {
+      console.error(`::warning::Kan ikke lese ${fullPath}: ${e instanceof Error ? e.message : e}`);
     }
   }
 }
