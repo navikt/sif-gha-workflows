@@ -7,8 +7,8 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const SCAN_TS = join(SCRIPT_DIR, "scan.ts");
-const FIXTURES_DIR = join(dirname(dirname(dirname(SCRIPT_DIR))), "tests", "sif_code_scan", "fixtures");
+const SCAN_TS = join(SCRIPT_DIR, "..", "..", ".github", "actions", "sif-code-scan", "scan.ts");
+const FIXTURES_DIR = join(SCRIPT_DIR, "fixtures");
 
 const ALLOWED_FNR = "01017100552";
 const NON_ALLOWED_FNR = "01017000108";

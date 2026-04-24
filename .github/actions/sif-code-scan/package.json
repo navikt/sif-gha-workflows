@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "scan": "tsx scan.ts",
-    "test": "vitest run"
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@navikt/fnrvalidator": "^2.2.1"
