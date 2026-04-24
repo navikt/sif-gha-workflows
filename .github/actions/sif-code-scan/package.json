@@ -8,10 +8,10 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@navikt/fnrvalidator": "^2.2.1"
+    "@navikt/fnrvalidator": "^2.2.1",
+    "tsx": "^4.19.0"
   },
   "devDependencies": {
-    "tsx": "^4.19.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   }
