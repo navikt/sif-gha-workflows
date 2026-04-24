@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import zipfile
+import argparse
 
 # Pre-filter for 11-digit candidates: day (00-79), month (00-59), then 7 digits.
 FNR_PATTERN = re.compile(r"\b[0-7]\d[0-5]\d\d{7}\b")
@@ -50,10 +51,13 @@ def is_sensitive_fnr(fnr):
     return True
 
 
-TEXT_EXTENSIONS = {
-    ".kt", ".java", ".json", ".yaml", ".yml", ".xml", ".properties",
-    ".ts", ".js", ".tsx", ".sql", ".tf", ".csv", ".tsv", ".txt", ".md",
-}
+def is_text_file(path, chunk_size=8192):
+    """Sjekker om en fil er en tekstfil ved å lete etter null-bytes."""
+    try:
+        with open(path, "rb") as f:
+            return b"\x00" not in f.read(chunk_size)
+    except (OSError, IOError):
+        return False
 
 EXCLUDED_DIRS = {".git", "node_modules", "build", ".gradle", "target"}
 
@@ -160,21 +164,21 @@ def scan_docx_file(path):
         return [], []
 
 
+parser = argparse.ArgumentParser(description="Skanner for sensitive fødselsnummer i kildekode.")
+parser.add_argument("--exclude-dirs", action="store_true",
+                    help="Ekskluder vanlige uønskede mapper (node_modules, build, .gradle, target, .git)")
+args = parser.parse_args()
+
 found_any = False
 all_findings = []
 
 for dirpath, dirnames, filenames in os.walk("."):
-    dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIRS]
+    if args.exclude_dirs:
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIRS]
     for filename in filenames:
         filepath = os.path.join(dirpath, filename)
         ext = os.path.splitext(filename)[1].lower()
-        if ext in TEXT_EXTENSIONS:
-            findings, non_allowed = scan_text_file(filepath)
-            for (location, pattern_name), (_, fnr) in zip(findings, non_allowed):
-                print(f"::error file={filepath},line={location}::Ikke-godkjent {pattern_name} funnet i {filepath} linje {location}")
-                all_findings.append((filepath, f"linje {location}", pattern_name, fnr))
-                found_any = True
-        elif ext in {".xlsx", ".xls"}:
+        if ext in {".xlsx", ".xls"}:
             findings, non_allowed = scan_xlsx_file(filepath)
             for (location, pattern_name), (_, fnr) in zip(findings, non_allowed):
                 print(f"::error file={filepath}::Ikke-godkjent {pattern_name} funnet i {filepath} ({location})")
@@ -182,6 +186,12 @@ for dirpath, dirnames, filenames in os.walk("."):
                 found_any = True
         elif ext == ".docx":
             findings, non_allowed = scan_docx_file(filepath)
+            for (location, pattern_name), (_, fnr) in zip(findings, non_allowed):
+                print(f"::error file={filepath},line={location}::Ikke-godkjent {pattern_name} funnet i {filepath} linje {location}")
+                all_findings.append((filepath, f"linje {location}", pattern_name, fnr))
+                found_any = True
+        elif is_text_file(filepath):
+            findings, non_allowed = scan_text_file(filepath)
             for (location, pattern_name), (_, fnr) in zip(findings, non_allowed):
                 print(f"::error file={filepath},line={location}::Ikke-godkjent {pattern_name} funnet i {filepath} linje {location}")
                 all_findings.append((filepath, f"linje {location}", pattern_name, fnr))

@@ -27,9 +27,12 @@ class ScanTestBase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.workdir)
 
-    def run_scan(self):
+    def run_scan(self, extra_args=None):
+        cmd = [sys.executable, SCAN_PY]
+        if extra_args:
+            cmd.extend(extra_args)
         return subprocess.run(
-            [sys.executable, SCAN_PY],
+            cmd,
             cwd=self.workdir,
             capture_output=True,
             text=True,
@@ -107,6 +110,14 @@ class TestDocxFiles(ScanTestBase):
 
 
 class TestExcludedDirs(ScanTestBase):
+    def run_scan(self, extra_args=None):
+        return super().run_scan(extra_args=["--exclude-dirs"] + (extra_args or []))
+
     def test_non_allowed_fnr_in_target_dir(self):
         self.write_file("target/bad.kt", f'val fnr = "{NON_ALLOWED_FNR}"\n')
         self.assert_scan_passes()
+
+    def test_non_allowed_fnr_in_target_dir_without_exclude(self):
+        self.write_file("target/bad.kt", f'val fnr = "{NON_ALLOWED_FNR}"\n')
+        result = super().run_scan()
+        self.assertNotEqual(result.returncode, 0, "Should find FNR when --exclude-dirs is not set")

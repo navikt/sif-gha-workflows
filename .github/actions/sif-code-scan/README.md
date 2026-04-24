@@ -10,6 +10,12 @@ Kjør fra roten av repoet du vil skanne:
 python3 path/to/scan.py
 ```
 
+Med ekskludering av build-mapper:
+
+```sh
+python3 path/to/scan.py --exclude-dirs
+```
+
 Skriptet traverserer alle filer i nåværende katalog rekursivt og avslutter med exit-kode 1 dersom det finner ikke-godkjente FNR.
 
 ## Hvordan det fungerer
@@ -22,15 +28,21 @@ Skriptet traverserer alle filer i nåværende katalog rekursivt og avslutter med
 
 ## Støttede filtyper
 
-| Type | Utvidelser |
-|------|-----------|
-| Tekst | `.kt`, `.java`, `.json`, `.yaml`, `.yml`, `.xml`, `.properties`, `.ts`, `.js`, `.tsx`, `.sql`, `.tf`, `.csv`, `.tsv`, `.txt`, `.md` |
-| Excel | `.xlsx`, `.xls` |
-| Word | `.docx` |
+Skanneren bruker null-byte-deteksjon for å avgjøre om en fil er tekst eller binær. De første 8 KB av filen leses — inneholder de en null-byte, behandles filen som binær og hoppes over.
+
+I tillegg har Excel (`.xlsx`/`.xls`) og Word (`.docx`) egne parsere som leser innholdet fra zip-strukturen.
 
 ## Ekskluderte kataloger
 
-`.git`, `node_modules`, `build`, `.gradle`, `target`
+Med `--exclude-dirs` kan du ekskludere vanlige build-mapper:
+
+```sh
+python3 scan.py --exclude-dirs
+```
+
+Mappene som ekskluderes: `.git`, `node_modules`, `build`, `.gradle`, `target`
+
+Uten flagget scannes alle kataloger.
 
 ## Godkjent-liste
 
