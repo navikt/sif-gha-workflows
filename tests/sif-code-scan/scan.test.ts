@@ -10,16 +10,16 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SCAN_TS = join(SCRIPT_DIR, "..", "..", ".github", "actions", "sif-code-scan", "scan.ts");
 const FIXTURES_DIR = join(SCRIPT_DIR, "fixtures");
 
-const ALLOWED_FNR = "01017100552";
-const NON_ALLOWED_FNR = "01017000108";
-const INVALID_FNR = "12345678901";
-const H_NUMMER = "01417000190"; // Fiktivt H-nummer (maaned+40), skal ikke flagges
-const D_NUMMER = "41017000010"; // D-nummer (dag+40), er skarpt FNR og skal flagges
+const GODKJENT_FNR = "01017100552";
+const IKKE_GODKJENT_FNR = "01017000108";
+const UGYLDIG_FNR = "12345678901";
+const H_NUMMER = "01417000190"; // Fiktivt H-nummer (måned+40), skal ikke flagges
+const D_NUMMER = "41017000010"; // D-nummer (dag+40), skal flagges
 
-function runScan(cwd: string, extraArgs: string[] = []): { exitCode: number; stdout: string; stderr: string } {
+function kjørScan(cwd: string, ekstraArgs: string[] = []): { exitCode: number; stdout: string; stderr: string } {
   try {
     const result = execSync(
-      `npx tsx "${SCAN_TS}" ${extraArgs.join(" ")}`,
+      `npx tsx "${SCAN_TS}" ${ekstraArgs.join(" ")}`,
       { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
     );
     return { exitCode: 0, stdout: result, stderr: "" };
@@ -28,13 +28,13 @@ function runScan(cwd: string, extraArgs: string[] = []): { exitCode: number; std
   }
 }
 
-function writeFile(workdir: string, name: string, content: string) {
+function skrivFil(workdir: string, name: string, content: string) {
   const path = join(workdir, name);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
 }
 
-function copyFixture(workdir: string, fixtureName: string, destName?: string) {
+function kopierFixture(workdir: string, fixtureName: string, destName?: string) {
   copyFileSync(join(FIXTURES_DIR, fixtureName), join(workdir, destName ?? fixtureName));
 }
 
@@ -50,88 +50,88 @@ describe("scan.ts", () => {
     rmSync(workdir, { recursive: true, force: true });
   });
 
-  describe("TextFiles", () => {
-    it("clean file passes", () => {
-      writeFile(workdir, "clean.kt", 'val x = "hello world"\n');
-      const { exitCode } = runScan(workdir);
+  describe("Tekstfiler", () => {
+    it("ren fil passerer", () => {
+      skrivFil(workdir, "clean.kt", 'val x = "hello world"\n');
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).toBe(0);
     });
 
-    it("allowed FNR passes", () => {
-      writeFile(workdir, "allowed.kt", `val testFnr = "${ALLOWED_FNR}"\n`);
-      const { exitCode } = runScan(workdir);
+    it("godkjent FNR passerer", () => {
+      skrivFil(workdir, "allowed.kt", `val testFnr = "${GODKJENT_FNR}"\n`);
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).toBe(0);
     });
 
-    it("non-allowed FNR fails", () => {
-      writeFile(workdir, "bad.kt", `val fnr = "${NON_ALLOWED_FNR}"\n`);
-      const { exitCode } = runScan(workdir);
+    it("ikke-godkjent FNR feiler", () => {
+      skrivFil(workdir, "bad.kt", `val fnr = "${IKKE_GODKJENT_FNR}"\n`);
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).not.toBe(0);
     });
 
-    it("invalid FNR passes", () => {
-      writeFile(workdir, "invalid.kt", `val num = "${INVALID_FNR}"\n`);
-      const { exitCode } = runScan(workdir);
+    it("ugyldig FNR passerer", () => {
+      skrivFil(workdir, "invalid.kt", `val num = "${UGYLDIG_FNR}"\n`);
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).toBe(0);
     });
 
-    it("mixed allowed and non-allowed fails", () => {
-      writeFile(workdir, "mixed.json", `{"allowed": "${ALLOWED_FNR}", "bad": "${NON_ALLOWED_FNR}"}\n`);
-      const { exitCode } = runScan(workdir);
+    it("blanding av godkjent og ikke-godkjent feiler", () => {
+      skrivFil(workdir, "mixed.json", `{"allowed": "${GODKJENT_FNR}", "bad": "${IKKE_GODKJENT_FNR}"}\n`);
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).not.toBe(0);
     });
 
-    it("H-nummer passes (syntetisk)", () => {
-      writeFile(workdir, "h_nummer.kt", `val fnr = "${H_NUMMER}"\n`);
-      const { exitCode } = runScan(workdir);
+    it("H-nummer passerer (syntetisk)", () => {
+      skrivFil(workdir, "h_nummer.kt", `val fnr = "${H_NUMMER}"\n`);
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).toBe(0);
     });
 
-    it("D-nummer fails", () => {
-      writeFile(workdir, "d_nummer.kt", `val fnr = "${D_NUMMER}"\n`);
-      const { exitCode } = runScan(workdir);
-      expect(exitCode).not.toBe(0);
-    });
-  });
-
-  describe("XlsxFiles", () => {
-    it("allowed FNR in xlsx passes", () => {
-      copyFixture(workdir, "allowed.xlsx", "test.xlsx");
-      const { exitCode } = runScan(workdir);
-      expect(exitCode).toBe(0);
-    });
-
-    it("non-allowed FNR in xlsx fails", () => {
-      copyFixture(workdir, "non_allowed.xlsx", "test.xlsx");
-      const { exitCode } = runScan(workdir);
+    it("D-nummer feiler", () => {
+      skrivFil(workdir, "d_nummer.kt", `val fnr = "${D_NUMMER}"\n`);
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).not.toBe(0);
     });
   });
 
-  describe("DocxFiles", () => {
-    it("allowed FNR in docx passes", () => {
-      copyFixture(workdir, "allowed.docx", "test.docx");
-      const { exitCode } = runScan(workdir);
+  describe("Xlsx-filer", () => {
+    it("godkjent FNR i xlsx passerer", () => {
+      kopierFixture(workdir, "allowed.xlsx", "test.xlsx");
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).toBe(0);
     });
 
-    it("non-allowed FNR in docx fails", () => {
-      copyFixture(workdir, "non_allowed.docx", "test.docx");
-      const { exitCode } = runScan(workdir);
+    it("ikke-godkjent FNR i xlsx feiler", () => {
+      kopierFixture(workdir, "non_allowed.xlsx", "test.xlsx");
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).not.toBe(0);
     });
   });
 
-  describe("ExcludedDirs", () => {
-    it("non-allowed FNR in target dir passes with --exclude-dirs", () => {
-      writeFile(workdir, "target/bad.kt", `val fnr = "${NON_ALLOWED_FNR}"\n`);
-      const { exitCode } = runScan(workdir, ["--exclude-dirs"]);
+  describe("Docx-filer", () => {
+    it("godkjent FNR i docx passerer", () => {
+      kopierFixture(workdir, "allowed.docx", "test.docx");
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).toBe(0);
     });
 
-    it("non-allowed FNR in target dir fails without --exclude-dirs", () => {
-      writeFile(workdir, "target/bad.kt", `val fnr = "${NON_ALLOWED_FNR}"\n`);
-      const { exitCode } = runScan(workdir);
+    it("ikke-godkjent FNR i docx feiler", () => {
+      kopierFixture(workdir, "non_allowed.docx", "test.docx");
+      const { exitCode } = kjørScan(workdir);
+      expect(exitCode).not.toBe(0);
+    });
+  });
+
+  describe("Ekskluderte mapper", () => {
+    it("ikke-godkjent FNR i target-mappe passerer med --exclude-dirs", () => {
+      skrivFil(workdir, "target/bad.kt", `val fnr = "${IKKE_GODKJENT_FNR}"\n`);
+      const { exitCode } = kjørScan(workdir, ["--exclude-dirs"]);
+      expect(exitCode).toBe(0);
+    });
+
+    it("ikke-godkjent FNR i target-mappe feiler uten --exclude-dirs", () => {
+      skrivFil(workdir, "target/bad.kt", `val fnr = "${IKKE_GODKJENT_FNR}"\n`);
+      const { exitCode } = kjørScan(workdir);
       expect(exitCode).not.toBe(0);
     });
   });
