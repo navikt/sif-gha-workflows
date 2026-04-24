@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, copyFileSync } from "fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, copyFileSync, chmodSync } from "fs";
 import { join } from "path";
 import { execSync } from "child_process";
 import { tmpdir } from "os";
@@ -133,6 +133,15 @@ describe("scan.ts", () => {
       skrivFil(workdir, "target/bad.kt", `val fnr = "${IKKE_GODKJENT_FNR}"\n`);
       const { exitCode } = kjørScan(workdir);
       expect(exitCode).not.toBe(0);
+    });
+  });
+
+  describe("Feilhåndtering", () => {
+    it("ulesbar fil hoppes over uten å krasje", () => {
+      skrivFil(workdir, "secret.kt", `val fnr = "${IKKE_GODKJENT_FNR}"\n`);
+      chmodSync(join(workdir, "secret.kt"), 0o000);
+      const { exitCode } = kjørScan(workdir);
+      expect(exitCode).toBe(0);
     });
   });
 });
