@@ -29,6 +29,16 @@ npx tsx scan.ts --exclude-dirs
 4. **Sjekker godkjent-liste** — Nummer i `allowed-fnr/*.txt` ignoreres.
 5. **Rapporterer funn** — Skriver `::error`-annotasjoner og en oppsummering.
 
+## Filtyper som skannes
+
+| Filtype | Beskrivelse |
+|---------|-------------|
+| **Tekstfiler** | Alle filer som ikke inneholder null-bytes (`.kt`, `.java`, `.ts`, `.json`, `.xml`, `.yaml`, `.sql`, `.md` osv.) |
+| **Excel** (`.xlsx`, `.xls`) | Celleinnhold leses fra XML-innholdet i regnearkfilen |
+| **Word** (`.docx`) | Tekst i avsnitt og tabeller leses fra dokumentets XML |
+
+Binærfiler (bilder, kompilerte filer osv.) hoppes automatisk over.
+
 ## Ekskluderte kataloger
 
 `.git` og `node_modules` ekskluderes alltid. Med `--exclude-dirs` ekskluderes også `build`, `.gradle` og `target`.
