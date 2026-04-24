@@ -1,9 +1,30 @@
 name: SIF Code Scan
 description: Scans repository for sensitive data like Norwegian national identity numbers (fødselsnummer). Only FNR from the bundled fiktive_fnr_*.txt lists are allowed.
 
+inputs:
+  exclude-dirs:
+    description: 'Exclude common build directories (build, .gradle, target) from scan'
+    required: false
+    default: 'false'
+
 runs:
   using: "composite"
   steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci --ignore-scripts
+
     - name: Scan for sensitive data
       shell: bash
-      run: python3 ${{ github.action_path }}/scan.py
+      run: |
+        ARGS=""
+        if [ "${{ inputs.exclude-dirs }}" = "true" ]; then
+          ARGS="--exclude-dirs"
+        fi
+        npx tsx "${{ github.action_path }}/scan.ts" $ARGS

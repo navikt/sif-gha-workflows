@@ -4,16 +4,17 @@ Skanner kildekode for ikke-godkjente fødselsnummer (FNR). Brukes for å hindre 
 
 ## Bruk
 
-Kjør fra roten av repoet du vil skanne:
+Installer avhengigheter og kjør fra roten av repoet du vil skanne:
 
 ```sh
-python3 path/to/scan.py
+cd .github/actions/sif-code-scan && npm ci
+npx tsx scan.ts
 ```
 
 Med ekskludering av build-mapper:
 
 ```sh
-python3 path/to/scan.py --exclude-dirs
+npx tsx scan.ts --exclude-dirs
 ```
 
 Skriptet traverserer alle filer i nåværende katalog rekursivt og avslutter med exit-kode 1 dersom det finner ikke-godkjente FNR.
@@ -21,8 +22,8 @@ Skriptet traverserer alle filer i nåværende katalog rekursivt og avslutter med
 ## Hvordan det fungerer
 
 1. **Finner kandidater** — Søker etter 11-sifret tall som matcher mønsteret for FNR/D-nummer.
-2. **Validerer kontrollsiffer** — Beregner kontrollsiffer (k1 og k2) med modulus 11-algoritmen og forkaster ugyldige nummer.
-3. **Filtrerer bort syntetiske** — Nummer med måned ≥ 41 (måned+40) er syntetiske/fiktive (H-nummer) og ignoreres.
+2. **Validerer med fnrvalidator** — Bruker `@navikt/fnrvalidator`-biblioteket for å validere nummer og bestemme type.
+3. **Filtrerer bort syntetiske** — H-nummer (hnr), T-nummer (tnr), og kombinasjoner (dnr-and-hnr, dnr-and-tnr) er syntetiske/fiktive og ignoreres.
 4. **Sjekker godkjent-liste** — Nummer som finnes i `allowed-fnr/*.txt` ignoreres også.
 5. **Rapporterer funn** — Skriver `::error`-annotasjoner (for GitHub Actions) og en oppsummering til stdout.
 
@@ -34,24 +35,32 @@ I tillegg har Excel (`.xlsx`/`.xls`) og Word (`.docx`) egne parsere som leser in
 
 ## Ekskluderte kataloger
 
-Med `--exclude-dirs` kan du ekskludere vanlige build-mapper:
+`.git` og `node_modules` ekskluderes alltid.
+
+Med `--exclude-dirs` kan du i tillegg ekskludere vanlige build-mapper:
 
 ```sh
-python3 scan.py --exclude-dirs
+npx tsx scan.ts --exclude-dirs
 ```
 
-Mappene som ekskluderes: `.git`, `node_modules`, `build`, `.gradle`, `target`
-
-Uten flagget scannes alle kataloger.
+Ekstra mapper som ekskluderes med flagget: `build`, `.gradle`, `target`
 
 ## Godkjent-liste
 
 Fødselsnummer som er kjent og akseptert (f.eks. testdata som ikke kan endres) legges i `.txt`-filer under `allowed-fnr/`. Én FNR per linje.
 
+## Tester
+
+Kjør testene med:
+
+```sh
+cd .github/actions/sif-code-scan && npm test
+```
+
 ## Eksempel
 
 ```
-$ python3 scan.py
+$ npx tsx scan.ts
 ::error file=./src/test/MyTest.kt,line=42::Ikke-godkjent FNR (fødselsnummer) funnet i ./src/test/MyTest.kt linje 42
 
 ============================================================
@@ -65,6 +74,6 @@ Kun fiktive fødselsnummer fra godkjent liste er tillatt.
 Når alt er OK:
 
 ```
-$ python3 scan.py
+$ npx tsx scan.ts
 ✅ Ingen ikke-godkjente fødselsnummer funnet. (3 fiktive FNR i godkjent liste)
 ```
