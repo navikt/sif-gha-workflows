@@ -22,10 +22,21 @@ on:
         required: false
         type: string
         default: '21'
+      scan-sensitive-data:
+        required: false
+        type: boolean
+        default: true
+        description: "Skal sensitiv data scan kjøres?"
     outputs:
       image:
         value: ${{ jobs.build.outputs.image }}
 jobs:
+  sif-code-scan:
+    if: ${{ inputs.scan-sensitive-data }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6.0.2
+      - uses: navikt/sif-gha-workflows/.github/actions/sif-code-scan@copilot/add-scan-for-sensitive-data-action
   build:
     permissions:
       contents: write # for dependency submission

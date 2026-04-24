@@ -1,0 +1,11 @@
+name: SIF Code Scan
+description: Scans repository for sensitive data like Norwegian national identity numbers (fødselsnummer). Only FNR from the bundled allowed-fnr lists are allowed.
+
+runs:
+  using: "composite"
+  steps:
+    - name: Scan for sensitive data
+      shell: bash
+      run: |
+        cd "${{ github.action_path }}" && npm ci --ignore-scripts --omit=dev --silent
+        npx tsx "${{ github.action_path }}/scan.ts"

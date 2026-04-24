@@ -56,6 +56,11 @@ on:
         type: boolean
         description: 'Maven quiet mode'
         default: true
+      scan-sensitive-data:
+        required: false
+        type: boolean
+        default: true
+        description: "Skal sensitiv data scan kjøres?"
     outputs:
       build-version:
         description: "Build version"
@@ -64,6 +69,12 @@ on:
         description: 'local docker image artifact name to be downloaded '
         value: ${{ jobs.build-and-test.outputs.image-artifact-name }}
 jobs:
+  sif-code-scan:
+    if: ${{ inputs.scan-sensitive-data }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6.0.2
+      - uses: navikt/sif-gha-workflows/.github/actions/sif-code-scan@copilot/add-scan-for-sensitive-data-action
   build-and-test:
     name: Build and test
     permissions:
