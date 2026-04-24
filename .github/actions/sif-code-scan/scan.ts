@@ -45,13 +45,9 @@ function isSensitiveFnr(fnrStr: string): boolean {
 }
 
 function isTextFile(path: string, chunkSize = 8192): boolean {
-  try {
-    const buf = readFileSync(path);
-    const chunk = buf.subarray(0, chunkSize);
-    return !chunk.includes(0);
-  } catch {
-    return false;
-  }
+  const buf = readFileSync(path);
+  const chunk = buf.subarray(0, chunkSize);
+  return !chunk.includes(0);
 }
 
 interface Finding {
@@ -78,90 +74,76 @@ function checkText(content: string): Finding[] {
 }
 
 function scanTextFile(filepath: string): Finding[] {
-  try {
-    const content = readFileSync(filepath, "utf-8");
-    return checkText(content);
-  } catch (e) {
-    console.error(`::warning::Feil ved skanning av fil ${filepath}: ${e}`);
-    return [];
-  }
+  const content = readFileSync(filepath, "utf-8");
+  return checkText(content);
 }
 
 function scanXlsxFile(filepath: string): Finding[] {
   const findings: Finding[] = [];
+  let sharedStrings: string[] = [];
   try {
-    let sharedStrings: string[] = [];
+    const ssXml = execSync(`unzip -p "${filepath}" xl/sharedStrings.xml 2>/dev/null`, {
+      encoding: "utf-8",
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    sharedStrings = [...ssXml.matchAll(/<t[^>]*>([^<]+)<\/t>/g)].map((m) => m[1]);
+  } catch {
+    // No shared strings
+  }
+
+  const fileList = execSync(`unzip -l "${filepath}" 2>/dev/null`, { encoding: "utf-8" });
+  const sheetNames = [...fileList.matchAll(/\s(xl\/worksheets\/sheet\d+\.xml)\s/g)]
+    .map((m) => m[1])
+    .sort();
+
+  for (const sheetName of sheetNames) {
+    let sheetXml: string;
     try {
-      const ssXml = execSync(`unzip -p "${filepath}" xl/sharedStrings.xml 2>/dev/null`, {
+      sheetXml = execSync(`unzip -p "${filepath}" "${sheetName}" 2>/dev/null`, {
         encoding: "utf-8",
         maxBuffer: 10 * 1024 * 1024,
       });
-      sharedStrings = [...ssXml.matchAll(/<t[^>]*>([^<]+)<\/t>/g)].map((m) => m[1]);
     } catch {
-      // No shared strings
+      continue;
     }
 
-    const fileList = execSync(`unzip -l "${filepath}" 2>/dev/null`, { encoding: "utf-8" });
-    const sheetNames = [...fileList.matchAll(/\s(xl\/worksheets\/sheet\d+\.xml)\s/g)]
-      .map((m) => m[1])
-      .sort();
-
-    for (const sheetName of sheetNames) {
-      let sheetXml: string;
-      try {
-        sheetXml = execSync(`unzip -p "${filepath}" "${sheetName}" 2>/dev/null`, {
-          encoding: "utf-8",
-          maxBuffer: 10 * 1024 * 1024,
-        });
-      } catch {
-        continue;
-      }
-
-      for (const rowMatch of sheetXml.matchAll(/<row[^>]*r="(\d+)"[^>]*>(.*?)<\/row>/gs)) {
-        const rowNo = rowMatch[1];
-        const rowXml = rowMatch[2];
-        for (const cellMatch of rowXml.matchAll(/<c[^>]*>(.*?)<\/c>/gs)) {
-          const cellXml = cellMatch[1];
-          const cellTag = cellMatch[0];
-          const valMatch = cellXml.match(/<v>([^<]+)<\/v>/);
-          if (!valMatch) continue;
-          let value = valMatch[1];
-          if (cellTag.includes('t="s"')) {
-            const idx = parseInt(value, 10);
-            if (idx < sharedStrings.length) value = sharedStrings[idx];
-          }
-          FNR_PATTERN.lastIndex = 0;
-          let match: RegExpExecArray | null;
-          while ((match = FNR_PATTERN.exec(value)) !== null) {
-            if (!isSensitiveFnr(match[0])) continue;
-            findings.push({
-              location: `sheet=${sheetName} row=${rowNo}`,
-              patternName: "FNR (fødselsnummer)",
-              fnr: match[0],
-            });
-            break;
-          }
+    for (const rowMatch of sheetXml.matchAll(/<row[^>]*r="(\d+)"[^>]*>(.*?)<\/row>/gs)) {
+      const rowNo = rowMatch[1];
+      const rowXml = rowMatch[2];
+      for (const cellMatch of rowXml.matchAll(/<c[^>]*>(.*?)<\/c>/gs)) {
+        const cellXml = cellMatch[1];
+        const cellTag = cellMatch[0];
+        const valMatch = cellXml.match(/<v>([^<]+)<\/v>/);
+        if (!valMatch) continue;
+        let value = valMatch[1];
+        if (cellTag.includes('t="s"')) {
+          const idx = parseInt(value, 10);
+          if (idx < sharedStrings.length) value = sharedStrings[idx];
+        }
+        FNR_PATTERN.lastIndex = 0;
+        let match: RegExpExecArray | null;
+        while ((match = FNR_PATTERN.exec(value)) !== null) {
+          if (!isSensitiveFnr(match[0])) continue;
+          findings.push({
+            location: `sheet=${sheetName} row=${rowNo}`,
+            patternName: "FNR (fødselsnummer)",
+            fnr: match[0],
+          });
+          break;
         }
       }
     }
-  } catch (e) {
-    console.error(`::warning::Feil ved skanning av fil ${filepath}: ${e}`);
   }
   return findings;
 }
 
 function scanDocxFile(filepath: string): Finding[] {
-  try {
-    const xml = execSync(`unzip -p "${filepath}" word/document.xml 2>/dev/null`, {
-      encoding: "utf-8",
-      maxBuffer: 10 * 1024 * 1024,
-    });
-    const text = xml.replace(/<[^>]+>/g, "");
-    return checkText(text);
-  } catch (e) {
-    console.error(`::warning::Feil ved skanning av fil ${filepath}: ${e}`);
-    return [];
-  }
+  const xml = execSync(`unzip -p "${filepath}" word/document.xml 2>/dev/null`, {
+    encoding: "utf-8",
+    maxBuffer: 10 * 1024 * 1024,
+  });
+  const text = xml.replace(/<[^>]+>/g, "");
+  return checkText(text);
 }
 
 // --- Main ---
@@ -197,34 +179,38 @@ function walkDir(dir: string): void {
       if (excludeDirs && BUILD_DIRS.has(entry)) continue;
       walkDir(fullPath);
     } else if (stat.isFile()) {
-      const ext = extname(entry).toLowerCase();
-      let findings: Finding[];
+      try {
+        const ext = extname(entry).toLowerCase();
+        let findings: Finding[];
 
-      if (ext === ".xlsx" || ext === ".xls") {
-        findings = scanXlsxFile(fullPath);
-        for (const f of findings) {
-          console.log(`::error file=${fullPath}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} (${f.location})`);
-          allFindings.push({ filepath: fullPath, location: String(f.location), patternName: f.patternName, fnr: f.fnr });
-          foundAny = true;
+        if (ext === ".xlsx" || ext === ".xls") {
+          findings = scanXlsxFile(fullPath);
+          for (const f of findings) {
+            console.log(`::error file=${fullPath}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} (${f.location})`);
+            allFindings.push({ filepath: fullPath, location: String(f.location), patternName: f.patternName, fnr: f.fnr });
+            foundAny = true;
+          }
+        } else if (ext === ".docx") {
+          findings = scanDocxFile(fullPath);
+          for (const f of findings) {
+            console.log(
+              `::error file=${fullPath},line=${f.location}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} linje ${f.location}`
+            );
+            allFindings.push({ filepath: fullPath, location: `linje ${f.location}`, patternName: f.patternName, fnr: f.fnr });
+            foundAny = true;
+          }
+        } else if (isTextFile(fullPath)) {
+          findings = scanTextFile(fullPath);
+          for (const f of findings) {
+            console.log(
+              `::error file=${fullPath},line=${f.location}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} linje ${f.location}`
+            );
+            allFindings.push({ filepath: fullPath, location: `linje ${f.location}`, patternName: f.patternName, fnr: f.fnr });
+            foundAny = true;
+          }
         }
-      } else if (ext === ".docx") {
-        findings = scanDocxFile(fullPath);
-        for (const f of findings) {
-          console.log(
-            `::error file=${fullPath},line=${f.location}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} linje ${f.location}`
-          );
-          allFindings.push({ filepath: fullPath, location: `linje ${f.location}`, patternName: f.patternName, fnr: f.fnr });
-          foundAny = true;
-        }
-      } else if (isTextFile(fullPath)) {
-        findings = scanTextFile(fullPath);
-        for (const f of findings) {
-          console.log(
-            `::error file=${fullPath},line=${f.location}::Ikke-godkjent ${f.patternName} funnet i ${fullPath} linje ${f.location}`
-          );
-          allFindings.push({ filepath: fullPath, location: `linje ${f.location}`, patternName: f.patternName, fnr: f.fnr });
-          foundAny = true;
-        }
+      } catch (e) {
+        console.error(`::warning::Feil ved lesing av ${fullPath}: ${e instanceof Error ? e.message : e}`);
       }
     }
   }
