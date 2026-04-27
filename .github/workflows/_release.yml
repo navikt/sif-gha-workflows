@@ -1,4 +1,4 @@
-name: Release
+name: Release av sif-gha-workflows
 
 on:
   release:
