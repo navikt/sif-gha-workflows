@@ -13,8 +13,8 @@ const BUILD_DIRS = new Set(["build", ".gradle", "target"]);
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ALLOWED_FNR_DIR = join(SCRIPT_DIR, "allowed-fnr");
-const ALLOWED_FNR_URL =
-  "https://github.com/navikt/sif-gha-workflows/tree/main/.github/actions/sif-code-scan/allowed-fnr";
+const README_URL =
+  "https://github.com/navikt/sif-gha-workflows/tree/main/.github/actions/sif-code-scan";
 
 function loadAllowedFnrs(): Set<string> {
   const allowed = new Set<string>();
@@ -159,6 +159,8 @@ interface AllFinding {
 
 let foundAny = false;
 const allFindings: AllFinding[] = [];
+let filesChecked = 0;
+let filesSkipped = 0;
 
 function reportFindings(filepath: string, findings: Finding[], locationPrefix: string) {
   for (const f of findings) {
@@ -194,14 +196,19 @@ function walkDir(dir: string): void {
         let findings: Finding[];
 
         if (ext === ".xlsx" || ext === ".xls") {
+          filesChecked++;
           findings = scanXlsxFile(fullPath);
           reportFindings(fullPath, findings, "celle");
         } else if (ext === ".docx") {
+          filesChecked++;
           findings = scanDocxFile(fullPath);
           reportFindings(fullPath, findings, "linje");
         } else if (isTextFile(fullPath)) {
+          filesChecked++;
           findings = scanTextFile(fullPath);
           reportFindings(fullPath, findings, "linje");
+        } else {
+          filesSkipped++;
         }
       }
     } catch (e) {
@@ -211,6 +218,10 @@ function walkDir(dir: string): void {
 }
 
 walkDir(".");
+
+console.log("");
+console.log(`Filer sjekket: ${filesChecked}`);
+console.log(`Filer skippet: ${filesSkipped}`);
 
 if (foundAny) {
   console.log("");
@@ -222,8 +233,8 @@ if (foundAny) {
   }
   console.log("-".repeat(60));
   console.log("Kun fiktive fødselsnummer fra godkjent liste er tillatt.");
-  console.log(`Se godkjente fødselsnummer: ${ALLOWED_FNR_URL}`);
+  console.log(`Se sif-code-scan README for mer informasjo: ${README_URL}`);
   process.exit(1);
 }
 
-console.log(`✅ Ingen ikke-godkjente fødselsnummer funnet. (${ALLOWED_FNRS.size} fiktive FNR i godkjent liste)`);
+console.log(`✅ Ingen ikke-godkjente sensitive fødselsnummer funnet.`);
