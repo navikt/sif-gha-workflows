@@ -1,4 +1,4 @@
-name: Test sif-code-scan
+name: Test sif-code-scan action
 on:
   push:
     paths:

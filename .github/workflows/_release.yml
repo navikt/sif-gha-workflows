@@ -1,0 +1,24 @@
+name: Release av sif-gha-workflows
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-major-tag:
+    name: Update floating major tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4
+
+      - name: Update floating major tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          TAG="${{ github.event.release.tag_name }}"
+          MAJOR=$(echo "$TAG" | grep -oE '^v?[0-9]+')
+          git tag -f "$MAJOR"
+          git push origin "$MAJOR" --force
