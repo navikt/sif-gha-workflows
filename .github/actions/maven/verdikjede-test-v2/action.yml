@@ -126,7 +126,9 @@ runs:
         echo "Printer repo digest for alle imager"
         echo "RepoDigest  image.version"
         set -v
-        docker ps --format "{{.Image}}" | xargs -I {} docker inspect --format '{{join .RepoDigests ", "}} {{index .Config.Labels "org.opencontainers.image.version"}}' {}
+        docker ps --format "{{.Image}}" | while read -r img; do
+          docker inspect --format '{{join .RepoDigests ", "}} {{index .Config.Labels "org.opencontainers.image.version"}}' "$img" 2>/dev/null || echo "SKIPPED: $img"
+        done
         set +v
 
     - name: Venter på stacken og sjekker status
