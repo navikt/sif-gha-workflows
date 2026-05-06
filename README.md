@@ -9,6 +9,13 @@ SIF Reusable Github Actions Workflows
 
 ---
 
+## Releasing
+
+Reusable workflows refererer til `@main` og får automatisk med seg alle endringer når PR er merget. For actions som bruker en versjonert tag (f.eks. `@v1`), må taggen oppdateres eller en ny release opprettes for at endringene skal tre i kraft.
+
+---
+
+
 ### Bygg-workflow for Gradle projekt
 - Submitter SBOM til [NAIS Dependency tracker](https://salsa.prod-gcp.nav.cloud.nais.io/)
 - Dependency snapshot & codeql resultat sendes til Github Security.

@@ -161,6 +161,7 @@ let foundAny = false;
 const allFindings: AllFinding[] = [];
 let filesChecked = 0;
 let filesSkipped = 0;
+const skippedExtensions = new Set<string>();
 
 function reportFindings(filepath: string, findings: Finding[], locationPrefix: string) {
   for (const f of findings) {
@@ -209,6 +210,7 @@ function walkDir(dir: string): void {
           reportFindings(fullPath, findings, "linje");
         } else {
           filesSkipped++;
+          skippedExtensions.add(ext || "(ingen filendelse)");
         }
       }
     } catch (e) {
@@ -222,6 +224,9 @@ walkDir(".");
 console.log("");
 console.log(`Filer sjekket: ${filesChecked}`);
 console.log(`Filer skippet: ${filesSkipped}`);
+if (skippedExtensions.size > 0) {
+  console.log(`Skippede filtyper: ${[...skippedExtensions].sort().join(", ")}`);
+}
 
 if (foundAny) {
   console.log("");
