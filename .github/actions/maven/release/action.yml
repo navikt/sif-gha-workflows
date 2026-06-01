@@ -62,7 +62,7 @@ runs:
       shell: bash
       run: |
         mvn -B -s settings-build.xml versions:set -DnewVersion=${{ inputs.release-version }} ${{ inputs.release-file }}
-        mvn -B -s settings-build.xml package ${{ inputs.mvn-projects }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
+        mvn -B -s settings-build.xml package ${{ inputs.mvn-projects }} ${{ inputs.release-file }} -DtrimStackTrace=false -Dfile.encoding=UTF-8
 
 
     - name: Create maven .m2 settings for release
