@@ -9,7 +9,7 @@ on:
       javaversion:
         required: false
         type: string
-        default: '21'
+        default: '25'
 
 jobs:
   build:
@@ -22,12 +22,10 @@ jobs:
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # ratchet:actions/setup-java@v5.2.0
         with:
           java-version: ${{ inputs.javaversion }}
-          distribution: corretto
+          distribution: temurin
           cache: gradle
-      - uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # ratchet:gradle/actions/setup-gradle@v6.1.0
+
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v6
         env:
-          DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath # Eksluderer test dependencies
           GITHUB_TOKEN: ${{ (inputs.readertoken && secrets.READER_TOKEN) || secrets.GITHUB_TOKEN }}
-        with:
-          dependency-graph: generate-and-submit
-          arguments: build -x test
