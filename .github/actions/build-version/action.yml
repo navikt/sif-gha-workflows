@@ -1,0 +1,13 @@
+name: build-version
+description: "Create build version string from current time and git commit hash"
+outputs:
+  build-version:
+    description: "Build version"
+    value: ${{ steps.generate-build-version.outputs.build-version }}
+runs:
+  using: "composite"
+  steps:
+    - name: Generate build version
+      id: generate-build-version
+      shell: bash
+      run: echo "build-version=$(date +%Y.%m.%d.%H%M%S)-$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT

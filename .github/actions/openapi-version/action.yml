@@ -1,0 +1,28 @@
+name: openapi-version
+description: "Parse openapi version string from generated openapi.json file"
+inputs:
+  openapiFilePath:
+    description: What file to parse.
+    required: true
+    default: openapi.json
+outputs:
+  openapiVersion:
+    description: "openapi version parsed from openapi.json file"
+    value: ${{ steps.openapi-version.outputs.openapiVersion }}
+runs:
+  using: "composite"
+  steps:
+  - name: Openapi version
+    id: openapi-version
+    shell: bash
+    # extract version number from generated openapi.json
+    run: |
+      echo "openapiVersion=$(jq --exit-status --raw-output '.info.version | capture("^(?<major>\\d+)\\.(?<minor>\\d+)$") | .major + "." + .minor' ${{ inputs.openapiFilePath }} || echo 'FEIL')" >> $GITHUB_OUTPUT
+  - name: Feilsjekk OPENAPI_VERSION
+    if: "${{ env.OPENAPI_VERSION == 'FEIL'}}"
+    env:
+      OPENAPI_VERSION: "${{ steps.openapi-version.outputs.openapiVersion }}"
+    uses: actions/github-script@v7
+    with:
+      script: |
+        core.setFailed('fant ikkje korrekt openapi version frå ${{ inputs.openapiFileName }}')
