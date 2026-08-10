@@ -77,7 +77,7 @@ jobs:
           ref: ${{ (inputs.branch != '' && inputs.branch) || '' }}
       - name: Deploy ${{ inputs.cluster }} fra Github
         if: inputs.gar == 'false'
-        uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # ratchet:nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@849e900e3cfa7faf7ad1532bb3a3e6499c932199 # ratchet:nais/deploy/actions/deploy@v2
         env:
           PRINT_PAYLOAD: true
           CLUSTER: ${{ inputs.cluster }}
@@ -91,7 +91,7 @@ jobs:
           team: ${{ inputs.namespace }}
       - name: Deploy ${{ inputs.cluster }} fra GAR
         if: inputs.gar == 'true'
-        uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # ratchet:nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@849e900e3cfa7faf7ad1532bb3a3e6499c932199 # ratchet:nais/deploy/actions/deploy@v2
         env:
           PRINT_PAYLOAD: true
           CLUSTER: ${{ inputs.cluster }}
