@@ -24,14 +24,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7.0.1
       - name: Deploy til dev-${{ inputs.environment }}
-        uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # ratchet:nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@849e900e3cfa7faf7ad1532bb3a3e6499c932199 # ratchet:nais/deploy/actions/deploy@v2
         env:
           CLUSTER: dev-${{ inputs.environment }}
           RESOURCE: nais/naiserator.yaml
           VARS: nais/dev-${{ inputs.environment }}.json
       - name: Deploy til prod-${{ inputs.environment }}
         if: ${{ inputs.deploy-prod }}
-        uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # ratchet:nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@849e900e3cfa7faf7ad1532bb3a3e6499c932199 # ratchet:nais/deploy/actions/deploy@v2
         env:
           RESOURCE: nais/naiserator.yaml
           CLUSTER: prod-${{ inputs.environment }}
