@@ -19,7 +19,7 @@ const D_NUMMER = "41017000010"; // D-nummer (dag+40), skal flagges
 function kjørScan(cwd: string, ekstraArgs: string[] = []): { exitCode: number; stdout: string; stderr: string } {
   try {
     const result = execSync(
-      `npx tsx "${SCAN_TS}" ${ekstraArgs.join(" ")}`,
+      `node "${SCAN_TS}" ${ekstraArgs.join(" ")}`,
       { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
     );
     return { exitCode: 0, stdout: result, stderr: "" };

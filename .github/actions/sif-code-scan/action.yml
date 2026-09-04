@@ -8,4 +8,4 @@ runs:
       shell: bash
       run: |
         npm --prefix "${{ github.action_path }}" ci --ignore-scripts --omit=dev --silent
-        "${{ github.action_path }}/node_modules/.bin/tsx" "${{ github.action_path }}/scan.ts"
+        node "${{ github.action_path }}/scan.ts"
