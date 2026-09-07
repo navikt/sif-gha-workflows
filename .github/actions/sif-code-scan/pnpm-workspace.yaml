@@ -1,0 +1,3 @@
+# Ingen dependencies skal kjøre build-scripts.
+allowBuilds:
+  esbuild: false
