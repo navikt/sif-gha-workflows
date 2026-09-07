@@ -10,15 +10,17 @@ Skanner kildekode for ikke-godkjente fødselsnummer (FNR). Brukes for å hindre 
 
 ## Lokal kjøring
 
+Krever Node 22.18 eller nyere, som kjører TypeScript direkte uten byggesteg.
+
 ```sh
 cd .github/actions/sif-code-scan && npm ci
-npx tsx scan.ts
+node scan.ts
 ```
 
 For å også ekskludere build-mapper (`build`, `.gradle`, `target`):
 
 ```sh
-npx tsx scan.ts --exclude-dirs
+node scan.ts --exclude-dirs
 ```
 
 ## Hvordan det fungerer
