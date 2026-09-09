@@ -13,7 +13,7 @@ Skanner kildekode for ikke-godkjente fødselsnummer (FNR). Brukes for å hindre 
 Krever Node 22.18 eller nyere, som kjører TypeScript direkte uten byggesteg.
 
 ```sh
-cd .github/actions/sif-code-scan && npm ci
+cd .github/actions/sif-code-scan && pnpm install
 node scan.ts
 ```
 
@@ -52,5 +52,5 @@ Fødselsnummer som er akseptert legges i `.txt`-filer under `allowed-fnr/`. Én 
 ## Tester
 
 ```sh
-cd .github/actions/sif-code-scan && npm test
+cd .github/actions/sif-code-scan && pnpm test
 ```
