@@ -138,7 +138,7 @@ jobs:
             "title": "Ungdomsprogramytelsen - tilbakekreving",
             "docker_compose_f": "-f docker-compose-testsuites/docker-compose-ung.yml -f docker-compose-testsuites/gha/docker-compose-ung-gha.yml ",
             "test_groups": "-Dgroups=ung-tilbake",
-            "log_groups": "-Dgroups=etter-pleiepenger"
+            "log_groups": "-Dgroups=etter-ung"
           },
           {
             "suite": "fordel",
