@@ -33,6 +33,7 @@ jobs:
         with:
           repositories: '[{"id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
           servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.READER_TOKEN}}" }]'
+          githubServer: false
           path: ${{ github.workspace }}/settings.xml
       - name: Set up JDK-${{ inputs.java-version }} with cache
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # ratchet:actions/setup-java@v6.0.0
