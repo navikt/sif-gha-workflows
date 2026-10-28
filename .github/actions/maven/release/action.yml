@@ -52,11 +52,12 @@ runs:
         cache: 'maven'
 
     - name: Create maven .m2 settings for build
-      uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
+      uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788 #v4.0.0
       with:
         repositories: '[{"id": "${{ inputs.maven-server-id-build }}", "name": "github-build", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
         servers: '[{ "id": "${{ inputs.maven-server-id-build }}", "username": "${{ github.actor }}", "password": "${{ inputs.build-token }}" }]'
-        output_file: 'settings-build.xml'
+        githubServer: false
+        path: ${{ github.workspace }}/settings-build.xml
 
     - name: Set version and build
       shell: bash
@@ -66,11 +67,12 @@ runs:
 
 
     - name: Create maven .m2 settings for release
-      uses: whelk-io/maven-settings-xml-action@9dc09b23833fa9aa7f27b63db287951856f3433d # ratchet:whelk-io/maven-settings-xml-action@v22
+      uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788 #v4.0.0
       with:
         repositories: '[{"id": "${{ inputs.maven-server-id-release }}", "name": "github-release", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
         servers: '[{ "id": "${{ inputs.maven-server-id-release }}", "username": "${{ github.actor }}", "password": "${{ inputs.release-token }}" }]'
-        output_file: 'settings-release.xml'
+        githubServer: false
+        path: ${{ github.workspace }}/settings-release.xml
     - name: Release
       shell: bash
       run: |
