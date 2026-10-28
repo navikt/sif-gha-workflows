@@ -56,6 +56,7 @@ runs:
       with:
         repositories: '[{"id": "${{ inputs.maven-server-id-build }}", "name": "github-build", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
         servers: '[{ "id": "${{ inputs.maven-server-id-build }}", "username": "${{ github.actor }}", "password": "${{ inputs.build-token }}" }]'
+        githubServer: false
         path: ${{ github.workspace }}/settings-build.xml
 
     - name: Set version and build
@@ -70,6 +71,7 @@ runs:
       with:
         repositories: '[{"id": "${{ inputs.maven-server-id-release }}", "name": "github-release", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" }}]'
         servers: '[{ "id": "${{ inputs.maven-server-id-release }}", "username": "${{ github.actor }}", "password": "${{ inputs.release-token }}" }]'
+        githubServer: false
         path: ${{ github.workspace }}/settings-release.xml
     - name: Release
       shell: bash
